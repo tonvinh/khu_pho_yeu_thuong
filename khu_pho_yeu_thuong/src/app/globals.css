@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "@fontsource/be-vietnam-pro/400.css";
+@import "@fontsource/be-vietnam-pro/500.css";
+@import "@fontsource/be-vietnam-pro/700.css";
+@import "@fontsource/be-vietnam-pro/800.css";
+
+/* Bảng màu chiến dịch (design: nền kem, đỏ gạch primary; cam/xanh lá theo trạng thái) */
+@theme {
+  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+  --color-cream: #fbf5ec;
+  --color-cream-dark: #f3e9d9;
+  --color-brick: #b23a2e;
+  --color-brick-dark: #93291f;
+  --color-brick-light: #f7e3df;
+  --color-ink: #3b2e25;
+  --color-ink-soft: #7a6a5c;
+  --color-status-waiting: #d64545;
+  --color-status-voting: #e8862e;
+  --color-status-signed: #2e8b57;
+  --color-accent-blue: #2d6cb5;
+}
+
+html {
+  font-size: 16px; /* accessibility: tối thiểu 16px (07 §1) */
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Nút chạm tối thiểu 44px (07 §1) */
+.tap {
+  min-height: 44px;
+}
+
+@keyframes kp-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.heart-pop { animation: kp-pop 0.3s ease; }
+
+@keyframes kp-slide-up {
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.slide-up { animation: kp-slide-up 0.25s ease; }
