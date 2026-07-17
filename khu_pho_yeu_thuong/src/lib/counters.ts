@@ -17,11 +17,13 @@ export async function getCounters(): Promise<Counters> {
     SELECT
       (SELECT count(*)::int FROM suggestions WHERE status = 'installed') AS signs_installed,
       (SELECT count(*)::int FROM issues WHERE status IN ('waiting','voting')) AS issues_waiting,
-      -- "Người đóng góp" = người đã đề xuất vấn đề hoặc viết câu nhắc
-      -- (ASSUMPTION: không tính người chỉ bình chọn — khớp seed demo 06 §5)
+      -- "Người đóng góp" = người có đề xuất/câu nhắc ĐÃ DUYỆT (quy tắc 1: chưa duyệt
+      -- thì chưa tính công khai; ASSUMPTION: không tính người chỉ bình chọn — khớp seed 06 §5)
       (SELECT count(DISTINCT u.id)::int FROM users u
-        WHERE EXISTS (SELECT 1 FROM issues WHERE proposed_by = u.id)
-           OR EXISTS (SELECT 1 FROM suggestions WHERE author_id = u.id)) AS contributors,
+        WHERE EXISTS (SELECT 1 FROM issues WHERE proposed_by = u.id
+                        AND status IN ('waiting','voting','signed'))
+           OR EXISTS (SELECT 1 FROM suggestions WHERE author_id = u.id
+                        AND status IN ('approved','selected','produced','installed'))) AS contributors,
       (SELECT count(*)::int FROM neighborhoods) AS neighborhoods_joined
   `);
   cache = { data: row!, at: Date.now() };

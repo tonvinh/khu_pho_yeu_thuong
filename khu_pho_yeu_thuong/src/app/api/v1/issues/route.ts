@@ -27,7 +27,11 @@ export async function GET(req: NextRequest) {
        (SELECT COALESCE(max(vc.n), 0)::int FROM (
           SELECT count(*) AS n FROM votes v
           JOIN suggestions s ON s.id = v.suggestion_id
-          WHERE s.issue_id = i.id AND v.is_valid GROUP BY v.suggestion_id) vc) AS top_votes
+          WHERE s.issue_id = i.id AND v.is_valid GROUP BY v.suggestion_id) vc) AS top_votes,
+       (SELECT s.content FROM suggestions s
+          LEFT JOIN votes v ON v.suggestion_id = s.id AND v.is_valid
+          WHERE s.issue_id = i.id AND s.status IN ('approved','selected','produced','installed')
+          GROUP BY s.id ORDER BY count(v.id) DESC, s.created_at ASC LIMIT 1) AS top_quote
      FROM issues i JOIN neighborhoods n ON n.id = i.neighborhood_id
      WHERE ${where}
      ORDER BY (i.status = 'signed'), i.approved_at DESC NULLS LAST`,

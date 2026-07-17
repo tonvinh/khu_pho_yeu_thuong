@@ -1,9 +1,13 @@
 "use client";
-// Orchestrator trang chủ: state chung, polling 20s, modal định danh/đề xuất/drawer, toast
+// Orchestrator trang chủ: state chung, polling 20s, modal định danh/đề xuất/drawer, toast.
+// Bố cục theo design "docs/KhuPhoCuaToi-prototype-v4.html": top bar sticky mờ,
+// hero trái chữ + phải bản đồ, mục ví dụ minh hoạ, "Đang chờ bạn sáng tạo" 2 cột,
+// khối ưu đãi gradient, footer gọn giữa trang.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { HomeData, Me, NotificationItem } from "./types";
 import { apiGet, apiSend, BASE } from "../client-api";
 import { COPY } from "@/lib/copy";
+import { EXAMPLE_SIGNS } from "@/lib/examples";
 import Counters from "./Counters";
 import MapSection from "./MapSection";
 import IssueList from "./IssueList";
@@ -12,6 +16,7 @@ import LeadSection from "./LeadSection";
 import IdentifyModal from "./IdentifyModal";
 import ProposeModal from "./ProposeModal";
 import IssueDrawer from "./IssueDrawer";
+import { Eyebrow, HangSign, SectionHead } from "./ui";
 
 export default function HomeShell({ initial }: { initial: HomeData }) {
   const [data, setData] = useState<HomeData>(initial);
@@ -102,104 +107,165 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
+  // Câu đang được thương nhất trong các góc xóm đang mở — ví dụ "sống" đầu dãy biển mẫu
+  const featured = data.issues
+    .filter((it) => it.top_quote && it.status !== "signed")
+    .sort((a, b) => b.top_votes - a.top_votes)[0];
+
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-16 lg:max-w-5xl">
-      {/* Header */}
-      <header className="flex items-center justify-between py-4">
-        <div className="flex items-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-brick text-xl text-white">💛</span>
-          <div>
-            <div className="text-lg font-extrabold leading-tight text-brick">Khu Phố Của Tôi</div>
-            <div className="text-xs text-ink-soft">Cùng xây khu phố biết thương</div>
+    <div>
+      {/* ===== TOP BAR (prototype .top: sticky, nền mờ) ===== */}
+      <div className="sticky top-0 z-30 border-b border-cream-dark bg-cream/85 backdrop-blur-lg">
+        <div className="mx-auto flex h-16 max-w-[1120px] items-center gap-3.5 px-5">
+          <div className="flex items-center gap-2.5 font-display text-[19px] font-extrabold">
+            <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-brick text-[15px] text-white shadow-kp-s">
+              ♥
+            </span>
+            Khu Phố Của Tôi
+          </div>
+          <div className="ml-auto flex items-center gap-4">
+            <button
+              onClick={() => scrollTo("goc-xom")}
+              className="hidden cursor-pointer text-sm font-semibold text-ink-soft hover:text-brick-dark sm:inline"
+            >
+              Góc xóm đang chờ
+            </button>
+            <button
+              onClick={() => scrollTo("uu-dai")}
+              className="hidden cursor-pointer text-sm font-semibold text-ink-soft hover:text-brick-dark sm:inline"
+            >
+              Ưu đãi cư dân
+            </button>
+            {meLoaded && me ? (
+              <span className="rounded-full border border-cream-dark bg-white px-3 py-1.5 text-[12.5px] text-ink-soft">
+                Chào {me.display_name} 👋
+              </span>
+            ) : (
+              <span className="hidden rounded-full border border-cream-dark bg-white px-3 py-1.5 text-[12.5px] text-ink-soft md:inline">
+                FPT đồng hành cùng khu phố
+              </span>
+            )}
           </div>
         </div>
-        {meLoaded && me && (
-          <div className="rounded-full bg-cream-dark px-3 py-1.5 text-sm font-medium">
-            Chào {me.display_name} 👋
-          </div>
-        )}
-      </header>
+      </div>
 
       {/* Banner báo tin vui in-web (thay SMS — Q1) */}
-      {notifs.map((n) => (
-        <div key={n.id} className="slide-up mb-3 rounded-2xl border-2 border-status-signed bg-white p-4 shadow-sm">
-          <p className="font-semibold">{COPY.bannerGoodNews(n.payload.location_text || "xóm mình")}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <a
-              href={`${BASE}/bien/${n.ref_id}`}
-              className="tap rounded-full bg-brick px-4 py-2 text-sm font-semibold text-white"
-            >
-              Chia sẻ
-            </a>
+      {notifs.length > 0 && (
+        <div className="mx-auto max-w-[1120px] px-5 pt-4">
+          {notifs.map((n) => (
+            <div key={n.id} className="kp-card slide-up mb-3 border-[#CFE2D5] bg-[#E9F1EB] p-4">
+              <p className="m-0 font-semibold">{COPY.bannerGoodNews(n.payload.location_text || "xóm mình")}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <a href={`${BASE}/bien/${n.ref_id}`} className="kp-btn kp-btn-primary tap px-4 py-1.5 text-sm">
+                  Chia sẻ
+                </a>
+                <button onClick={() => dismissNotif(n.id)} className="tap cursor-pointer px-3 py-2 text-sm text-ink-soft">
+                  Đóng
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ===== HERO: chữ trái + bản đồ phải (prototype .hero-grid) ===== */}
+      <header className="mx-auto grid max-w-[1120px] items-center gap-8 px-5 pb-7 pt-10 lg:grid-cols-[1fr_1.05fr]">
+        <div className="flex flex-col items-start">
+          <Eyebrow>● Cùng xây khu phố biết thương</Eyebrow>
+          <h1 className="m-0 mt-4 font-display text-[clamp(30px,4.4vw,46px)] font-extrabold leading-[1.15] tracking-[-0.01em]">
+            {COPY.heroTitle1} <span className="text-brick">{COPY.heroTitle2}</span>
+          </h1>
+          <p className="m-0 mt-3 max-w-[30em] text-[16.5px] text-ink-soft">{COPY.heroBody}</p>
+          <div className="mt-5 flex flex-wrap gap-3">
             <button
-              onClick={() => { scrollTo("ban-do"); }}
-              className="tap rounded-full border border-brick px-4 py-2 text-sm font-semibold text-brick"
+              onClick={() => requireIdentity(() => setProposeOpen(true))}
+              className="kp-btn kp-btn-primary tap px-5 py-3"
             >
-              Xem trên bản đồ
+              {COPY.ctaMain}
             </button>
-            <button onClick={() => dismissNotif(n.id)} className="tap px-3 py-2 text-sm text-ink-soft">
-              Đóng
+            <button onClick={() => scrollTo("goc-xom")} className="kp-btn kp-btn-outline tap px-5 py-3">
+              {COPY.ctaSecondary}
+            </button>
+            <button onClick={() => scrollTo("uu-dai")} className="kp-btn kp-btn-outline tap px-5 py-3">
+              {COPY.ctaTertiary}
             </button>
           </div>
+          <Counters counters={data.counters} />
         </div>
-      ))}
 
-      {/* Hero */}
-      <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
-        <h1 className="text-2xl font-extrabold leading-snug sm:text-3xl">
-          {COPY.heroTitle1} <span className="text-brick">{COPY.heroTitle2}</span>
-        </h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{COPY.heroBody}</p>
-        <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-          <button
-            onClick={() => scrollTo("goc-xom")}
-            className="tap rounded-full bg-brick px-6 py-3 text-center font-bold text-white shadow hover:bg-brick-dark"
-          >
-            {COPY.ctaMain}
-          </button>
-          <button
-            onClick={() => scrollTo("goc-xom")}
-            className="tap rounded-full border-2 border-brick px-6 py-3 text-center font-semibold text-brick"
-          >
-            {COPY.ctaSecondary}
-          </button>
-          <button
-            onClick={() => scrollTo("uu-dai")}
-            className="tap rounded-full border border-cream-dark bg-cream px-6 py-3 text-center font-semibold text-ink"
-          >
-            {COPY.ctaTertiary}
-          </button>
+        <MapSection map={data.map} onOpenIssue={(id) => setDrawerIssueId(id)} />
+      </header>
+
+      {/* ===== VÍ DỤ MINH HOẠ: biển treo mẫu ===== */}
+      <section className="mx-auto max-w-[1120px] px-5 py-7">
+        <SectionHead
+          title="Biển treo trông thế nào?"
+          hint="vài ví dụ minh hoạ từ những câu nhắc chuẩn 4N — nhắc, nhở, nhỏ, nhẹ"
+        />
+        <div className="grid grid-cols-1 items-start gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+          {featured && (
+            <HangSign
+              quote={`“${featured.top_quote}”`}
+              by="đang được thương nhất tuần này 🧡"
+              spot={featured.location_text}
+              tilt={1.5}
+            />
+          )}
+          {EXAMPLE_SIGNS.filter((s) => s.quote !== featured?.top_quote)
+            .slice(0, featured ? 5 : 6)
+            .map((s, i) => (
+            <HangSign key={s.quote} quote={`“${s.quote}”`} by={s.by} spot={s.spot} tilt={i % 2 ? 1.5 : -1.5} />
+          ))}
         </div>
       </section>
 
-      <Counters counters={data.counters} />
+      {/* ===== ĐANG CHỜ BẠN SÁNG TẠO: danh sách + bảng xếp hạng (prototype .two) ===== */}
+      <section id="goc-xom" className="mx-auto max-w-[1120px] px-5 py-7">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <SectionHead
+            title="Đang chờ bạn sáng tạo"
+            hint="chọn một điểm, viết câu nhắc dễ thương hoặc bình chọn câu hay nhất"
+          />
+          <button
+            onClick={() => requireIdentity(() => setProposeOpen(true))}
+            className="kp-btn kp-btn-outline tap px-4 py-2 text-sm"
+          >
+            + Đề xuất góc xóm mới
+          </button>
+        </div>
+        <div className="mt-2 grid items-start gap-6 lg:grid-cols-[1.35fr_1fr]">
+          <IssueList
+            issues={data.issues}
+            onOpenIssue={(id) => setDrawerIssueId(id)}
+            onPropose={() => requireIdentity(() => setProposeOpen(true))}
+          />
+          <Leaderboard
+            ambassadors={data.ambassadors}
+            neighborhoodOfMonth={data.neighborhoodOfMonth}
+            neighborhoods={data.map.neighborhoods}
+          />
+        </div>
+      </section>
 
-      <div id="ban-do">
-        <MapSection map={data.map} onOpenIssue={(id) => setDrawerIssueId(id)} />
-      </div>
-
-      <div id="goc-xom">
-        <IssueList
-          issues={data.issues}
-          onOpenIssue={(id) => setDrawerIssueId(id)}
-          onPropose={() => requireIdentity(() => setProposeOpen(true))}
-        />
-      </div>
-
-      <Leaderboard ambassadors={data.ambassadors} neighborhoodOfMonth={data.neighborhoodOfMonth} />
-
-      <div id="uu-dai">
+      {/* ===== ƯU ĐÃI CƯ DÂN ===== */}
+      <section id="uu-dai" className="mx-auto max-w-[1120px] px-5 py-7">
         <LeadSection me={me} requireIdentity={requireIdentity} showToast={showToast} />
-      </div>
+      </section>
 
-      {/* Footer */}
-      <footer className="mt-10 border-t border-cream-dark pt-6 text-center text-sm text-ink-soft">
-        <p>{COPY.footerSupport}</p>
-        <p className="mt-2">
-          <a href={`${BASE}/chinh-sach-du-lieu`} className="underline">Chính sách dữ liệu</a>
-          {" · "}Chiến dịch “Khu phố biết thương” — FPT Telecom
-        </p>
-        <p className="mt-2 font-medium text-brick">{COPY.ctaCampaign}</p>
+      {/* ===== FOOTER (prototype: gọn, giữa trang) ===== */}
+      <footer className="mt-3 border-t border-cream-dark">
+        <div className="mx-auto max-w-[1120px] px-5 pb-10 pt-7 text-center text-[12.5px] text-ink-soft">
+          <div className="font-display text-base font-extrabold text-ink">Khu Phố Của Tôi</div>
+          <div className="mt-1">Chiến dịch “Khu phố biết thương” — FPT Telecom · Nhắc · Nhở · Nhỏ · Nhẹ</div>
+          <div className="mt-1">{COPY.footerSupport}</div>
+          <div className="mt-1">
+            <a href={`${BASE}/chinh-sach-du-lieu`} className="underline hover:text-brick-dark">
+              Chính sách dữ liệu
+            </a>
+            {" · "}
+            {COPY.ctaCampaign}
+          </div>
+        </div>
       </footer>
 
       {/* Modals & Drawer */}
@@ -233,10 +299,10 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         />
       )}
 
-      {/* Toast */}
+      {/* Toast (prototype .toast: nền ink, đáy giữa) */}
       {toast && (
         <div className="fixed inset-x-4 bottom-6 z-50 mx-auto max-w-md">
-          <div className="slide-up rounded-2xl bg-ink px-4 py-3 text-center text-sm font-medium text-white shadow-lg">
+          <div className="slide-up rounded-xl bg-ink px-5 py-3 text-center text-sm text-white shadow-kp">
             {toast}
           </div>
         </div>

@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Khu Phố Của Tôi — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EEE3; --paper2:#FBF7EF; --ink:#2B2620; --mute:#6E665A;
+    --terra:#C0573B; --terra-d:#A8482F; --olive:#7C8A5A; --olive-d:#5F6C44;
+    --fpt:#EF7B27; --green:#2F6B4F; --line:#E4D9C7; --card:#FFFFFF;
+    --shadow:0 10px 30px rgba(60,40,20,.10); --shadow-s:0 4px 14px rgba(60,40,20,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:"Be Vietnam Pro",system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.disp{font-family:"Baloo 2","Be Vietnam Pro",system-ui,sans-serif;line-height:1.15}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+  a{color:inherit}
+  button{font-family:inherit;cursor:pointer;border:none}
+
+  /* top bar */
+  .top{position:sticky;top:0;z-index:30;background:rgba(244,238,227,.86);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .top .wrap{display:flex;align-items:center;gap:14px;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:"Baloo 2";font-weight:800;font-size:19px;color:var(--ink)}
+  .brand .mk{width:30px;height:30px;border-radius:50%;background:var(--terra);display:grid;place-items:center;color:#fff;font-size:15px;box-shadow:var(--shadow-s)}
+  .badge{margin-left:auto;font-size:12.5px;color:var(--mute);background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:999px}
+  @media(max-width:680px){.badge{display:none}}
+
+  /* hero */
+  .hero{padding:38px 0 26px}
+  .hero-grid{display:grid;grid-template-columns:1fr 1.05fr;gap:34px;align-items:center}
+  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;gap:24px}}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:13px;letter-spacing:.04em;color:var(--terra-d);background:#fff;border:1px solid var(--line);padding:6px 13px;border-radius:999px}
+  h1{font-size:clamp(30px,4.4vw,46px);font-weight:800;margin:16px 0 12px;letter-spacing:-.01em}
+  h1 .swing{color:var(--terra)}
+  .lead{font-size:16.5px;color:var(--mute);max-width:30em}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+  .btn{font-weight:600;font-size:15px;padding:12px 20px;border-radius:12px;transition:.18s transform,.18s box-shadow,.18s background}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--terra);color:#fff;box-shadow:var(--shadow-s)}
+  .btn-primary:hover{background:var(--terra-d);box-shadow:var(--shadow)}
+  .btn-ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--terra);color:var(--terra-d)}
+
+  /* counters */
+  .counters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:30px}
+  @media(max-width:520px){.counters{grid-template-columns:repeat(2,1fr)}}
+  .ct{background:var(--paper2);border:1px solid var(--line);border-radius:14px;padding:14px 14px}
+  .ct .n{font-family:"Baloo 2";font-weight:800;font-size:26px;line-height:1}
+  .ct .l{font-size:12px;color:var(--mute);margin-top:5px}
+  .ct.t .n{color:var(--terra)} .ct.o .n{color:var(--olive-d)} .ct.g .n{color:var(--green)} .ct.f .n{color:var(--fpt)}
+
+  /* map (signature) */
+  .map-card{background:linear-gradient(160deg,#FBF7EF,#EFE6D6);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:14px;position:relative;overflow:hidden}
+  .map-head{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 12px}
+  .map-head .t{font-family:"Baloo 2";font-weight:700;font-size:15px}
+  .legend{display:flex;gap:12px;font-size:11.5px;color:var(--mute);flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .dot.w{background:var(--terra)} .dot.v{background:var(--fpt)} .dot.d{background:var(--green)}
+  svg.map{width:100%;height:auto;display:block;border-radius:14px}
+  .pin{cursor:pointer;transition:transform .18s}
+  .pin:hover{transform:translateY(-3px)}
+  .pin .hook{stroke:#b9a888;stroke-width:1.6}
+  .sign-sway{transform-origin:center top;animation:sway 3.5s ease-in-out infinite}
+  @keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+  .pin:hover .sign-sway{animation-duration:1.1s}
+
+  /* sections */
+  section.block{padding:30px 0}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .sec-head h2{font-size:24px;font-weight:800}
+  .sec-head .hint{color:var(--mute);font-size:13.5px}
+  .two{display:grid;grid-template-columns:1.35fr 1fr;gap:26px;align-items:start;margin-top:18px}
+  @media(max-width:880px){.two{grid-template-columns:1fr}}
+
+  /* issue cards */
+  .issues{display:flex;flex-direction:column;gap:12px}
+  .issue{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px 16px;box-shadow:var(--shadow-s);cursor:pointer;transition:.18s transform,.18s box-shadow}
+  .issue:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .issue .row{display:flex;align-items:center;gap:11px}
+  .cat{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;background:#F3ECE0;flex:none}
+  .issue .meta{flex:1;min-width:0}
+  .issue .ttl{font-weight:600;font-size:15px}
+  .issue .sub{font-size:12.5px;color:var(--mute);margin-top:2px}
+  .state{font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:999px;white-space:nowrap}
+  .s-wait{background:#FBEAE3;color:var(--terra-d)}
+  .s-vote{background:#FCEEDD;color:#9A5410}
+  .s-done{background:#E4EFE7;color:var(--green)}
+  .issue .foot{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:12.5px;color:var(--mute)}
+  .chip{background:#F3ECE0;border-radius:999px;padding:3px 9px;font-size:11.5px}
+
+  /* leaderboard */
+  .board{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-s);overflow:hidden}
+  .board .bh{padding:15px 17px;background:linear-gradient(120deg,var(--olive),var(--olive-d));color:#fff}
+  .board .bh .t{font-family:"Baloo 2";font-weight:700;font-size:16px}
+  .board .bh .s{font-size:12px;opacity:.9;margin-top:2px}
+  .lb{display:flex;align-items:center;gap:12px;padding:12px 17px;border-top:1px solid var(--line)}
+  .rank{width:26px;height:26px;border-radius:50%;background:#F3ECE0;display:grid;place-items:center;font-family:"Baloo 2";font-weight:700;font-size:13px;color:var(--mute);flex:none}
+  .lb:nth-child(2) .rank{background:var(--fpt);color:#fff}
+  .lb:nth-child(3) .rank{background:#D9C8A6;color:#5b4a2a}
+  .lb:nth-child(4) .rank{background:#E7D9BE;color:#6b5836}
+  .lb .nm{flex:1;font-weight:600;font-size:14px}
+  .lb .nm small{display:block;font-weight:400;color:var(--mute);font-size:11.5px}
+  .lb .pt{font-family:"Baloo 2";font-weight:700;color:var(--olive-d)}
+  .town{padding:14px 17px;border-top:1px solid var(--line);font-size:13px;color:var(--mute)}
+  .town b{color:var(--ink)}
+
+  /* drawer / modal */
+  .scrim{position:fixed;inset:0;background:rgba(43,38,32,.42);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:.22s;z-index:40}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,100%);background:var(--paper);box-shadow:-12px 0 40px rgba(40,25,10,.2);transform:translateX(102%);transition:transform .26s cubic-bezier(.3,.8,.3,1);z-index:50;display:flex;flex-direction:column}
+  .drawer.on{transform:translateX(0)}
+  .dh{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
+  .dh .x{margin-left:auto;background:#fff;border:1px solid var(--line);width:34px;height:34px;border-radius:10px;font-size:17px;color:var(--mute)}
+  .dh .x:hover{color:var(--terra)}
+  .db{padding:18px 20px;overflow:auto;flex:1}
+  .db h3{font-size:19px;font-weight:700;margin-bottom:3px}
+  .proposal{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 13px;margin-bottom:10px;display:flex;gap:11px;align-items:flex-start}
+  .proposal .txt{flex:1;font-size:14.5px}
+  .proposal .by{font-size:11.5px;color:var(--mute);margin-top:5px}
+  .vote{flex:none;text-align:center;background:#F7F1E7;border:1px solid var(--line);border-radius:10px;padding:6px 9px;min-width:50px;transition:.15s}
+  .vote:hover{border-color:var(--olive);background:#EFF1E5}
+  .vote.voted{background:var(--olive);border-color:var(--olive);color:#fff}
+  .vote .vn{font-family:"Baloo 2";font-weight:700;font-size:16px;line-height:1}
+  .vote .vl{font-size:10px}
+  .field{margin-top:14px}
+  .field label{font-size:12.5px;font-weight:600;color:var(--mute);display:block;margin-bottom:6px}
+  .field textarea,.field input,.field select{width:100%;font-family:inherit;font-size:14.5px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);resize:vertical}
+  .field textarea:focus,.field input:focus,.field select:focus{outline:none;border-color:var(--terra)}
+  .note{font-size:11.5px;color:var(--mute);margin-top:7px;display:flex;gap:6px}
+  .note b{color:var(--terra-d)}
+  .donebox{background:#E9F1EB;border:1px solid #CFE2D5;border-radius:14px;padding:16px;text-align:center;margin-bottom:8px}
+  .donebox .sign{display:inline-block;background:#fff;border:1.5px solid var(--olive);border-radius:12px;padding:13px 18px;font-family:"Baloo 2";font-weight:600;font-size:17px;color:var(--ink);box-shadow:var(--shadow-s);transform:rotate(-1.5deg)}
+  .seg{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .seg button{font-size:13px;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .seg button.sel{background:var(--terra);color:#fff;border-color:var(--terra)}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:var(--shadow)}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{padding:26px 0 40px;color:var(--mute);font-size:12.5px;text-align:center;border-top:1px solid var(--line);margin-top:10px}
+  .proto{display:inline-block;background:#FBEAE3;color:var(--terra-d);font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;margin-bottom:8px}
+
+  /* lead / ưu đãi section */
+  .lead-wrap{background:linear-gradient(150deg,#FFF9F0,#F7EFE1);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:26px;display:grid;grid-template-columns:1fr 1.15fr;gap:28px;align-items:start}
+  @media(max-width:880px){.lead-wrap{grid-template-columns:1fr}}
+  .lead-pitch h2{font-size:24px;font-weight:800;margin-bottom:10px}
+  .lead-pitch p{font-size:14.5px;color:var(--mute);margin-bottom:12px}
+  .lead-pitch .mini{font-size:12.5px;color:var(--mute);background:#fff;border:1px dashed var(--line);border-radius:12px;padding:10px 13px}
+  .lead-form{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow-s)}
+  .pillbox{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+  .pillbox button{font-size:13px;padding:8px 12px;border-radius:10px;background:#fff;border:1px solid var(--line);color:var(--ink);cursor:pointer}
+  .pillbox button.sel{background:var(--olive);color:#fff;border-color:var(--olive)}
+  .ck{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--ink);margin-top:14px;cursor:pointer;line-height:1.45}
+  .ck input{margin-top:3px;accent-color:var(--terra);width:16px;height:16px;flex:none;cursor:pointer}
+  .ck small{display:block;color:var(--mute);font-size:11.5px;margin-top:2px}
+  .support-line{font-size:12px;color:var(--mute);margin-top:12px;text-align:center}
+
+  /* 4N live checker */
+  .n4row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+  .n4chip{font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;border:1.5px solid var(--line);color:var(--mute);background:#fff;transition:.18s;display:inline-flex;align-items:center;gap:5px}
+  .n4chip.ok{background:var(--olive);border-color:var(--olive);color:#fff}
+  .n4chip.bad{background:#FBEAE3;border-color:var(--terra);color:var(--terra-d)}
+  .n4hint{font-size:12px;color:var(--terra-d);margin-top:7px;min-height:16px;line-height:1.4}
+  .n4hint.pass{color:var(--olive-d)}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="wrap">
+  <div class="brand"><span class="mk">♥</span> Khu Phố Của Tôi</div>
+  <span class="badge">FPT đồng hành cùng khu phố · <i>nguyên mẫu</i></span>
+</div></div>
+
+<header class="hero"><div class="wrap"><div class="hero-grid">
+  <div>
+    <span class="eyebrow">● Cùng xây khu phố biết thương</span>
+    <h1>Muốn gửi một lời thương cho xóm mình? <span class="swing">Viết một câu nhắc nhỏ nhẹ.</span></h1>
+    <p class="lead">Bạn chọn một góc xóm. Cả xóm cùng viết câu nhắc dễ thương theo chuẩn 4N và bấm "thương" để bình chọn. Câu được thương nhiều nhất sẽ thành biển thật do FPT treo — nối tiếp hơn <b>10.000 lời nhắc</b> đã có mặt khắp ngõ hẻm Việt Nam.</p>
+    <div class="cta-row">
+      <button class="btn btn-primary" onclick="openNew()">+ Gửi lời nhắc cho xóm mình</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('cho').scrollIntoView()">Xem góc xóm đang chờ</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('uudai').scrollIntoView()">🎁 Ưu đãi cư dân</button>
+    </div>
+    <div class="counters" id="counters"></div>
+  </div>
+  <div class="map-card">
+    <div class="map-head">
+      <span class="t">Bản đồ khu phố</span>
+      <span class="legend">
+        <span><i class="dot w"></i>Đang chờ</span>
+        <span><i class="dot v"></i>Đang bình chọn</span>
+        <span><i class="dot d"></i>Đã có biển</span>
+      </span>
+    </div>
+    <svg class="map" viewBox="0 0 560 420" id="svgmap" aria-label="Bản đồ khu phố minh hoạ"></svg>
+  </div>
+</div></div></header>
+
+<section class="block" id="cho"><div class="wrap">
+  <div class="sec-head"><h2>Đang chờ bạn sáng tạo</h2><span class="hint">chọn một điểm, viết câu nhắc dễ thương hoặc bình chọn câu hay nhất</span></div>
+  <div class="two">
+    <div class="issues" id="issueList"></div>
+    <div>
+      <div class="board" id="board"></div>
+    </div>
+  </div>
+</div></section>
+
+<section class="block" id="uudai"><div class="wrap">
+  <div class="lead-wrap">
+    <div class="lead-pitch">
+      <span class="eyebrow">🎁 Món quà nhỏ cho người góp câu thương</span>
+      <h2>FPT muốn gửi lại xóm mình một điều dễ thương</h2>
+      <p>Bạn đã góp một câu nhắc cho khu phố — FPT xin gửi lại <b>ưu đãi dành riêng cho cư dân khu phố biết thương</b>: gói Internet, Truyền hình và FPT Play với mức giá "tình làng nghĩa xóm". Chỉ khi bạn muốn, tụi mình mới liên hệ.</p>
+      <div class="mini">🔒 Số điện thoại của bạn chỉ dùng để gửi ưu đãi này khi bạn chủ động đồng ý — không dùng cho bất kỳ mục đích nào khác, không tự động gọi mời.</div>
+    </div>
+    <div class="lead-form">
+      <div class="field" style="margin-top:0"><label>Tên bạn (hoặc tên cả nhà hay gọi)</label><input id="leadName" placeholder="VD: Cô Tám, anh Dũng, nhà số 7…"></div>
+      <div class="field"><label>Số điện thoại</label><input id="leadPhone" inputmode="tel" placeholder="VD: 090xxxxxxx"></div>
+      <div class="field"><label>Khu phố của bạn (để ưu đãi đúng khu vực)</label><input id="leadArea" placeholder="VD: Hẻm 42 Lê Lợi, P. Bàn Cờ"></div>
+      <div class="field"><label>Bạn đang quan tâm điều gì cho nhà mình?</label>
+        <div class="pillbox" id="svcBox">
+          <button data-svc="net" onclick="toggleSvc(this)">🌐 Internet cho cả nhà</button>
+          <button data-svc="tv" onclick="toggleSvc(this)">📺 Internet + Truyền hình</button>
+          <button data-svc="play" onclick="toggleSvc(this)">🎬 Gói FPT Play</button>
+          <button data-svc="cam" onclick="toggleSvc(this)">📷 Internet + Camera</button>
+        </div>
+      </div>
+      <label class="ck"><input type="checkbox" id="leadConsent">
+        <span>Tôi muốn nhận ưu đãi dành riêng cho cư dân khu phố biết thương từ FPT.
+        <small>Không tick, không sao cả — câu nhắc của bạn vẫn được trân trọng như nhau 💛</small></span></label>
+      <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="submitLead()">Nhận ưu đãi của xóm mình</button>
+      <div class="support-line">Đang là khách FPT và cần hỗ trợ kỹ thuật? Gọi tổng đài <b>1900 6600</b> — không cần điền form này.</div>
+    </div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <div class="proto">NGUYÊN MẪU TRÌNH BÀY</div><br>
+  Dữ liệu trong nguyên mẫu là minh hoạ. Chủ đề giới hạn trong danh mục tích cực đời thường; mọi câu nhắc đều qua bộ lọc 4N và đội ngũ chiến dịch duyệt trước khi lên biển. Số điện thoại chỉ dùng cho mục đích bạn đã chọn; thông tin ưu đãi chỉ gửi khi bạn chủ động đồng ý.
+</div></footer>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer" aria-modal="true" role="dialog"></aside>
+<div class="toast" id="toast"></div>
+
+<script>
+const CATS = {
+  move:{ic:"🏃",label:"Khoẻ mỗi ngày"},
+  kids:{ic:"🧒",label:"Trẻ con trong xóm"},
+  civil:{ic:"💛",label:"Lối sống văn minh, tử tế"},
+  share:{ic:"🤝",label:"Giúp đỡ, san sẻ"},
+  green:{ic:"🌿",label:"Xóm xanh, xóm sạch"},
+  joy:{ic:"😊",label:"Sống vui, sống có ích"}
+};
+
+let UID = 100;
+const me = "Bạn";
+
+let state = {
+  issues: [
+    { id:1, cat:"move", spot:"Sân chung Hẻm 42 Lê Lợi", status:"vote", x:120, y:120,
+      proposals:[
+        {id:11, txt:"Chiều nay ra sân đi bộ một vòng, rủ thêm người nữa cho vui chân.", by:"Cô Tám tạp hoá", votes:34, mine:false},
+        {id:12, txt:"Ra sân tập cùng tụi nhỏ một chút — mồ hôi chung vui hơn mồ hôi riêng.", by:"Minh (lớp 11)", votes:21, mine:false},
+      ]},
+    { id:2, cat:"civil", spot:"Đầu ngõ 7 Trần Phú", status:"vote", x:330, y:90,
+      proposals:[
+        {id:21, txt:"Đi ngang nhà cụ, chào một tiếng — cụ vui cả buổi.", by:"Chú Ba xe ôm", votes:41, mine:false},
+        {id:22, txt:"Ông bà đi chậm, mình chờ một chút — ngõ mình đâu có vội.", by:"Hương", votes:18, mine:false},
+      ]},
+    { id:3, cat:"kids", spot:"Sân trước Trường Tiểu học", status:"wait", x:230, y:230, proposals:[] },
+    { id:4, cat:"share", spot:"Ngách 12/3 Nguyễn Du", status:"wait", x:430, y:200, proposals:[] },
+    { id:5, cat:"green", spot:"Cuối hẻm chợ Xóm Mới", status:"done", x:160, y:320,
+      proposals:[{id:51, txt:"Bỏ rác đúng chỗ một chút, khu mình thơm cả ngày.", by:"Bà Liên", votes:52, mine:false}],
+      final:"Bỏ rác đúng chỗ một chút, khu mình thơm cả ngày." },
+    { id:6, cat:"joy", spot:"Hẻm 9 Phan Bội Châu", status:"done", x:380, y:330,
+      proposals:[{id:61, txt:"Gặp nhau đầu ngõ, cười một cái — nhẹ cả ngày.", by:"Anh Dũng", votes:47, mine:false}],
+      final:"Gặp nhau đầu ngõ, cười một cái — nhẹ cả ngày." },
+    { id:7, cat:"share", spot:"Khu trọ 88 Hai Bà Trưng", status:"vote", x:470, y:300,
+      proposals:[{id:71, txt:"Trời sắp mưa, hô nhau cất đồ — một tiếng gọi đỡ cả buổi phơi.", by:"Quân", votes:12, mine:false}] },
+  ]
+};
+
+/* ---------- derived ---------- */
+function counts(){
+  const done = state.issues.filter(i=>i.status==="done").length;
+  const wait = state.issues.filter(i=>i.status!=="done").length;
+  const people = new Set();
+  state.issues.forEach(i=>i.proposals.forEach(p=>people.add(p.by)));
+  return {done, wait, people:people.size, towns:5};
+}
+function leaderboard(){
+  const m = {};
+  state.issues.forEach(i=>i.proposals.forEach(p=>{
+    if(!m[p.by]) m[p.by]={name:p.by, pts:0, picked:0, votes:0};
+    m[p.by].votes += p.votes;
+    m[p.by].pts += p.votes;                 // 1đ / vote
+    if(i.status==="done" && i.final===p.txt){ m[p.by].pts += 30; m[p.by].picked++; } // 30đ nếu được treo
+  }));
+  return Object.values(m).sort((a,b)=>b.pts-a.pts).slice(0,5);
+}
+
+/* ---------- render ---------- */
+function renderCounters(){
+  const c = counts();
+  document.getElementById("counters").innerHTML = `
+    <div class="ct g"><div class="n">${c.done}</div><div class="l">biển đã treo</div></div>
+    <div class="ct t"><div class="n">${c.wait}</div><div class="l">góc xóm đang chờ</div></div>
+    <div class="ct o"><div class="n">${c.people}</div><div class="l">người đóng góp</div></div>
+    <div class="ct f"><div class="n">${c.towns}</div><div class="l">khu phố tham gia</div></div>`;
+}
+
+function statePill(s){
+  if(s==="wait") return `<span class="state s-wait">Đang chờ câu nhắc</span>`;
+  if(s==="vote") return `<span class="state s-vote">Đang bình chọn</span>`;
+  return `<span class="state s-done">Đã có biển</span>`;
+}
+
+function renderIssues(){
+  const order = {vote:0, wait:1, done:2};
+  const list = [...state.issues].sort((a,b)=>order[a.status]-order[b.status]);
+  document.getElementById("issueList").innerHTML = list.map(i=>{
+    const top = i.proposals.length ? Math.max(...i.proposals.map(p=>p.votes)) : 0;
+    const foot = i.status==="done"
+      ? `<div class="foot">✓ <span>${i.final}</span></div>`
+      : `<div class="foot"><span class="chip">${i.proposals.length} câu đề xuất</span>${i.proposals.length?`<span class="chip">★ ${top} bình chọn</span>`:`<span>Chưa có ai viết — bạn mở hàng nhé!</span>`}</div>`;
+    return `<div class="issue" onclick="openIssue(${i.id})">
+      <div class="row">
+        <div class="cat">${CATS[i.cat].ic}</div>
+        <div class="meta"><div class="ttl">${CATS[i.cat].label} · ${i.spot}</div>
+        <div class="sub">Góc xóm đang chờ một lời nhắc dễ thương</div></div>
+        ${statePill(i.status)}
+      </div>${foot}
+    </div>`;
+  }).join("");
+}
+
+function renderBoard(){
+  const lb = leaderboard();
+  const rows = lb.map((p,idx)=>`
+    <div class="lb"><div class="rank">${idx+1}</div>
+      <div class="nm">${p.name}<small>${p.picked} câu được treo · ${p.votes} lượt thương</small></div>
+      <div class="pt">${p.pts}đ</div></div>`).join("");
+  document.getElementById("board").innerHTML = `
+    <div class="bh"><div class="t">🏆 Cây bút của khu phố</div><div class="s">Người viết câu nhắc được cả xóm thương nhất</div></div>
+    ${rows}
+    <div class="town">Khu phố tử tế nhất tháng: <b>Phường Lê Lợi</b> — 3 biển mới, 76 lượt thương.</div>`;
+}
+
+/* ---------- map ---------- */
+function renderMap(){
+  const svg = document.getElementById("svgmap");
+  // soft background blocks (houses) + lanes
+  let bg = `
+    <rect x="0" y="0" width="560" height="420" fill="none"/>
+    <g opacity="0.85">
+      <rect x="40" y="40" width="150" height="100" rx="12" fill="#EADFCB"/>
+      <rect x="210" y="30" width="170" height="80" rx="12" fill="#E5DAC4"/>
+      <rect x="400" y="45" width="120" height="110" rx="12" fill="#EADFCB"/>
+      <rect x="60" y="250" width="150" height="120" rx="12" fill="#E5DAC4"/>
+      <rect x="300" y="270" width="200" height="110" rx="12" fill="#EADFCB"/>
+      <rect x="235" y="150" width="120" height="120" rx="12" fill="#EFE6D6"/>
+    </g>
+    <g stroke="#D8C9AE" stroke-width="14" stroke-linecap="round" opacity="0.7">
+      <path d="M20,200 H540" fill="none"/>
+      <path d="M280,20 V400" fill="none"/>
+      <path d="M120,120 L120,200" fill="none"/>
+      <path d="M430,200 L430,300" fill="none"/>
+    </g>`;
+  const colorFor = s => s==="done" ? "var(--green)" : s==="vote" ? "var(--fpt)" : "var(--terra)";
+  let pins = state.issues.map(i=>{
+    const c = colorFor(i.status);
+    const hook = `<line class="hook" x1="${i.x}" y1="${i.y-26}" x2="${i.x}" y2="${i.y-12}"/>`;
+    const sign = `<g class="sign-sway">
+        <rect x="${i.x-15}" y="${i.y-12}" width="30" height="24" rx="7" fill="${c}"/>
+        <text x="${i.x}" y="${i.y+5}" font-size="15" text-anchor="middle" fill="#fff" font-family="Baloo 2,sans-serif">${CATS[i.cat].ic.length>1?'•':CATS[i.cat].ic}</text>
+      </g>`;
+    return `<g class="pin" onclick="openIssue(${i.id})">
+        ${hook}
+        <circle cx="${i.x}" cy="${i.y-26}" r="3.2" fill="#b9a888"/>
+        ${sign}
+      </g>`;
+  }).join("");
+  svg.innerHTML = bg + pins;
+}
+
+/* ---------- drawer ---------- */
+const scrim = document.getElementById("scrim"), drawer = document.getElementById("drawer");
+function openDrawer(html){ drawer.innerHTML = html; scrim.classList.add("on"); drawer.classList.add("on"); }
+function closeDrawer(){ scrim.classList.remove("on"); drawer.classList.remove("on"); }
+
+function openIssue(id){
+  const i = state.issues.find(x=>x.id===id);
+  let body;
+  if(i.status==="done"){
+    body = `<div class="donebox"><div style="font-size:12.5px;color:var(--mute);margin-bottom:10px">Biển đã treo tại đây</div>
+      <div class="sign">${i.final}</div></div>
+      <p style="font-size:13px;color:var(--mute);margin-top:12px">Cảm ơn cả khu phố đã cùng viết nên câu nhắc này 💛</p>`;
+  } else {
+    const props = [...i.proposals].sort((a,b)=>b.votes-a.votes).map(p=>`
+      <div class="proposal">
+        <div class="txt">${p.txt}<div class="by">— ${p.by}</div></div>
+        <button class="vote ${p.mine?'voted':''}" onclick="vote(${i.id},${p.id})">
+          <div class="vn">${p.votes}</div><div class="vl">${p.mine?'đã thương':'thương'}</div>
+        </button>
+      </div>`).join("") || `<p style="font-size:13.5px;color:var(--mute)">Chưa có câu nào. Bạn viết câu đầu tiên cho điểm này nhé!</p>`;
+    body = `
+      <div style="font-size:13px;color:var(--mute);margin-bottom:10px">${i.proposals.length} câu nhắc đang chờ bình chọn</div>
+      ${props}
+      <div class="field"><label>Viết câu nhắc của bạn</label>
+        <textarea id="newProp" rows="3" placeholder="VD: Đi ngang nhà cụ, chào một tiếng — cụ vui cả buổi…" oninput="renderN4()"></textarea>
+        <div class="n4row" id="n4row">
+          <span class="n4chip" id="n4-nhac">Nhắc</span>
+          <span class="n4chip" id="n4-nho">Nhở</span>
+          <span class="n4chip" id="n4-nhosz">Nhỏ</span>
+          <span class="n4chip" id="n4-nhe">Nhẹ</span>
+        </div>
+        <div class="n4hint" id="n4hint">Soi câu theo chuẩn 4N — gõ tới đâu, đèn sáng tới đó.</div>
+      </div>
+      <div class="field"><label>Số điện thoại (không bắt buộc) — để báo tin vui khi câu của bạn được chọn treo</label>
+        <input id="propPhone" inputmode="tel" placeholder="Bỏ trống cũng được nha"></div>
+      <label class="ck"><input type="checkbox" id="propConsent">
+        <span>Tôi muốn nhận ưu đãi dành riêng cho cư dân khu phố biết thương từ FPT.
+        <small>Tuỳ chọn riêng, không ảnh hưởng đến câu nhắc của bạn.</small></span></label>
+      <div class="note">💛 <span><b>Giữ cho dễ thương:</b> gọi tên một việc tốt cụ thể, không nêu đích danh người/nhà nào. Câu được chọn sẽ qua bộ lọc 4N và đội ngũ chiến dịch duyệt trước khi lên biển.</span></div>
+      <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="submitProp(${i.id})">Gửi câu nhắc</button>`;
+  }
+  openDrawer(`
+    <div class="dh">
+      <div class="cat" style="width:44px;height:44px;font-size:22px">${CATS[i.cat].ic}</div>
+      <div><h3>${CATS[i.cat].label}</h3><div style="font-size:13px;color:var(--mute)">${i.spot}</div></div>
+      <button class="x" onclick="closeDrawer()">×</button>
+    </div>
+    <div class="db">${body}</div>`);
+}
+
+function vote(iid,pid){
+  const i = state.issues.find(x=>x.id===iid);
+  const p = i.proposals.find(x=>x.id===pid);
+  if(p.mine){ p.mine=false; p.votes--; } else { p.mine=true; p.votes++; }
+  openIssue(iid); renderAll();
+}
+
+function validPhone(v){ return /^(0|\+84)\d{9}$/.test(v.replace(/[\s.\-]/g,"")); }
+
+/* ---------- chuẩn 4N: bộ soi câu ---------- */
+const GENERIC = /(sống đẹp|văn minh hơn|nâng cao ý thức|chung tay|hãy cùng|vì cộng đồng|xây dựng khu phố|nếp sống mới|toàn dân|phong trào|trách nhiệm|văn hoá giao thông)/i;
+const COMMAND = /(nghiêm cấm|\bcấm\b|không được|xử phạt|bị phạt|yêu cầu|đề nghị|bắt buộc|tuyệt đối không|vi phạm|chấp hành)/i;
+const HARSH   = /(công an|camera|trộm cắp|\btrộm\b|bêu|xấu hổ|vô ý thức|đồ vô|kẻ nào|báo chính quyền)/i;
+
+function wordCount(t){ return t.trim().split(/\s+/).filter(w=>/[A-Za-zÀ-ỹ0-9]/.test(w)).length; }
+
+function checkN4(t){
+  const wc = wordCount(t);
+  const nhac  = wc >= 4 && !GENERIC.test(t);            // gọi tên việc cụ thể, không khẩu hiệu
+  const nho   = !COMMAND.test(t);                        // giọng người nhà, không ra lệnh/dọa phạt
+  const nhosz = wc >= 4 && wc <= 18;                     // ngắn, dễ đọc dễ nhớ
+  const nhe   = !HARSH.test(t) && (t.match(/!/g)||[]).length <= 1 && t !== t.toUpperCase(); // đọc xong nhẹ lòng
+  let hint = "";
+  if(!t.trim()) hint = "Soi câu theo chuẩn 4N — gõ tới đâu, đèn sáng tới đó.";
+  else if(!nhac)  hint = "Nhắc: gọi tên một việc cụ thể (đi chậm, chào cụ, quét ngõ…) — tránh khẩu hiệu chung chung.";
+  else if(!nho)   hint = "Nhở: bỏ từ ra lệnh/dọa phạt — nói như người trong nhà, thêm \u201cnha\u201d, \u201cgiùm\u201d cho mềm.";
+  else if(!nhosz) hint = wc < 4 ? "Nhỏ: viết thêm chút cho đủ ý nha." : "Nhỏ: câu đang dài — rút gọn còn một hơi đọc (≤ 18 chữ).";
+  else if(!nhe)   hint = "Nhẹ: bỏ từ nặng nề/răn đe — đọc xong phải thấy nhẹ lòng, muốn làm liền.";
+  else hint = "Đủ 4N rồi — gửi thôi! 💛";
+  return { nhac, nho, nhosz, nhe, pass: nhac && nho && nhosz && nhe, hint };
+}
+
+function renderN4(){
+  const ta = document.getElementById("newProp");
+  if(!ta) return null;
+  const r = checkN4(ta.value);
+  const set = (id, ok) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove("ok","bad");
+    if(ta.value.trim()) el.classList.add(ok ? "ok" : "bad");
+  };
+  set("n4-nhac", r.nhac); set("n4-nho", r.nho); set("n4-nhosz", r.nhosz); set("n4-nhe", r.nhe);
+  const h = document.getElementById("n4hint");
+  if(h){ h.textContent = r.hint; h.classList.toggle("pass", r.pass && !!ta.value.trim()); }
+  return r;
+}
+
+function submitProp(iid){
+  const ta = document.getElementById("newProp");
+  const v = ta.value.trim();
+  if(v.length<6){ toast("Viết thêm một chút cho đủ ý nha 🙂"); return; }
+  const r = checkN4(v);
+  if(!r.pass){ renderN4(); toast(r.hint); return; }
+  const ph = (document.getElementById("propPhone")||{value:""}).value.trim();
+  if(ph && !validPhone(ph)){ toast("Số điện thoại chưa đúng định dạng — kiểm tra lại giúp mình nha 📱"); return; }
+  const consent = (document.getElementById("propConsent")||{checked:false}).checked;
+  const i = state.issues.find(x=>x.id===iid);
+  i.proposals.push({id:++UID, txt:v, by:me, votes:1, mine:true, phone:ph||null, optin:consent});
+  if(i.status==="wait") i.status="vote";
+  toast(ph ? "Đã gửi! Có tin vui về câu của bạn, tụi mình sẽ nhắn liền 💛" : "Đã gửi! Cảm ơn bạn đã góp một câu thương 💛");
+  openIssue(iid); renderAll();
+}
+
+/* ---------- lead / ưu đãi ---------- */
+const leadSvcs = new Set();
+function toggleSvc(btn){
+  const k = btn.dataset.svc;
+  if(leadSvcs.has(k)){ leadSvcs.delete(k); btn.classList.remove("sel"); }
+  else { leadSvcs.add(k); btn.classList.add("sel"); }
+}
+function submitLead(){
+  const name = document.getElementById("leadName").value.trim();
+  const phone = document.getElementById("leadPhone").value.trim();
+  const consent = document.getElementById("leadConsent").checked;
+  if(name.length<2){ toast("Cho tụi mình xin tên để gọi cho thân nha 🙂"); return; }
+  if(!validPhone(phone)){ toast("Số điện thoại chưa đúng định dạng — kiểm tra lại giúp mình nha 📱"); return; }
+  if(!consent){ toast("Bạn tick đồng ý nhận ưu đãi giúp mình nhé — tụi mình chỉ liên hệ khi bạn muốn 💛"); return; }
+  toast("Đã ghi nhận! Ưu đãi của xóm mình sẽ đến trong 1–2 ngày tới 🎁");
+  document.getElementById("leadName").value = "";
+  document.getElementById("leadPhone").value = "";
+  document.getElementById("leadArea").value = "";
+  document.getElementById("leadConsent").checked = false;
+  leadSvcs.clear();
+  document.querySelectorAll("#svcBox button").forEach(b=>b.classList.remove("sel"));
+}
+
+/* ---------- new issue ---------- */
+let newCat = "move";
+function openNew(){
+  const opts = Object.entries(CATS).map(([k,v])=>`<button class="${k===newCat?'sel':''}" onclick="pickCat('${k}')">${v.ic} ${v.label}</button>`).join("");
+  openDrawer(`
+    <div class="dh"><div><h3>Gửi lời nhắc cho xóm mình</h3>
+      <div style="font-size:13px;color:var(--mute)">Chọn điều dễ thương bạn muốn cổ vũ</div></div>
+      <button class="x" onclick="closeDrawer()">×</button></div>
+    <div class="db">
+      <div class="field"><label>Chủ đề lời nhắc</label><div class="seg" id="seg">${opts}</div></div>
+      <div class="field"><label>Góc xóm muốn treo (ngõ/hẻm/ngách)</label><input id="newSpot" placeholder="VD: Sân chung Hẻm 25 Nguyễn Trãi"></div>
+      <div class="field"><label>Điều tốt bạn muốn cổ vũ ở góc này</label>
+        <textarea id="newDesc" rows="3" placeholder="VD: Chiều nào các cụ cũng ra ghế đá — muốn cả xóm ghé chào các cụ một tiếng."></textarea></div>
+      <div class="note">💛 <span><b>Danh mục mở lòng, đóng khung:</b> chỉ nhận chủ đề tích cực đời thường, không nêu đích danh ai. Đề xuất hiển thị sau khi qua bộ lọc 4N của chiến dịch.</span></div>
+      <button class="btn btn-primary" style="margin-top:12px;width:100%" onclick="submitNew()">Gửi góc xóm → chờ cả xóm viết câu</button>
+    </div>`);
+}
+function pickCat(k){ newCat=k; document.querySelectorAll('#seg button').forEach(b=>b.classList.remove('sel')); event.target.classList.add('sel'); }
+function submitNew(){
+  const spot = document.getElementById("newSpot").value.trim();
+  if(spot.length<3){ toast("Cho mình xin vị trí cụ thể hơn nha 📍"); return; }
+  const x = 80 + Math.random()*400, y = 70 + Math.random()*300;
+  state.issues.push({id:++UID, cat:newCat, spot, status:"wait", x:Math.round(x), y:Math.round(y), proposals:[]});
+  toast("Đã ghi nhận! Góc xóm của bạn đang chờ cả xóm viết câu nhắc.");
+  closeDrawer(); renderAll();
+  document.getElementById('cho').scrollIntoView();
+}
+
+/* ---------- toast ---------- */
+let tT;
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(tT); tT = setTimeout(()=>t.classList.remove("on"), 2600);
+}
+
+function renderAll(){ renderCounters(); renderIssues(); renderBoard(); renderMap(); }
+renderAll();
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeDrawer(); });
+</script>
+</body>
+</html>

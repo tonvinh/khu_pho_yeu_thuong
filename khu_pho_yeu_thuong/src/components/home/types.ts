@@ -15,6 +15,7 @@ export interface IssueCard {
   neighborhood_name: string;
   suggestion_count: number;
   top_votes: number;
+  top_quote: string | null;
 }
 
 export interface MapNeighborhood {

@@ -7,6 +7,7 @@
 import pg from "pg";
 import { createHmac, randomBytes } from "node:crypto";
 import { hash as argonHash } from "@node-rs/argon2";
+import { seedAdminDemo } from "./seed-admin-demo.mjs";
 
 try { process.loadEnvFile(".env"); } catch { /* env đã có */ }
 
@@ -193,6 +194,10 @@ await client.query(
 );
 
 await client.query("COMMIT");
+
+// Data minh hoạ cho trang admin (hàng chờ duyệt, leads, gian lận, sổ cái…)
+await seedAdminDemo(client);
+
 await client.end();
 
 console.log("✔ Seed xong: 5 khu phố · 7 vấn đề · 9 câu nhắc · sổ cái điểm khớp 05-SCORING-RULES");

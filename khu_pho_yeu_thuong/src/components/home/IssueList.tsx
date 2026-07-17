@@ -1,13 +1,16 @@
 "use client";
-// Danh sách "góc xóm đang chờ" (02 §2)
+// Danh sách "góc xóm đang chờ" (02 §2) — card dọc theo prototype .issue:
+// ô icon danh mục, tiêu đề "Loại · địa điểm", pill trạng thái, foot chip số liệu
 import type { IssueCard } from "./types";
 import { categoryIcon, categoryLabel, ISSUE_STATUS_LABEL } from "@/lib/taxonomy";
 
-const BADGE: Record<string, string> = {
-  waiting: "bg-status-waiting/10 text-status-waiting",
-  voting: "bg-status-voting/10 text-status-voting",
-  signed: "bg-status-signed/10 text-status-signed",
+const PILL: Record<IssueCard["status"], string> = {
+  waiting: "bg-status-waiting-bg text-status-waiting",
+  voting: "bg-status-voting-bg text-status-voting",
+  signed: "bg-status-signed-bg text-status-signed",
 };
+
+const ORDER: Record<IssueCard["status"], number> = { voting: 0, waiting: 1, signed: 2 };
 
 export default function IssueList({
   issues,
@@ -18,49 +21,63 @@ export default function IssueList({
   onOpenIssue: (id: string) => void;
   onPropose: () => void;
 }) {
+  const list = [...issues].sort((a, b) => ORDER[a.status] - ORDER[b.status]);
+
   return (
-    <section className="mt-8">
-      <h2 className="text-lg font-extrabold">📍 Góc xóm đang chờ</h2>
-
-      <button
-        onClick={onPropose}
-        className="tap mt-3 w-full rounded-2xl border-2 border-dashed border-brick/50 bg-brick-light/50 px-4 py-4 text-center font-bold text-brick"
-      >
-        + Đề xuất vấn đề khu mình
-      </button>
-
-      <div className="mt-3 space-y-2.5">
-        {issues.map((it) => (
-          <button
-            key={it.id}
-            onClick={() => onOpenIssue(it.id)}
-            className="block w-full rounded-2xl bg-white p-4 text-left shadow-sm transition hover:shadow-md"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="font-bold">
-                {categoryIcon(it.category)} {categoryLabel(it.category)}
-                <span className="ml-2 font-medium text-ink-soft">· {it.location_text}</span>
+    <div className="flex flex-col gap-3">
+      {list.map((it) => (
+        <button
+          key={it.id}
+          onClick={() => onOpenIssue(it.id)}
+          className="kp-card cursor-pointer p-4 text-left transition hover:-translate-y-0.5 hover:shadow-kp"
+        >
+          <div className="flex items-center gap-3">
+            <div className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[11px] bg-[#F3ECE0] text-[19px]">
+              {categoryIcon(it.category)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[15px] font-semibold">
+                {categoryLabel(it.category)} · {it.location_text}
               </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${BADGE[it.status]}`}>
-                {ISSUE_STATUS_LABEL[it.status]}
-              </span>
+              <div className="mt-0.5 truncate text-[12.5px] text-ink-soft">
+                {it.description || "Góc xóm đang chờ một lời nhắc dễ thương"} · {it.neighborhood_name}
+              </div>
             </div>
-            <p className="mt-1 text-sm text-ink-soft">
-              Khu phố nêu: cần một câu nhắc cho điểm này
-            </p>
-            <div className="mt-2 flex gap-3 text-xs font-semibold text-ink-soft">
-              <span>{it.suggestion_count} câu đề xuất</span>
-              {it.top_votes > 0 && <span className="text-brick">★ {it.top_votes} bình chọn</span>}
-              <span className="ml-auto">{it.neighborhood_name}</span>
-            </div>
+            <span
+              className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${PILL[it.status]}`}
+            >
+              {ISSUE_STATUS_LABEL[it.status]}
+            </span>
+          </div>
+          <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-soft">
+            {it.status === "signed" && it.top_quote ? (
+              <span className="text-status-signed">✓ {it.top_quote}</span>
+            ) : (
+              <>
+                <span className="rounded-full bg-[#F3ECE0] px-2.5 py-0.5 text-[11.5px]">
+                  {it.suggestion_count} câu đề xuất
+                </span>
+                {it.suggestion_count > 0 ? (
+                  <span className="rounded-full bg-[#F3ECE0] px-2.5 py-0.5 text-[11.5px]">
+                    🧡 {it.top_votes.toLocaleString("vi-VN")} lượt thương
+                  </span>
+                ) : (
+                  <span>Chưa có ai viết — bạn mở hàng nhé!</span>
+                )}
+              </>
+            )}
+          </div>
+        </button>
+      ))}
+
+      {list.length === 0 && (
+        <div className="kp-card flex flex-col items-center gap-3 p-6 text-center text-sm text-ink-soft">
+          Chưa có góc xóm nào đang chờ — bạn đề xuất điểm đầu tiên nhé!
+          <button onClick={onPropose} className="kp-btn kp-btn-primary tap px-5 py-2">
+            + Đề xuất vấn đề khu mình
           </button>
-        ))}
-        {issues.length === 0 && (
-          <p className="rounded-2xl bg-white p-6 text-center text-sm text-ink-soft shadow-sm">
-            Chưa có góc xóm nào đang chờ — bạn đề xuất điểm đầu tiên nhé!
-          </p>
-        )}
-      </div>
-    </section>
+        </div>
+      )}
+    </div>
   );
 }

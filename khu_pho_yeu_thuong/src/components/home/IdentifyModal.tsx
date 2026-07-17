@@ -1,9 +1,10 @@
 "use client";
 // Modal "Cho xóm biết bạn là ai" (02 §8.1) — KHÔNG OTP; SĐT gửi server 1 lần qua HTTPS,
-// không bao giờ lưu ở client.
+// không bao giờ lưu ở client. Style field theo prototype.
 import { useState } from "react";
 import type { MapNeighborhood, Me } from "./types";
 import { apiSend } from "../client-api";
+import { Field } from "./ui";
 
 export default function IdentifyModal({
   neighborhoods,
@@ -39,41 +40,45 @@ export default function IdentifyModal({
 
   return (
     <Modal onClose={onClose}>
-      <h3 className="text-xl font-extrabold">Cho xóm biết bạn là ai 💛</h3>
-      <p className="mt-1 text-sm text-ink-soft">
+      <h3 className="m-0 font-display text-xl font-extrabold">Cho xóm biết bạn là ai 💛</h3>
+      <p className="m-0 mt-1 text-sm text-ink-soft">
         Chỉ cần số điện thoại một lần — không cần mật khẩu, không gửi tin nhắn xác thực.
         Số của bạn được bảo mật, không hiển thị cho ai.
       </p>
-      <div className="mt-4 space-y-3">
+      <Field label="Số điện thoại" className="mt-4">
         <input
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="Số điện thoại (VD: 090xxxxxxx)"
-          className="tap w-full rounded-xl border border-cream-dark bg-cream px-4 py-3"
+          placeholder="VD: 090xxxxxxx"
+          className="kp-input tap"
         />
+      </Field>
+      <Field label="Tên hiển thị (tên cả xóm hay gọi)" className="mt-3.5">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Tên hiển thị (VD: Cô Tám tạp hoá)"
-          className="tap w-full rounded-xl border border-cream-dark bg-cream px-4 py-3"
+          placeholder="VD: Cô Tám tạp hoá, anh Dũng, nhà số 7…"
+          className="kp-input tap"
         />
+      </Field>
+      <Field label="Khu phố của bạn" className="mt-3.5">
         <select
           value={nbId}
           onChange={(e) => setNbId(e.target.value)}
-          className="tap w-full rounded-xl border border-cream-dark bg-cream px-4 py-3"
+          className="kp-input tap cursor-pointer"
         >
-          <option value="">Khu phố của bạn…</option>
+          <option value="">— Chọn khu phố —</option>
           {neighborhoods.map((n) => (
             <option key={n.id} value={n.id}>{n.name}</option>
           ))}
         </select>
-      </div>
-      {error && <p className="mt-2 text-sm font-medium text-status-waiting">{error}</p>}
+      </Field>
+      {error && <p className="m-0 mt-2 text-sm font-medium text-status-waiting">{error}</p>}
       <button
         onClick={submit}
         disabled={busy}
-        className="tap mt-4 w-full rounded-full bg-brick px-5 py-3 font-bold text-white disabled:opacity-60"
+        className="kp-btn kp-btn-primary tap mt-4 w-full px-5 py-3 disabled:opacity-60"
       >
         {busy ? "Đang xử lý…" : "Vào xóm thôi"}
       </button>
@@ -83,9 +88,9 @@ export default function IdentifyModal({
 
 export function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 backdrop-blur-[2px] sm:items-center" onClick={onClose}>
       <div
-        className="slide-up max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white p-6 sm:rounded-3xl"
+        className="slide-up max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-cream p-6 shadow-kp sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {children}

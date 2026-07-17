@@ -8,9 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@fontsource/baloo-2':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@fontsource/be-vietnam-pro':
         specifier: ^5.2.5
         version: 5.2.8
+      '@fontsource/ibm-plex-mono':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@node-rs/argon2':
         specifier: ^2.0.2
         version: 2.0.2
@@ -244,8 +250,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@fontsource/baloo-2@5.2.7':
+    resolution: {integrity: sha512-RllEWCvjw0PqLey6hbNI2M8gdZy2CFCIHXXNIXC4V4xsRQeOgZ3OMx3uQ1u4LjJ16BGytZD6wE/VFU9st0VdDg==}
+
   '@fontsource/be-vietnam-pro@5.2.8':
     resolution: {integrity: sha512-lqTtfpkAy0GdFH0fqwR0sW4VP+3CNGaQV6SpW2TSZaNmixZMlou+2dp5ErGidrS1MPiDDPfPbfW2i358PVFLZA==}
+
+  '@fontsource/ibm-plex-mono@5.2.7':
+    resolution: {integrity: sha512-MKAb8qV+CaiMQn2B0dIi1OV3565NYzp3WN5b4oT6LTkk+F0jR6j0ZN+5BKJiIhffDC3rtBULsYZE65+0018z9w==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -1592,7 +1604,11 @@ snapshots:
   '@esbuild/win32-x64@0.28.1':
     optional: true
 
+  '@fontsource/baloo-2@5.2.7': {}
+
   '@fontsource/be-vietnam-pro@5.2.8': {}
+
+  '@fontsource/ibm-plex-mono@5.2.7': {}
 
   '@img/colour@1.1.0': {}
 
