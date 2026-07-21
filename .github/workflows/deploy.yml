@@ -1,11 +1,15 @@
-name: Deploy to VM (ai-law, Singapore)
+name: Deploy khu-pho to VM (ai-law, Singapore)
 
 # CI/CD: push lên main → self-hosted runner trên VM tự pull + rebuild + migrate.
 # Runner kết nối OUTBOUND (không mở port SSH); build ngay trên VM (~1 phút).
-# Lưu ý: repo có gốc là thư mục cha, app nằm trong thư mục con khu_pho_yeu_thuong/.
+# LƯU Ý: repo có gốc là thư mục cha; app khu-pho nằm trong thư mục con khu_pho_yeu_thuong/.
+# Workflow BẮT BUỘC ở gốc repo (.github/workflows) mới được GitHub nhận.
 on:
   push:
     branches: [main]
+    paths:
+      - "khu_pho_yeu_thuong/**"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch: {}   # cho phép bấm "Run workflow" thủ công
 
 concurrency:
