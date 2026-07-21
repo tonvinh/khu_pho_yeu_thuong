@@ -2,6 +2,7 @@ name: Deploy to VM (ai-law, Singapore)
 
 # CI/CD: push lên main → self-hosted runner trên VM tự pull + rebuild + migrate.
 # Runner kết nối OUTBOUND (không mở port SSH); build ngay trên VM (~1 phút).
+# Lưu ý: repo có gốc là thư mục cha, app nằm trong thư mục con khu_pho_yeu_thuong/.
 on:
   push:
     branches: [main]
@@ -11,26 +12,30 @@ concurrency:
   group: deploy-vm
   cancel-in-progress: false
 
+env:
+  REPO_DIR: /opt/khu_pho
+  APP_DIR: /opt/khu_pho/khu_pho_yeu_thuong
+
 jobs:
   deploy:
     runs-on: [self-hosted, khupho]
     steps:
-      - name: Pull latest source to /opt/khu_pho
+      - name: Pull latest source
         run: |
-          cd /opt/khu_pho
+          cd "$REPO_DIR"
           git fetch https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} main
           git reset --hard FETCH_HEAD
           git log --oneline -1
 
       - name: Build & restart (docker compose)
         run: |
-          cd /opt/khu_pho
+          cd "$APP_DIR"
           docker compose -f docker-compose.prod.yml build web
           docker compose -f docker-compose.prod.yml up -d
 
       - name: Run DB migrations
         run: |
-          cd /opt/khu_pho
+          cd "$APP_DIR"
           docker compose -f docker-compose.prod.yml exec -T web node scripts/migrate.mjs
 
       - name: Health check
