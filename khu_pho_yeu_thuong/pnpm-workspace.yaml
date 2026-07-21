@@ -1,5 +1,0 @@
-allowBuilds:
-  esbuild: true
-  sharp: true
-  "@node-rs/argon2": true
-  "@tailwindcss/oxide": true

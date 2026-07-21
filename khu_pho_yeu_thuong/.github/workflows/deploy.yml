@@ -1,0 +1,43 @@
+name: Deploy to VM (ai-law, Singapore)
+
+# CI/CD: push lên main → self-hosted runner trên VM tự pull + rebuild + migrate.
+# Runner kết nối OUTBOUND (không mở port SSH); build ngay trên VM (~1 phút).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}   # cho phép bấm "Run workflow" thủ công
+
+concurrency:
+  group: deploy-vm
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, khupho]
+    steps:
+      - name: Pull latest source to /opt/khu_pho
+        run: |
+          cd /opt/khu_pho
+          git fetch https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} main
+          git reset --hard FETCH_HEAD
+          git log --oneline -1
+
+      - name: Build & restart (docker compose)
+        run: |
+          cd /opt/khu_pho
+          docker compose -f docker-compose.prod.yml build web
+          docker compose -f docker-compose.prod.yml up -d
+
+      - name: Run DB migrations
+        run: |
+          cd /opt/khu_pho
+          docker compose -f docker-compose.prod.yml exec -T web node scripts/migrate.mjs
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 15); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/v1/counters || true)
+            if [ "$code" = "200" ]; then echo "web healthy (HTTP 200)"; exit 0; fi
+            echo "waiting for web... ($i) got=$code"; sleep 3
+          done
+          echo "web did not become healthy"; exit 1

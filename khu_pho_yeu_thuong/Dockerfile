@@ -1,13 +1,15 @@
-# Next.js multi-stage (07 §2.2): builder → runner node:20-alpine, standalone, non-root
-FROM node:20-alpine AS deps
+# Next.js multi-stage (07 §2.2): builder → runner node:22-alpine, standalone, non-root
+# Node 22 + pnpm 9 cố định: corepack mặc định kéo pnpm 11 (đòi Node >=22.13 và hard-fail
+# "ignored builds" của sharp/esbuild). pnpm 9 build native deps tự động, khớp lockfile 9.0.
+FROM node:22-alpine AS deps
 WORKDIR /app
-RUN corepack enable
+RUN npm install -g pnpm@9
 COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile
 
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
-RUN corepack enable
+RUN npm install -g pnpm@9
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # basePath truyền lúc build (Q5): '' cho khupho.fpt.vn, '/khu-pho-de-thuong' cho fpt.vn/...
