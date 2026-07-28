@@ -48,8 +48,8 @@ export default function ProposeModal({
 
   return (
     <Drawer
-      title="Đề xuất vấn đề khu mình"
-      sub="Chọn loại vấn đề an toàn đời thường"
+      title="Góp một điều xóm mình nên để ý"
+      sub="Chọn vấn đề bạn muốn viết lời nhắc"
       onClose={onClose}
     >
       <Field label="Loại vấn đề">
@@ -94,7 +94,7 @@ export default function ProposeModal({
         />
       </Field>
 
-      <Field label="Điều bạn muốn cả xóm cùng để ý ở góc này" className="mt-3.5">
+      <Field label="Viết lời nhắc “thương” bạn muốn gửi cho góc phố này" className="mt-3.5">
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -113,7 +113,7 @@ export default function ProposeModal({
         disabled={busy}
         className="kp-btn kp-btn-primary tap mt-3 w-full px-5 py-3 disabled:opacity-60"
       >
-        {busy ? "Đang gửi…" : "Gửi đề xuất → vào danh sách chờ"}
+        {busy ? "Đang gửi…" : "Gửi góp ý cho xóm mình"}
       </button>
     </Drawer>
   );

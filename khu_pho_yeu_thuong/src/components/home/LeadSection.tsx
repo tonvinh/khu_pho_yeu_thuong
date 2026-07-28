@@ -94,7 +94,7 @@ export default function LeadSection({
                 className="kp-input tap"
               />
             </Field>
-            <Field label="Khu phố của bạn (để ưu đãi đúng khu vực)" className="mt-3.5">
+            <Field label="Bạn đang ở khu phố nào?" className="mt-3.5">
               <input
                 value={nbText}
                 onChange={(e) => setNbText(e.target.value)}
@@ -104,7 +104,7 @@ export default function LeadSection({
             </Field>
             <div className="mt-3.5">
               <div className="mb-1.5 text-[12.5px] font-semibold text-ink-soft">
-                Bạn đang quan tâm điều gì cho nhà mình?
+                Nhà mình đang muốn tìm hiểu dịch vụ nào?
               </div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(INTERESTS).map(([k, label]) => (
@@ -129,10 +129,7 @@ export default function LeadSection({
                 onChange={(e) => setOptIn(e.target.checked)}
                 className="mt-[3px] h-4 w-4 flex-none cursor-pointer accent-brick"
               />
-              <span>
-                {COPY.optInCheckbox}
-                <span className="mt-0.5 block text-[11.5px] text-ink-soft">{COPY.optInNoteTier2}</span>
-              </span>
+              <span>{COPY.optInCheckbox}</span>
             </label>
 
             {needSwitch && (
@@ -162,7 +159,7 @@ export default function LeadSection({
             </button>
             {!me && (
               <p className="m-0 mt-2 text-center text-xs text-ink-soft">
-                Bạn sẽ được hỏi định danh một lần trước khi gửi — để bảo vệ chính số của bạn.
+                Bạn sẽ xác thực số điện thoại một lần trước khi gửi để bảo vệ thông tin của mình.
               </p>
             )}
             <p className="m-0 mt-3 text-center text-xs text-ink-soft">{COPY.footerSupport}</p>
