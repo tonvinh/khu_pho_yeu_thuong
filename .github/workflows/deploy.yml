@@ -2,14 +2,9 @@ name: Deploy khu-pho to VM (ai-law, Singapore)
 
 # CI/CD: push lên main → self-hosted runner trên VM tự pull + rebuild + migrate.
 # Runner kết nối OUTBOUND (không mở port SSH); build ngay trên VM (~1 phút).
-# LƯU Ý: repo có gốc là thư mục cha; app khu-pho nằm trong thư mục con khu_pho_yeu_thuong/.
-# Workflow BẮT BUỘC ở gốc repo (.github/workflows) mới được GitHub nhận.
 on:
   push:
     branches: [main]
-    paths:
-      - "khu_pho_yeu_thuong/**"
-      - ".github/workflows/deploy.yml"
   workflow_dispatch: {}   # cho phép bấm "Run workflow" thủ công
 
 concurrency:
@@ -17,8 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  REPO_DIR: /opt/khu_pho
-  APP_DIR: /opt/khu_pho/khu_pho_yeu_thuong
+  APP_DIR: /opt/khu_pho
 
 jobs:
   deploy:
@@ -26,10 +20,26 @@ jobs:
     steps:
       - name: Pull latest source
         run: |
-          cd "$REPO_DIR"
+          cd "$APP_DIR"
           git fetch https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} main
           git reset --hard FETCH_HEAD
           git log --oneline -1
+
+      - name: Ensure .env (tự nâng lên sau khi bỏ thư mục lồng — idempotent)
+        run: |
+          cd "$APP_DIR"
+          # Trước đây gốc repo là thư mục cha nên app nằm ở khu_pho_yeu_thuong/.
+          # .env production là file gitignored nên reset --hard không đụng tới; nâng nó lên gốc.
+          if [ ! -f .env ] && [ -f khu_pho_yeu_thuong/.env ]; then
+            cp -a khu_pho_yeu_thuong/.env .env
+            # giữ 1 bản backup NGOÀI build context (home của runner), rồi dọn thư mục lồng cũ
+            cp -a khu_pho_yeu_thuong/.env "$HOME/khu_pho.env.bak-old-layout" || true
+            rm -f khu_pho_yeu_thuong/.env
+            rmdir khu_pho_yeu_thuong 2>/dev/null || true
+            echo "đã nâng .env lên $APP_DIR/.env; backup: $HOME/khu_pho.env.bak-old-layout"
+          fi
+          test -f .env || { echo "THIẾU $APP_DIR/.env — deploy dừng để tránh sinh secret mới"; exit 1; }
+          grep -q '^PHONE_PEPPER=.\+' .env || { echo "PHONE_PEPPER rỗng trong .env — dừng"; exit 1; }
 
       - name: Build & restart (docker compose)
         run: |

@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.env
+.env.local
+# pattern không có ** chỉ khớp ở gốc context — chặn cả .env nằm sâu bên trong
+**/.env
+**/.env.local
+docs
+data
+coverage
+*.md
+!README.md
