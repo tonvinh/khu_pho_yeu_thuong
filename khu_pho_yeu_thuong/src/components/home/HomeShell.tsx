@@ -1,7 +1,7 @@
 "use client";
 // Orchestrator trang chủ: state chung, polling 20s, modal định danh/đề xuất/drawer, toast.
 // Bố cục theo design "docs/KhuPhoCuaToi-prototype-v4.html": top bar sticky mờ,
-// hero trái chữ + phải bản đồ, mục ví dụ minh hoạ, "Đang chờ bạn sáng tạo" 2 cột,
+// hero trái chữ + phải bản đồ, mục ví dụ minh hoạ, mục "Cùng đóng góp một câu…" 2 cột,
 // khối ưu đãi gradient, footer gọn giữa trang.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { HomeData, Me, NotificationItem } from "./types";
@@ -128,13 +128,13 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
               onClick={() => scrollTo("goc-xom")}
               className="hidden cursor-pointer text-sm font-semibold text-ink-soft hover:text-brick-dark sm:inline"
             >
-              Góc xóm đang chờ
+              Góc phố đang chờ
             </button>
             <button
               onClick={() => scrollTo("uu-dai")}
               className="hidden cursor-pointer text-sm font-semibold text-ink-soft hover:text-brick-dark sm:inline"
             >
-              Ưu đãi cư dân
+              Quà dành cho cư dân
             </button>
             {meLoaded && me ? (
               <span className="rounded-full border border-cream-dark bg-white px-3 py-1.5 text-[12.5px] text-ink-soft">
@@ -199,14 +199,14 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       {/* ===== VÍ DỤ MINH HOẠ: biển treo mẫu ===== */}
       <section className="mx-auto max-w-[1120px] px-5 py-7">
         <SectionHead
-          title="Biển treo trông thế nào?"
-          hint="vài ví dụ minh hoạ từ những câu nhắc chuẩn 4N — nhắc, nhở, nhỏ, nhẹ"
+          title="Lời nhắc khi lên biển trông như thế nào?"
+          hint="Cùng ngắm qua vài mẫu minh họa với những câu nhắc chuẩn tinh thần 4N"
         />
         <div className="grid grid-cols-1 items-start gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           {featured && (
             <HangSign
               quote={`“${featured.top_quote}”`}
-              by="đang được thương nhất tuần này 🧡"
+              by="Được “Thương” nhiều nhất tuần này 🧡"
               spot={featured.location_text}
               tilt={1.5}
             />
@@ -223,14 +223,14 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       <section id="goc-xom" className="mx-auto max-w-[1120px] px-5 py-7">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <SectionHead
-            title="Đang chờ bạn sáng tạo"
-            hint="chọn một điểm, viết câu nhắc dễ thương hoặc bình chọn câu hay nhất"
+            title="Cùng đóng góp một câu cho khu phố của mình!"
+            hint="chọn một góc phố, để lại lời nhắn dễ thương và bình chọn cho lời thương ấm áp nhất"
           />
           <button
             onClick={() => requireIdentity(() => setProposeOpen(true))}
             className="kp-btn kp-btn-outline tap px-4 py-2 text-sm"
           >
-            + Đề xuất góc xóm mới
+            + Đề xuất khu phố mới
           </button>
         </div>
         <div className="mt-2 grid items-start gap-6 lg:grid-cols-[1.35fr_1fr]">
@@ -256,7 +256,8 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       <footer className="mt-3 border-t border-cream-dark">
         <div className="mx-auto max-w-[1120px] px-5 pb-10 pt-7 text-center text-[12.5px] text-ink-soft">
           <div className="font-display text-base font-extrabold text-ink">Khu Phố Của Tôi</div>
-          <div className="mt-1">Chiến dịch “Khu phố biết thương” — FPT Telecom · Nhắc · Nhở · Nhỏ · Nhẹ</div>
+          <div className="mt-1">Một hoạt động thuộc chiến dịch “Khu phố biết thương” của FPT Telecom</div>
+          <div>Nhắc · Nhở · Nhỏ · Nhẹ</div>
           <div className="mt-1">{COPY.footerSupport}</div>
           <div className="mt-1">
             <a href={`${BASE}/chinh-sach-du-lieu`} className="underline hover:text-brick-dark">

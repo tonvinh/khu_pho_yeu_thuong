@@ -5,10 +5,10 @@ import { absoluteUrl } from "@/lib/url";
 export const metadata: Metadata = {
   title: "Khu Phố Của Tôi — Cùng xây khu phố biết thương",
   description:
-    "Bạn chọn một góc xóm. Cả xóm cùng viết câu nhắc dễ thương theo chuẩn 4N và bấm “thương” để bình chọn. Câu được thương nhiều nhất sẽ thành biển thật do FPT treo.",
+    "Chọn một góc xóm, cùng mọi người gửi những câu nhắc dễ thương theo tinh thần 4N và bấm “Thương” để bình chọn. Câu được nhiều lượt “Thương” nhất sẽ được FPT đưa lên biển thật.",
   openGraph: {
     title: "Khu Phố Của Tôi — Cùng xây khu phố biết thương",
-    description: "Lên Khu Phố Của Tôi, viết câu nhắc cho xóm mình.",
+    description: "Gửi một lời nhắc, thêm một chút thương cho xóm mình.",
     url: absoluteUrl("/"),
     siteName: "Khu Phố Của Tôi",
     locale: "vi_VN",

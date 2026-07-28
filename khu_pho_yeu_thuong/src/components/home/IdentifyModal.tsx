@@ -40,10 +40,10 @@ export default function IdentifyModal({
 
   return (
     <Modal onClose={onClose}>
-      <h3 className="m-0 font-display text-xl font-extrabold">Cho xóm biết bạn là ai 💛</h3>
+      <h3 className="m-0 font-display text-xl font-extrabold">Để FPT gửi ưu đãi đến bạn 💛</h3>
       <p className="m-0 mt-1 text-sm text-ink-soft">
-        Chỉ cần số điện thoại một lần — không cần mật khẩu, không gửi tin nhắn xác thực.
-        Số của bạn được bảo mật, không hiển thị cho ai.
+        Chỉ cần để lại một vài thông tin. FPT sẽ liên hệ khi bạn đồng ý; số điện thoại được bảo mật
+        và không hiển thị công khai.
       </p>
       <Field label="Số điện thoại" className="mt-4">
         <input
@@ -80,7 +80,7 @@ export default function IdentifyModal({
         disabled={busy}
         className="kp-btn kp-btn-primary tap mt-4 w-full px-5 py-3 disabled:opacity-60"
       >
-        {busy ? "Đang xử lý…" : "Vào xóm thôi"}
+        {busy ? "Đang xử lý…" : "Bắt đầu thôi"}
       </button>
     </Modal>
   );

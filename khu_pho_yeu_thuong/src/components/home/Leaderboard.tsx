@@ -70,7 +70,7 @@ export default function Leaderboard({
         )}
         {neighborhoodOfMonth && (
           <div className="border-t border-cream-dark px-[17px] py-3.5 text-[13px] text-ink-soft">
-            Khu phố tử tế nhất tháng: <b className="text-ink">{neighborhoodOfMonth.name}</b> —{" "}
+            Khu phố dễ thương nhất tháng này: <b className="text-ink">{neighborhoodOfMonth.name}</b> —{" "}
             {neighborhoodOfMonth.new_signs} biển mới, {neighborhoodOfMonth.votes} lượt thương.
           </div>
         )}
@@ -93,14 +93,14 @@ export default function Leaderboard({
           ))}
         </div>
         <p className="m-0 mt-2.5 text-xs text-ink-soft">
-          Khu phố treo đủ 100% biển của các góc xóm sẽ được gắn chứng nhận “Khu phố biết thương” chuẩn 4N.
+          Khi 100% lời nhắc đã hiện diện khắp các ngõ ngách, khu phố sẽ được gắn chứng nhận “Khu phố biết thương” chuẩn 4N.
         </p>
         {certified && (
           <a
             href={`${BASE}/khu-pho/${certified.slug}`}
             className="kp-btn kp-btn-primary tap mt-3 px-5 py-1.5 text-sm"
           >
-            Chia sẻ 💛
+            Chia sẻ ngay 💛
           </a>
         )}
       </div>
@@ -108,7 +108,7 @@ export default function Leaderboard({
       {/* Tra cứu chứng nhận */}
       <div className="kp-card flex flex-col gap-2.5 p-4">
         <label htmlFor="cert-lookup" className="text-[13px] font-semibold">
-          Tra cứu: xóm bạn được chứng nhận chưa?
+          Tra cứu: Xóm mình đã đạt chuẩn 4N chưa?
         </label>
         <select
           id="cert-lookup"
@@ -130,12 +130,12 @@ export default function Leaderboard({
             }`}
           >
             {lookup.certified_4n
-              ? `${lookup.name} đã đạt “Khu phố biết thương” chuẩn 4N${
+              ? `${lookup.name} đã chính thức trở thành “Khu phố biết thương” chuẩn 4N${
                   lookup.certified_at
-                    ? ` — ${new Date(lookup.certified_at).toLocaleDateString("vi-VN")}`
+                    ? ` từ ngày ${new Date(lookup.certified_at).toLocaleDateString("vi-VN")}`
                     : ""
                 }.`
-              : `${lookup.name} chưa đạt chứng nhận — còn thiếu biển, rủ xóm viết thêm câu nhắc nha.`}
+              : `${lookup.name} còn thiếu biển để đạt chuẩn 4N. Hãy cùng góp thêm câu nhắc cho xóm mình!`}
           </div>
         )}
       </div>

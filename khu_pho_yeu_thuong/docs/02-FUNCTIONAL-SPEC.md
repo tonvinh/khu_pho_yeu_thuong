@@ -8,15 +8,15 @@ Phiên bản 1.0 · Tham chiếu design: `Khu Pho Yeu Thuong.dc.html`
 Thứ tự section từ trên xuống:
 
 1. **Header**: logo "Khu Phố Của Tôi" (icon trái tim), badge "Cùng xây khu phố biết thương".
-2. **Hero**: tiêu đề *"Muốn gửi một lời thương cho xóm mình? Viết một câu nhắc nhỏ nhẹ."* + đoạn mô tả cơ chế (chọn góc xóm → cả xóm viết câu nhắc chuẩn 4N → bấm "thương" bình chọn → câu được thương nhiều nhất thành biển thật do FPT treo — nối tiếp hơn **10.000 lời nhắc**). 3 nút:
+2. **Hero**: tiêu đề *"Muốn gửi một lời thương cho xóm mình? Hãy viết một câu nhắc nhỏ nhẹ nhé!"* + đoạn mô tả cơ chế (chọn góc xóm → cả xóm viết câu nhắc chuẩn 4N → bấm "Thương" bình chọn → câu được nhiều lượt "Thương" nhất được FPT đưa lên biển thật — nối tiếp hơn **10.000 lời nhắc**). 3 nút:
    - `+ Gửi lời nhắc cho xóm mình` (primary, đỏ gạch) → mở luồng viết câu nhắc
-   - `Xem góc xóm đang chờ` (secondary) → cuộn tới danh sách vấn đề
-   - `🧧 Ưu đãi cư dân` (tertiary) → cuộn tới section lead tầng 2
-3. **Bộ đếm thời gian thực** (4 ô): `biển đã treo` · `góc xóm đang chờ` · `người đóng góp` · `khu phố tham gia`. Cập nhật ngay khi có hoạt động mới (polling/SSE).
+   - `Xem góc phố đang chờ` (secondary) → cuộn tới danh sách vấn đề
+   - `🧧 Quà dành cho cư dân` (tertiary) → cuộn tới section lead tầng 2
+3. **Bộ đếm thời gian thực** (4 ô): `biển đã treo` · `góc phố đang chờ` · `người đóng góp` · `khu phố tham gia`. Cập nhật ngay khi có hoạt động mới (polling/SSE).
 4. **Bản đồ khu phố** (§1)
 5. **Danh sách vấn đề** (§2)
-6. **Bảng xếp hạng "Đại sứ khu phố"** + "Khu phố tử tế nhất tháng" (§5)
-7. **Section "Ưu đãi cư dân"** — lead tầng 2 (§7.2)
+6. **Bảng xếp hạng "Đại sứ khu phố"** + "Khu phố dễ thương nhất tháng này" (§5)
+7. **Section "Quà dành cho cư dân"** — lead tầng 2 (§7.2)
 8. **Footer**: hotline 1900 6600, link chính sách dữ liệu, credit chiến dịch.
 
 ---
@@ -36,7 +36,7 @@ Thứ tự section từ trên xuống:
 - **Bấm vào địa chỉ phố/xóm (khu phố)** → xem trạng thái chứng nhận **"Khu phố biết thương" chuẩn 4N** (§6).
 - Ảnh gốc và ảnh địa điểm do admin quản lý (04-ADMIN-SPEC §10); import hàng loạt qua template (04 §11).
 
-## 2. Danh sách vấn đề ("góc xóm đang chờ")
+## 2. Danh sách vấn đề ("góc phố đang chờ")
 
 Từng **thẻ vấn đề** hiển thị:
 - Icon + **loại vấn đề** (taxonomy §2.1) · **vị trí** (VD "Hẻm 42 Lê Lợi")
@@ -45,7 +45,7 @@ Từng **thẻ vấn đề** hiển thị:
 - **Số câu đề xuất** (VD "2 câu đề xuất") và **lượt bình chọn cao nhất** (VD "★ 34 bình chọn")
 - Bấm thẻ → mở drawer vấn đề (§3)
 
-Nút `+ Đề xuất vấn đề khu mình` đứng đầu danh sách → mở form đề xuất (§4).
+Nút `+ Đề xuất khu phố mới` đứng đầu danh sách → mở form đề xuất (§4).
 
 ### 2.1 Taxonomy loại vấn đề (danh mục đóng — không cho nhập tự do)
 | Mã | Nhãn | Icon gợi ý |
@@ -59,7 +59,7 @@ Nút `+ Đề xuất vấn đề khu mình` đứng đầu danh sách → mở f
 | `giup_nhau` | Giúp nhau, san sẻ | 🤝 |
 | `nguoi_gia` | Ông bà, người già | 👵 |
 
-Lý do danh mục đóng: *"chỉ nhận vấn đề an toàn đời thường; mọi đề xuất hiển thị sau khi qua duyệt — đây là bước giữ trung lập và đúng mực"* (copy hiển thị ngay trong form).
+Lý do danh mục đóng: *"Khu Phố Của Tôi tiếp nhận những góp ý về an toàn và nếp sống khu phố. Mỗi đề xuất sẽ được xem xét trước khi hiển thị để lời nhắc luôn phù hợp và văn minh."* (copy hiển thị ngay trong form).
 
 ## 3. Drawer vấn đề — Viết & bình chọn câu nhắc (Bước 2)
 
@@ -67,7 +67,7 @@ Khi mở một vấn đề:
 - Header: icon loại + tên loại + vị trí, nút đóng ✕.
 - **Danh sách câu nhắc đang chờ bình chọn**, mỗi câu gồm: nội dung, tác giả (tên hiển thị, VD "— Cô Tám tạp hoá", "— Minh (lớp 11)"), badge `✓ Đạt chuẩn 4N`, và nút/bộ đếm **thương** (VD "34 thương"). Nếu chưa có câu: *"Chưa có câu nào. Bạn viết câu đầu tiên cho điểm này nhé!"*
 - **Ô "Viết câu nhắc của bạn"** (textarea, placeholder: *"VD: Đi chậm chút nha, trong hẻm có đứa nhỏ đang chơi..."*).
-- **Checklist 4N tự soát**: 4 chip tĩnh `Nhắc · Nhở · Nhỏ · Nhẹ` hiển thị như gợi ý để người viết tự soát (không chấm tự động — đã chốt Q2); chú thích *"Câu của bạn sẽ được đội chiến dịch duyệt theo chuẩn 4N trước khi hiển thị"*. (Định nghĩa 4N cho người duyệt: 06-CONTENT-COPY §3.)
+- **Checklist 4N tự soát**: 4 chip tĩnh `Nhắc · Nhở · Nhỏ · Nhẹ` hiển thị như gợi ý để người viết tự soát (không chấm tự động — đã chốt Q2); chú thích *"Câu nhắc của bạn sẽ được FPT chúng tớ duyệt theo chuẩn 4N trước khi hiển thị lên website"*. (Định nghĩa 4N cho người duyệt: 06-CONTENT-COPY §3.)
 - **Khối lead tầng 1** (§7.1): chỉ còn checkbox opt-in ưu đãi — SĐT đã có từ bước định danh (§8), KHÔNG hỏi lại.
 - Chú thích đạo đức: 💛 *"Giữ cho dễ thương: gọi tên một việc tốt cụ thể, không nêu đích danh người/nhà nào. Câu được chọn sẽ qua bộ lọc 4N và đội ngũ chiến dịch duyệt trước khi lên biển."*
 - Nút `Gửi câu nhắc` (primary).
@@ -77,27 +77,27 @@ Khi mở một vấn đề:
 - 1 tài khoản = 1 phiếu thương cho mỗi câu (bấm lại để bỏ thương — toggle).
 - Không tự thương câu của chính mình (ẩn/disable nút trên câu của mình).
 
-## 4. Form "Đề xuất vấn đề khu mình" (Bước 1)
+## 4. Form "Góp một điều xóm mình nên để ý" (Bước 1)
 
 Modal/drawer gồm:
-- Tiêu đề: **"Đề xuất vấn đề khu mình"** · phụ đề "Chọn loại vấn đề an toàn đời thường"
+- Tiêu đề: **"Góp một điều xóm mình nên để ý"** · phụ đề "Chọn vấn đề bạn muốn viết lời nhắc"
 - **Loại vấn đề**: chip chọn 1 trong taxonomy §2.1
 - **Vị trí (ngõ/hẻm/ngách)**: text, placeholder *"VD: Hẻm 25 Nguyễn Trãi"* — bắt buộc
 - **Mô tả ngắn (không nêu đích danh ai)**: textarea, placeholder *"VD: Xe hay phóng nhanh đoạn cua, gần chỗ trẻ con chơi."*
 - Cảnh báo danh mục đóng (copy §2.1)
-- Nút `Gửi đề xuất → vào danh sách chờ`
+- Nút `Gửi góp ý cho xóm mình`
 - Sau khi gửi: đề xuất ở trạng thái `pending_review`, **chỉ hiển thị công khai sau khi admin duyệt**.
 - Yêu cầu định danh SĐT (§8) trước khi gửi (để tính điểm + chặn spam; tối đa 3 đề xuất được tính điểm/tuần — vẫn cho gửi quá 3 nhưng không cộng điểm, xem 05-SCORING-RULES).
 
 ## 5. Bảng xếp hạng
 
 ### 5.1 "Đại sứ khu phố" — "Cây bút của khu phố"
-- Tiêu đề: 🏆 **"Cây bút của khu phố"** · phụ đề *"Người viết câu nhắc được cả xóm thương nhất"*.
+- Tiêu đề: 🏆 **"Cây bút của khu phố"** · phụ đề *"Những cây bút nhận được nhiều lượt “Thương” nhất từ bà con"*.
 - Top 5–10, mỗi dòng: hạng, tên hiển thị (VD "Bà Liên", "Chú Ba xe ôm"), thống kê ("1 câu được treo · 52 lượt thương"), **điểm** (VD "82đ").
 - Điểm tính theo công thức trong 05-SCORING-RULES, cập nhật thời gian thực.
 
-### 5.2 "Khu phố tử tế nhất tháng"
-- Dòng tổng kết dưới bảng: *"Khu phố tử tế nhất tháng: **Phường Lê Lợi** — 3 biển mới, 76 lượt thương"*.
+### 5.2 "Khu phố dễ thương nhất tháng này"
+- Dòng tổng kết dưới bảng: *"Khu phố dễ thương nhất tháng này: **Phường Lê Lợi** — 3 biển mới, 76 lượt thương"*.
 - Điểm khu phố = tổng điểm cư dân trong khu + số biển mới treo trong khu (chu kỳ tháng).
 
 ## 6. Chứng nhận "Khu phố biết thương" chuẩn 4N
@@ -111,22 +111,22 @@ Modal/drawer gồm:
 ## 7. Luồng thu lead (2 tầng)
 
 ### 7.1 Tầng 1 — Lead "mềm" trong drawer viết câu nhắc
-- **SĐT đã có từ bước định danh (§8) — không hỏi lại.** Drawer chỉ hiển thị **checkbox opt-in riêng biệt** (mặc định KHÔNG tick): *"Tôi muốn nhận ưu đãi dành riêng cho cư dân khu phố biết thương từ FPT."* — chú thích *"Tuỳ chọn riêng, không ảnh hưởng đến câu nhắc của bạn."*
+- **SĐT đã có từ bước định danh (§8) — không hỏi lại.** Drawer chỉ hiển thị **checkbox opt-in riêng biệt** (mặc định KHÔNG tick): *"Tôi đồng ý để FPT liên hệ tư vấn ưu đãi dành riêng cho cư dân “Khu phố biết thương”."* — chú thích *"Tuỳ chọn riêng, không ảnh hưởng đến câu nhắc của bạn."*
 - Tick → tạo lead `source = soft_drawer` từ SĐT định danh (server ghi `phone_encrypted` với purpose `lead`). Không tick → không có lead, không lưu SĐT cho mục đích liên hệ.
 - **"Báo tin vui" khi câu được treo: KHÔNG gửi SMS (đã chốt Q1).** Thay bằng thông báo in-web: khi khách quay lại (cookie nhận diện), hiện banner 🎉 *"Câu của bạn đã được treo tại {vị trí}!"* + nút Chia sẻ (§11) + nút xem trên bản đồ.
 
-### 7.2 Tầng 2 — Lead chủ động: section "Ưu đãi cư dân" cuối trang
-- Badge: 🧧 *"Món quà nhỏ cho người góp câu thương"*. Tiêu đề: **"FPT muốn gửi lại xóm mình một điều dễ thương"**.
-- Mô tả: FPT xin gửi lại ưu đãi dành riêng cho cư dân khu phố biết thương: gói Internet, Truyền hình và FPT Play với mức giá "tình làng nghĩa xóm". Chỉ khi bạn muốn, tụi mình mới liên hệ.
+### 7.2 Tầng 2 — Lead chủ động: section "Quà dành cho cư dân" cuối trang
+- Badge: 🧧 *"Món quà nhỏ gửi người góp lời thương"*. Tiêu đề: **"FPT muốn gửi lại xóm mình một điều dễ thương"**.
+- Mô tả: FPT dành riêng cho cư dân "Khu phố biết thương" những ưu đãi khi đăng ký Internet, Truyền hình và FPT Play. Khi muốn tìm hiểu thêm, bạn chỉ cần để lại thông tin để FPT liên hệ tư vấn.
 - Ghi chú riêng tư (bắt buộc hiển thị): 🔒 *"Số điện thoại của bạn chỉ dùng để gửi ưu đãi này khi bạn chủ động đồng ý — không dùng cho bất kỳ mục đích nào khác, không tự động gọi mời."*
 - Form:
   - **Tên bạn (hoặc tên cả nhà hay gọi)** — placeholder *"VD: Cô Tám, anh Dũng, nhà số 7..."*
   - **Số điện thoại** — placeholder *"VD: 090xxxxxxx"* (bắt buộc, validate đầu số VN)
-  - **Khu phố của bạn (để ưu đãi đúng khu vực)** — placeholder *"VD: Hẻm 42 Lê Lợi, P. Bàn Cờ"*
-  - **Bạn đang quan tâm điều gì cho nhà mình?** — chip đa chọn: `📶 Internet cho cả nhà` · `📺 Internet + Truyền hình` · `🎬 Gói FPT Play` · `📷 Internet + Camera`
-  - Checkbox opt-in (copy như tầng 1) + chú thích *"Không tick, không sao cả — câu nhắc của bạn vẫn được trân trọng như nhau."*
+  - **Bạn đang ở khu phố nào?** — placeholder *"VD: Hẻm 42 Lê Lợi, P. Bàn Cờ"*
+  - **Nhà mình đang muốn tìm hiểu dịch vụ nào?** — chip đa chọn: `📶 Internet cho cả nhà` · `📺 Internet + Truyền hình` · `🎬 Gói FPT Play` · `📷 Internet + Camera`
+  - Checkbox opt-in (copy như tầng 1) — **không kèm chú thích** (bỏ theo wording 28/7)
   - Nút `Nhận ưu đãi của xóm mình`
-- Dòng cuối: *"Đang là khách FPT và cần hỗ trợ kỹ thuật? Gọi tổng đài **1900 6600** — không cần điền form này."*
+- Dòng cuối: *"Đã là khách hàng của FPT và cần hỗ trợ kỹ thuật? Gọi **1900 6600**, không cần điền biểu mẫu này."*
 - `lead.source = active_section`.
 
 ## 8. Định danh khách hàng — SĐT băm + cookie (KHÔNG dùng OTP)
@@ -134,7 +134,7 @@ Modal/drawer gồm:
 **Nguyên tắc:** không gửi OTP. Khách hàng nhập SĐT một lần; hệ thống **băm SĐT** làm khoá định danh và cấp **cookie phiên** để nhận diện các lần truy cập sau. Ưu tiên cao nhất là bảo mật SĐT.
 
 ### 8.1 Luồng lần đầu
-1. Khi thực hiện hành động cần định danh (gửi đề xuất, gửi câu nhắc, bấm thương, gửi lead) → mở modal **"Cho xóm biết bạn là ai"**: ô SĐT + tên hiển thị (VD "Cô Tám tạp hoá") + chọn khu phố. Xem bản đồ/danh sách/bảng xếp hạng: không cần.
+1. Khi thực hiện hành động cần định danh (gửi đề xuất, gửi câu nhắc, bấm thương, gửi lead) → mở modal **"Để FPT gửi ưu đãi đến bạn"**: ô SĐT + tên hiển thị (VD "Cô Tám tạp hoá") + chọn khu phố. Xem bản đồ/danh sách/bảng xếp hạng: không cần.
 2. Server chuẩn hoá SĐT (+84) → tính `phone_hash = HMAC-SHA256(phone_chuẩn_hoá, PEPPER)` với PEPPER là secret phía server (secret manager, không nằm trong code/DB). Upsert user theo `phone_hash` — **1 SĐT = 1 tài khoản**.
 3. Server tạo **session token ngẫu nhiên 256-bit** (không phải hash SĐT), lưu `sha256(token)` vào bảng sessions, và set cookie:
    `kp_session` — `HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=180 ngày`.
