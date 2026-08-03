@@ -27,6 +27,13 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
   vô hiệu phiếu cư dân mới nhất. Điểm ghi/thu hồi kèm theo qua `recordVoteReceivedBulk` /
   `invalidateVoteReceivedBulk` (score-service), có audit_logs `votes_adjust`.
 
+- Trang admin "Nội dung" (`/admin/noi-dung`): sửa text trang chủ (hero, khu "Câu chuyện
+  chiến dịch" + video YouTube + ảnh KV, khối ưu đãi lead). Bảng `site_content` (migration
+  008) CHỈ lưu ghi đè key–value — key vắng/xoá → fallback mặc định trong
+  `src/lib/site-content.ts` (mặc định lấy từ copy.ts nên copy gốc vẫn là nguồn chuẩn).
+  API: GET/PATCH `/api/admin/site-content`, ảnh KV POST/DELETE `/api/admin/site-content/kv`.
+  Trang chủ SSR nội dung qua `getSiteContent()` → `HomeData.content`.
+
 ## Điều chỉnh 1/8 (docs/dieuchinh.1.8.xlsx — sheet ACTION LIST)
 
 - Danh mục còn ĐÚNG 6 chủ đề (`src/lib/taxonomy.ts`); migration 002 remap 8 mã cũ → 6 mã mới.

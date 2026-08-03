@@ -24,10 +24,14 @@ export default function Leaderboard({
 }) {
   const [lookupId, setLookupId] = useState<string | null>(null);
   const [lookupText, setLookupText] = useState("");
+  const [certIdx, setCertIdx] = useState(0);
   const lookup = neighborhoods.find((n) => n.id === lookupId) ?? null;
   const lookupMiss = !lookup && lookupText.trim().length > 0 &&
     !neighborhoods.some((n) => n.name.toLowerCase().includes(lookupText.trim().toLowerCase()));
   const certified = neighborhoods.find((n) => n.certified_4n) ?? null;
+  // Slideshow ảnh chứng nhận: các khu đã có ảnh (admin upload) — bấm ảnh để chuyển khu kế
+  const certNbs = neighborhoods.filter((n) => n.certificate_url);
+  const cert = certNbs.length > 0 ? certNbs[certIdx % certNbs.length] : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,32 +84,73 @@ export default function Leaderboard({
         )}
       </div>
 
-      {/* Biển chứng nhận 4N */}
+      {/* Biển chứng nhận 4N — có ảnh: slideshow bấm để chuyển khu; chưa có: biển placeholder */}
       <div className="rounded-[18px] border border-[#CFE2D5] bg-[#E9F1EB] p-5 text-center">
         <div className="text-[12.5px] text-ink-soft">Chứng nhận “Khu phố biết thương” chuẩn 4N</div>
-        <div className="mt-2.5 inline-block -rotate-[1.5deg] rounded-xl border-[1.5px] border-olive bg-white px-[18px] py-[13px] font-display text-[17px] font-semibold shadow-kp-s">
-          {certified ? certified.name : "Xóm của bạn?"}
-        </div>
-        <div className="mt-3 flex justify-center gap-1.5">
-          {["Nhắc", "Nhở", "Nhỏ", "Nhẹ"].map((n) => (
-            <span
-              key={n}
-              className="rounded-full bg-white px-2.5 py-1 text-[11.5px] font-semibold text-olive-dark"
+        {cert ? (
+          <>
+            <button
+              onClick={() => setCertIdx((i) => (i + 1) % certNbs.length)}
+              title={certNbs.length > 1 ? "Bấm để xem khu phố tiếp theo" : cert.name}
+              className="tap mt-2.5 block w-full cursor-pointer overflow-hidden rounded-xl border-[1.5px] border-olive bg-white shadow-kp-s transition hover:-translate-y-0.5 hover:shadow-kp"
             >
-              {n}
-            </span>
-          ))}
-        </div>
-        <p className="m-0 mt-2.5 text-xs text-ink-soft">
-          Khi 100% lời nhắc đã hiện diện khắp các ngõ ngách, khu phố sẽ được gắn chứng nhận “Khu phố biết thương” chuẩn 4N.
-        </p>
-        {certified && (
-          <a
-            href={`${BASE}/khu-pho/${certified.slug}`}
-            className="kp-btn kp-btn-primary tap mt-3 px-5 py-1.5 text-sm"
-          >
-            Chia sẻ ngay 💛
-          </a>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={cert.certificate_url!}
+                alt={`Chứng nhận 4N — ${cert.name}`}
+                className="h-44 w-full object-cover"
+              />
+            </button>
+            <div className="mt-2.5 font-display text-[15px] font-semibold">{cert.name}</div>
+            {certNbs.length > 1 && (
+              <div className="mt-2 flex items-center justify-center gap-1.5">
+                {certNbs.map((n, i) => (
+                  <span
+                    key={n.id}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === certIdx % certNbs.length ? "w-4 bg-olive" : "w-1.5 bg-[#CFE2D5]"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            {certNbs.length > 1 && (
+              <p className="m-0 mt-1.5 text-[11.5px] text-ink-soft">Bấm vào ảnh để xem khu phố tiếp theo</p>
+            )}
+            <a
+              href={`${BASE}/khu-pho/${cert.slug}`}
+              className="kp-btn kp-btn-primary tap mt-3 px-5 py-1.5 text-sm"
+            >
+              Chia sẻ ngay 💛
+            </a>
+          </>
+        ) : (
+          <>
+            <div className="mt-2.5 inline-block -rotate-[1.5deg] rounded-xl border-[1.5px] border-olive bg-white px-[18px] py-[13px] font-display text-[17px] font-semibold shadow-kp-s">
+              {certified ? certified.name : "Xóm của bạn?"}
+            </div>
+            <div className="mt-3 flex justify-center gap-1.5">
+              {["Nhắc", "Nhở", "Nhỏ", "Nhẹ"].map((n) => (
+                <span
+                  key={n}
+                  className="rounded-full bg-white px-2.5 py-1 text-[11.5px] font-semibold text-olive-dark"
+                >
+                  {n}
+                </span>
+              ))}
+            </div>
+            <p className="m-0 mt-2.5 text-xs text-ink-soft">
+              Khi 100% lời nhắc đã hiện diện khắp các ngõ ngách, khu phố sẽ được gắn chứng nhận “Khu phố biết thương” chuẩn 4N.
+            </p>
+            {certified && (
+              <a
+                href={`${BASE}/khu-pho/${certified.slug}`}
+                className="kp-btn kp-btn-primary tap mt-3 px-5 py-1.5 text-sm"
+              >
+                Chia sẻ ngay 💛
+              </a>
+            )}
+          </>
         )}
       </div>
 

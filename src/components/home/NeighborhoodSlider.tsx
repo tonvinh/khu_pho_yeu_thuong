@@ -1,10 +1,12 @@
 "use client";
 // Thay bản đồ khu phố bằng slide ảnh khu phố tiêu biểu (dieuchinh.1.8 #1, ORDER #2):
 // chọn phường → pack [ảnh + tag trạng thái + tên + địa chỉ]. Chỉ hiện khu phố admin
-// bật "tiêu biểu"; ảnh tổng quan tối đa 4 (neighborhood_photos, kích thước đồng nhất,
-// admin upload); chưa có ảnh → bản đồ cách điệu / nền placeholder.
+// bật "tiêu biểu", xếp theo featured_position (server ORDER BY, NULL đứng cuối);
+// ảnh tổng quan tối đa 4 (neighborhood_photos, kích thước đồng nhất, admin upload);
+// chưa có ảnh → bản đồ cách điệu / nền placeholder. Mũi tên & auto-slide 4s chạy hết
+// ảnh khu đang xem rồi mới lăn sang khu kế — chip khu phố phía trên nhảy theo.
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { MapData } from "./types";
+import type { MapData, MapNeighborhood } from "./types";
 import { formatAddress } from "@/lib/address";
 
 // 3 trạng thái khu phố theo ORDER #2 (màu xanh lá / xanh dương / cam)
@@ -61,13 +63,38 @@ export default function NeighborhoodSlider({
     return active ? NB_STATUS.has_suggestions : NB_STATUS.empty;
   }, [map.pins, nb]);
 
-  if (!nb) return null;
   // Tối đa 4 ảnh tổng quan (kích thước đồng nhất) — chưa có thì dùng bản đồ cách điệu
-  const photos = nb.photo_urls.length > 0 ? nb.photo_urls : nb.map_url ? [nb.map_url] : [];
+  const photosOf = (n: MapNeighborhood) =>
+    n.photo_urls.length > 0 ? n.photo_urls : n.map_url ? [n.map_url] : [];
+  const photos = nb ? photosOf(nb) : [];
   const photo = photos[Math.min(photoIdx, photos.length - 1)] ?? null;
   const goto = (i: number) => { setIndex(i); setPhotoIdx(0); };
-  const prev = () => goto((index - 1 + list.length) % list.length);
-  const next = () => goto((index + 1) % list.length);
+  // Mũi tên trượt TRONG ảnh của khu đang xem trước; hết ảnh mới lăn sang khu kế
+  // (chip phía trên tự nhảy theo vì index đổi). Lùi từ ảnh đầu → ảnh CUỐI khu trước.
+  const prev = () => {
+    if (photoIdx > 0) return setPhotoIdx(photoIdx - 1);
+    const i = (index - 1 + list.length) % list.length;
+    setIndex(i);
+    setPhotoIdx(Math.max(0, photosOf(list[i]).length - 1));
+  };
+  const next = () => {
+    if (photoIdx < photos.length - 1) return setPhotoIdx(photoIdx + 1);
+    goto((index + 1) % list.length);
+  };
+
+  // Tự động trượt: mỗi 4s sang ảnh kế (hết ảnh → khu kế). Người dùng bấm tay thì
+  // photoIdx/index đổi → effect chạy lại, hẹn giờ tính lại từ đầu.
+  useEffect(() => {
+    if (list.length <= 1 && photos.length <= 1) return;
+    const t = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      next();
+    }, 4000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, photoIdx, list]);
+
+  if (!nb) return null;
 
   return (
     <div className="kp-card kp-card-3 relative overflow-hidden border border-cream-dark bg-gradient-to-br from-[#FBF7EF] to-[#EFE6D6] p-3.5">

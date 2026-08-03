@@ -3,7 +3,7 @@
 // (1) đề xuất góc phố mới; (2) viết câu nhắc / vote câu nhắc.
 // Chỉ ghi lead khi tick opt-in (quy tắc cứng 5); hiện tối đa 1 lần mỗi thiết bị.
 import { useState } from "react";
-import type { Me } from "./types";
+import type { Me, SiteContentData } from "./types";
 import { apiSend } from "../client-api";
 import { COPY } from "@/lib/copy";
 import { Modal } from "./IdentifyModal";
@@ -11,10 +11,12 @@ import { Field } from "./ui";
 
 export default function LeadPromptModal({
   me,
+  content,
   onClose,
   showToast,
 }: {
   me: Me | null;
+  content: SiteContentData;
   onClose: () => void;
   showToast: (msg: string) => void;
 }) {
@@ -70,7 +72,7 @@ export default function LeadPromptModal({
         <span>{COPY.optInCheckbox}</span>
       </label>
       <p className="m-0 mt-2.5 rounded-xl border border-dashed border-cream-dark bg-white px-[13px] py-2.5 text-[11.5px] leading-relaxed text-ink-soft">
-        {COPY.leadPrivacy}
+        {content.lead_privacy}
       </p>
 
       {needSwitch && (

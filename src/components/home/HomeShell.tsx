@@ -4,7 +4,7 @@
 // hero trái chữ + phải bản đồ, mục ví dụ minh hoạ, mục "Cùng đóng góp một câu…" 2 cột,
 // khối ưu đãi gradient, footer gọn giữa trang.
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { HomeData, Me, NotificationItem } from "./types";
+import type { HomeData, IssueCard, Me, NotificationItem } from "./types";
 import { apiGet, apiSend, BASE } from "../client-api";
 import { COPY } from "@/lib/copy";
 import { EXAMPLE_SIGNS } from "@/lib/examples";
@@ -56,13 +56,15 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           "/api/v1/leaderboard"
         ),
       ]);
-      setData({
+      // content (nội dung admin sửa) chỉ SSR lúc đầu — polling giữ nguyên bản đang có
+      setData((prev) => ({
         counters,
         issues: issuesRes.issues,
         map: mapRes,
         ambassadors: lb.ambassadors,
         neighborhoodOfMonth: lb.neighborhood_of_month,
-      });
+        content: prev.content,
+      }));
     } catch {
       /* giữ dữ liệu cũ khi lỗi mạng */
     }
@@ -109,6 +111,29 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
     pendingAction.current = null;
     if (fn) window.setTimeout(fn, 50);
   }, []);
+
+  /** Thương nhanh từ card (không mở drawer): toggle ngay trên UI, lỗi thì revert */
+  const toggleIssueVote = useCallback(
+    (it: IssueCard) =>
+      requireIdentity(async () => {
+        setData((prev) => ({
+          ...prev,
+          issues: prev.issues.map((x) => (x.id === it.id ? { ...x, voted: !it.voted } : x)),
+        }));
+        try {
+          const res = await apiSend<{ voted: boolean }>("POST", `/api/v1/issues/${it.id}/vote`);
+          refresh();
+          if (res.voted) maybeShowLeadPrompt();
+        } catch (e) {
+          setData((prev) => ({
+            ...prev,
+            issues: prev.issues.map((x) => (x.id === it.id ? { ...x, voted: it.voted } : x)),
+          }));
+          if (e instanceof Error && e.message !== "api") showToast(e.message);
+        }
+      }),
+    [requireIdentity, refresh, maybeShowLeadPrompt, showToast]
+  );
 
   const dismissNotif = useCallback(async (id: string) => {
     setNotifs((ns) => ns.filter((n) => n.id !== id));
@@ -216,9 +241,9 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         <div className="flex flex-col items-start">
           <Eyebrow>● Cùng xây khu phố biết thương</Eyebrow>
           <h1 className="m-0 mt-4 font-display text-[clamp(30px,4.4vw,46px)] font-extrabold leading-[1.15] tracking-[-0.01em]">
-            {COPY.heroTitle1} <span className="text-brick">{COPY.heroTitle2}</span>
+            {data.content.hero_title_1} <span className="text-brick">{data.content.hero_title_2}</span>
           </h1>
-          <p className="m-0 mt-3 max-w-[30em] text-[16.5px] text-ink-soft">{COPY.heroBody}</p>
+          <p className="m-0 mt-3 max-w-[30em] text-[16.5px] text-ink-soft">{data.content.hero_body}</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <button
               onClick={() => requireIdentity(() => setProposeOpen(true))}
@@ -242,15 +267,12 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         />
       </header>
 
-      {/* ===== TVC / KV CHIẾN DỊCH (#19 — demo chờ final) ===== */}
-      <CampaignMedia />
+      {/* ===== TVC / KV CHIẾN DỊCH (#19) — nội dung sửa ở /admin/noi-dung ===== */}
+      <CampaignMedia content={data.content} />
 
       {/* ===== VÍ DỤ MINH HOẠ: biển treo mẫu ===== */}
       <section className="mx-auto max-w-[1120px] px-5 py-7">
-        <SectionHead
-          title="Lời nhắc khi lên biển trông như thế nào?"
-          hint="Cùng ngắm qua vài mẫu minh họa với những câu nhắc chuẩn tinh thần 4N"
-        />
+        <SectionHead title="Lời nhắc khi lên biển trông như thế nào?" />
         <div className="grid grid-cols-1 items-start gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           {featured && (
             <HangSign
@@ -277,9 +299,9 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           />
           <button
             onClick={() => requireIdentity(() => setProposeOpen(true))}
-            className="kp-btn kp-btn-outline tap px-4 py-2 text-sm"
+            className="kp-btn kp-btn-primary tap px-5 py-3"
           >
-            + Đề xuất góc phố mới
+            {COPY.ctaMain}
           </button>
         </div>
         <div className="mt-2 grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
@@ -287,6 +309,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
             issues={data.issues}
             onOpenIssue={(id) => setDrawerIssueId(id)}
             onPropose={() => requireIdentity(() => setProposeOpen(true))}
+            onToggleVote={toggleIssueVote}
           />
           <Leaderboard
             ambassadors={data.ambassadors}
@@ -298,7 +321,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
       {/* ===== ƯU ĐÃI CƯ DÂN ===== */}
       <section id="uu-dai" className="mx-auto max-w-[1120px] px-5 py-7">
-        <LeadSection me={me} requireIdentity={requireIdentity} showToast={showToast} />
+        <LeadSection me={me} content={data.content} requireIdentity={requireIdentity} showToast={showToast} />
       </section>
 
       {/* ===== FOOTER (prototype: gọn, giữa trang) ===== */}
@@ -351,7 +374,12 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         />
       )}
       {leadPromptOpen && (
-        <LeadPromptModal me={me} onClose={() => setLeadPromptOpen(false)} showToast={showToast} />
+        <LeadPromptModal
+          me={me}
+          content={data.content}
+          onClose={() => setLeadPromptOpen(false)}
+          showToast={showToast}
+        />
       )}
 
       {/* Toast (prototype .toast: nền ink, đáy giữa) — trên cả modal z-50 */}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { q, tx } from "@/lib/db";
 import { jsonError, requireUserWrite } from "@/lib/api";
+import { getSessionUser } from "@/lib/session";
 import { CATEGORY_CODES } from "@/lib/taxonomy";
 import { resolveNeighborhoodId } from "@/lib/neighborhoods";
 
@@ -20,6 +21,10 @@ export async function GET(req: NextRequest) {
     params.push(neighborhood);
     where += ` AND i.neighborhood_id = $${params.length}`;
   }
+  // Người xem (cookie kp_session) — đánh dấu góc phố đã bình chọn hay chưa
+  const viewer = await getSessionUser(req);
+  params.push(viewer?.id ?? "00000000-0000-0000-0000-000000000000");
+  const viewerParam = `$${params.length}`;
   const rows = await q(
     `SELECT i.id, i.category, i.location_text, i.description, i.status,
        i.neighborhood_id, n.name AS neighborhood_name,
@@ -32,7 +37,9 @@ export async function GET(req: NextRequest) {
        (SELECT s.content FROM suggestions s
           LEFT JOIN votes v ON v.suggestion_id = s.id AND v.is_valid
           WHERE s.issue_id = i.id AND s.status IN ('approved','selected','produced','installed')
-          GROUP BY s.id ORDER BY count(v.id) DESC, s.created_at ASC LIMIT 1) AS top_quote
+          GROUP BY s.id ORDER BY count(v.id) DESC, s.created_at ASC LIMIT 1) AS top_quote,
+       EXISTS (SELECT 1 FROM votes v JOIN suggestions s ON s.id = v.suggestion_id
+          WHERE s.issue_id = i.id AND v.user_id = ${viewerParam}) AS voted
      FROM issues i JOIN neighborhoods n ON n.id = i.neighborhood_id
      WHERE ${where}
      ORDER BY (i.status = 'signed'), i.approved_at DESC NULLS LAST`,

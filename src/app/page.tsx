@@ -2,6 +2,8 @@
 import { getCounters } from "@/lib/counters";
 import { q } from "@/lib/db";
 import { getAmbassadors, getNeighborhoodOfMonth } from "@/lib/leaderboard";
+import { getSessionUser } from "@/lib/session";
+import { getSiteContent } from "@/lib/site-content";
 import { imgUrl } from "@/lib/storage";
 import HomeShell from "@/components/home/HomeShell";
 import type { HomeData } from "@/components/home/types";
@@ -9,7 +11,10 @@ import type { HomeData } from "@/components/home/types";
 export const dynamic = "force-dynamic";
 
 async function loadHomeData(): Promise<HomeData> {
-  const [counters, issues, neighborhoods, pins, ambassadors, nom] = await Promise.all([
+  // Người xem hiện tại (cookie kp_session) — để đánh dấu góc phố đã bình chọn hay chưa
+  const viewer = await getSessionUser();
+  const viewerId = viewer?.id ?? "00000000-0000-0000-0000-000000000000";
+  const [counters, issues, neighborhoods, pins, ambassadors, nom, content] = await Promise.all([
     getCounters(),
     q(`SELECT i.id, i.category, i.location_text, i.description, i.status,
          i.neighborhood_id, n.name AS neighborhood_name,
@@ -21,12 +26,15 @@ async function loadHomeData(): Promise<HomeData> {
          (SELECT s.content FROM suggestions s
             LEFT JOIN votes v ON v.suggestion_id = s.id AND v.is_valid
             WHERE s.issue_id = i.id AND s.status IN ('approved','selected','produced','installed')
-            GROUP BY s.id ORDER BY count(v.id) DESC, s.created_at ASC LIMIT 1) AS top_quote
+            GROUP BY s.id ORDER BY count(v.id) DESC, s.created_at ASC LIMIT 1) AS top_quote,
+         EXISTS (SELECT 1 FROM votes v JOIN suggestions s ON s.id = v.suggestion_id
+            WHERE s.issue_id = i.id AND v.user_id = $1) AS voted
        FROM issues i JOIN neighborhoods n ON n.id = i.neighborhood_id
        WHERE i.status IN ('waiting','voting','signed')
-       ORDER BY (i.status = 'signed'), i.approved_at DESC NULLS LAST`),
+       ORDER BY (i.status = 'signed'), i.approved_at DESC NULLS LAST`,
+      [viewerId]),
     q(`SELECT n.id, n.name, n.ward, n.city, n.slug, n.certified_4n, n.certified_at,
-         n.is_featured, n.map_stylized_key,
+         n.is_featured, n.map_stylized_key, n.certificate_photo_key,
          COALESCE((SELECT json_agg(p.photo_key ORDER BY p.position)
            FROM neighborhood_photos p WHERE p.neighborhood_id = n.id), '[]'::json) AS photo_keys
        FROM neighborhoods n WHERE NOT n.hidden
@@ -36,6 +44,7 @@ async function loadHomeData(): Promise<HomeData> {
          AND pin_x IS NOT NULL AND pin_y IS NOT NULL`),
     getAmbassadors(10),
     getNeighborhoodOfMonth(),
+    getSiteContent(),
   ]);
 
   return {
@@ -52,12 +61,14 @@ async function loadHomeData(): Promise<HomeData> {
         certified_at: n.certified_at as string | null,
         is_featured: n.is_featured as boolean,
         map_url: imgUrl(n.map_stylized_key as string | null),
+        certificate_url: imgUrl(n.certificate_photo_key as string | null),
         photo_urls: (n.photo_keys as string[]).map((k) => imgUrl(k)!),
       })),
       pins: pins as HomeData["map"]["pins"],
     },
     ambassadors,
     neighborhoodOfMonth: nom,
+    content,
   };
 }
 

@@ -16,10 +16,12 @@ export default function IssueList({
   issues,
   onOpenIssue,
   onPropose,
+  onToggleVote,
 }: {
   issues: IssueCard[];
   onOpenIssue: (id: string) => void;
   onPropose: () => void;
+  onToggleVote: (it: IssueCard) => void;
 }) {
   const list = [...issues].sort((a, b) => ORDER[a.status] - ORDER[b.status]);
 
@@ -29,7 +31,7 @@ export default function IssueList({
         <button
           key={it.id}
           onClick={() => onOpenIssue(it.id)}
-          className="kp-card cursor-pointer p-4 text-left transition hover:-translate-y-0.5 hover:shadow-kp"
+          className="kp-card group cursor-pointer p-4 text-left transition hover:-translate-y-0.5 hover:shadow-kp"
         >
           <div className="flex items-center gap-3">
             <div className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[11px] bg-[#F3ECE0] text-[19px]">
@@ -58,9 +60,32 @@ export default function IssueList({
                   {it.suggestion_count} câu đề xuất
                 </span>
                 {it.suggestion_count > 0 ? (
-                  <span className="rounded-full bg-[#F3ECE0] px-2.5 py-0.5 text-[11.5px]">
-                    🧡 {it.top_votes.toLocaleString("vi-VN")} lượt thương
-                  </span>
+                  <>
+                    <span className="rounded-full bg-[#F3ECE0] px-2.5 py-0.5 text-[11.5px]">
+                      🧡 {it.top_votes.toLocaleString("vi-VN")} lượt thương
+                    </span>
+                    {/* Thương nhanh ngay trên card (không mở drawer) — toggle theo cookie
+                        người xem; span vì card đã là <button> (không lồng button) */}
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); onToggleVote(it); }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onToggleVote(it);
+                        }
+                      }}
+                      className={`tap ml-auto cursor-pointer rounded-full border px-2.5 py-1 text-[11.5px] font-semibold transition ${
+                        it.voted
+                          ? "border-olive bg-olive text-white hover:bg-olive-dark"
+                          : "border-cream-dark bg-white text-ink-soft hover:border-olive hover:text-olive-dark"
+                      }`}
+                    >
+                      {it.voted ? "🧡 Đã bình chọn" : "Chưa bình chọn"}
+                    </span>
+                  </>
                 ) : (
                   <span>Chưa có ai viết — bạn mở hàng nhé!</span>
                 )}

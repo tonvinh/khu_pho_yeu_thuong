@@ -16,6 +16,8 @@ export interface IssueCard {
   suggestion_count: number;
   top_votes: number;
   top_quote: string | null;
+  /** Người xem (cookie kp_session) đã thương câu nào trong góc này chưa */
+  voted: boolean;
 }
 
 export interface MapNeighborhood {
@@ -29,6 +31,8 @@ export interface MapNeighborhood {
   /** Bật ở admin → xuất hiện trong block "Khu phố tiêu biểu" đầu trang chủ */
   is_featured: boolean;
   map_url: string | null;
+  /** Ảnh bảng chứng nhận 4N (admin upload) — hiện trong block chứng nhận trang chủ */
+  certificate_url: string | null;
   /** Tối đa 4 ảnh tổng quan, kích thước đồng nhất (admin upload, theo position) */
   photo_urls: string[];
 }
@@ -103,10 +107,26 @@ export interface NotificationItem {
   created_at: string;
 }
 
+/** Nội dung trang chủ admin sửa được ở /admin/noi-dung (mặc định từ copy.ts) */
+export interface SiteContentData {
+  hero_title_1: string;
+  hero_title_2: string;
+  hero_body: string;
+  campaign_title: string;
+  campaign_hint: string;
+  campaign_youtube_id: string;
+  /** URL ảnh KV chiến dịch — null → placeholder "chờ thiết kế final" */
+  campaign_kv_url: string | null;
+  lead_title: string;
+  lead_body: string;
+  lead_privacy: string;
+}
+
 export interface HomeData {
   counters: CounterData;
   issues: IssueCard[];
   map: MapData;
   ambassadors: Ambassador[];
   neighborhoodOfMonth: NeighborhoodOfMonth | null;
+  content: SiteContentData;
 }

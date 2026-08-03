@@ -3,7 +3,7 @@
 // Prototype .lead-wrap: card gradient lớn, pitch bên trái + form trắng bên phải,
 // pillbox chọn quan tâm (ô liu khi chọn), checkbox mặc định KHÔNG tick.
 import { useState } from "react";
-import type { Me } from "./types";
+import type { Me, SiteContentData } from "./types";
 import { apiSend } from "../client-api";
 import { COPY } from "@/lib/copy";
 import { INTERESTS } from "@/lib/taxonomy";
@@ -11,10 +11,12 @@ import { Eyebrow, Field } from "./ui";
 
 export default function LeadSection({
   me,
+  content,
   requireIdentity,
   showToast,
 }: {
   me: Me | null;
+  content: SiteContentData;
   requireIdentity: (fn: () => void) => void;
   showToast: (msg: string) => void;
 }) {
@@ -58,10 +60,10 @@ export default function LeadSection({
       {/* Pitch */}
       <div className="flex flex-col gap-3">
         <Eyebrow>{COPY.leadBadge}</Eyebrow>
-        <h2 className="m-0 font-display text-2xl font-extrabold leading-tight">{COPY.leadTitle}</h2>
-        <p className="m-0 text-[14.5px] text-ink-soft">{COPY.leadBody}</p>
+        <h2 className="m-0 font-display text-2xl font-extrabold leading-tight">{content.lead_title}</h2>
+        <p className="m-0 text-[14.5px] text-ink-soft">{content.lead_body}</p>
         <p className="m-0 rounded-xl border border-dashed border-cream-dark bg-white px-[13px] py-2.5 text-[12.5px] leading-relaxed text-ink-soft">
-          {COPY.leadPrivacy}
+          {content.lead_privacy}
         </p>
       </div>
 
