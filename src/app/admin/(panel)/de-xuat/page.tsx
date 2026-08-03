@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import { categoryIcon, categoryLabel } from "@/lib/taxonomy";
+import { formatAddress } from "@/lib/address";
 
 interface PendingIssue {
   id: string; category: string; location_text: string; description: string | null;
-  created_at: string; neighborhood_name: string; proposer_name: string | null;
+  created_at: string; neighborhood_name: string; ward: string | null; city: string | null;
+  hidden: boolean; proposer_name: string | null; attached_suggestion: string | null;
 }
 
 const CRITERIA = [
@@ -55,13 +57,25 @@ export default function ReviewIssuesPage() {
             <div key={r.id} className="rounded-2xl border border-cream-dark p-4">
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <strong>{categoryIcon(r.category)} {categoryLabel(r.category)}</strong>
-                <span>· {r.location_text}</span>
-                <span className="text-ink-soft">· {r.neighborhood_name}</span>
+                <span>· {formatAddress(r.location_text, r.ward || r.neighborhood_name, r.city)}</span>
+                {r.hidden && (
+                  <span className="rounded-full bg-status-voting-bg px-2 py-0.5 text-[11px] font-semibold text-status-voting">
+                    Khu phố mới (dân tự nhập) — duyệt sẽ hiện công khai
+                  </span>
+                )}
                 <span className="ml-auto text-xs text-ink-soft">
                   {r.proposer_name || "—"} · {new Date(r.created_at).toLocaleString("vi-VN")}
                 </span>
               </div>
               {r.description && <p className="mt-1.5 text-sm text-ink-soft">{r.description}</p>}
+              {r.attached_suggestion && (
+                <p className="mt-1.5 rounded-xl bg-cream px-3 py-2 text-sm">
+                  💬 Câu nhắc gửi kèm: “{r.attached_suggestion}”
+                  <span className="block text-xs text-ink-soft">
+                    Duyệt đề xuất xong, câu này sẽ vào hàng “Duyệt câu nhắc” như bình thường.
+                  </span>
+                </p>
+              )}
               <div className="mt-3 flex gap-2">
                 <Btn onClick={() => act(r.id, "approve")}>Duyệt</Btn>
                 <Btn variant="outline" onClick={() => setRejectId(rejectId === r.id ? null : r.id)}>Từ chối…</Btn>

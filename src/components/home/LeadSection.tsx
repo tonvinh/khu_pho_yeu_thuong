@@ -54,7 +54,7 @@ export default function LeadSection({
     });
 
   return (
-    <div className="grid items-start gap-7 rounded-[22px] border border-cream-dark bg-gradient-to-br from-[#FFF9F0] to-[#F7EFE1] p-6 shadow-kp lg:grid-cols-[1fr_1.15fr]">
+    <div className="grid items-start gap-7 rounded-[22px] border border-cream-dark bg-gradient-to-br from-[#FFF9F0] to-[#F7EFE1] p-6 shadow-kp lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
       {/* Pitch */}
       <div className="flex flex-col gap-3">
         <Eyebrow>{COPY.leadBadge}</Eyebrow>

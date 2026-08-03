@@ -25,8 +25,8 @@ async function loadHomeData(): Promise<HomeData> {
        FROM issues i JOIN neighborhoods n ON n.id = i.neighborhood_id
        WHERE i.status IN ('waiting','voting','signed')
        ORDER BY (i.status = 'signed'), i.approved_at DESC NULLS LAST`),
-    q(`SELECT id, name, slug, certified_4n, certified_at, map_stylized_key, photo_key
-       FROM neighborhoods ORDER BY name`),
+    q(`SELECT id, name, ward, city, slug, certified_4n, certified_at, map_stylized_key, photo_key
+       FROM neighborhoods WHERE NOT hidden ORDER BY name`),
     q(`SELECT id, neighborhood_id, category, location_text, status, pin_x, pin_y
        FROM issues WHERE status IN ('waiting','voting','signed')
          AND pin_x IS NOT NULL AND pin_y IS NOT NULL`),
@@ -41,6 +41,8 @@ async function loadHomeData(): Promise<HomeData> {
       neighborhoods: neighborhoods.map((n) => ({
         id: n.id as string,
         name: n.name as string,
+        ward: n.ward as string | null,
+        city: n.city as string | null,
         slug: n.slug as string,
         certified_4n: n.certified_4n as boolean,
         certified_at: n.certified_at as string | null,

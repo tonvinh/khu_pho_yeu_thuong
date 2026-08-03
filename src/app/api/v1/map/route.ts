@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic";
 // Pins + khu phố cho bản đồ. Public CHỈ nhận bản cách điệu (Q3), không bao giờ ảnh gốc.
 export async function GET() {
   const neighborhoods = await q(
-    `SELECT id, name, slug, certified_4n, certified_at, map_stylized_key, photo_key
-     FROM neighborhoods ORDER BY name`
+    `SELECT id, name, ward, city, slug, certified_4n, certified_at, map_stylized_key, photo_key
+     FROM neighborhoods WHERE NOT hidden ORDER BY name`
   );
   const issues = await q(
     `SELECT id, neighborhood_id, category, location_text, status, pin_x, pin_y
@@ -19,6 +19,8 @@ export async function GET() {
     neighborhoods: neighborhoods.map((n) => ({
       id: n.id,
       name: n.name,
+      ward: n.ward,
+      city: n.city,
       slug: n.slug,
       certified_4n: n.certified_4n,
       certified_at: n.certified_at,

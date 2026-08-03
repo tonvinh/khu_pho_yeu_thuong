@@ -1,11 +1,13 @@
-// Copy chuẩn — gốc từ 06-CONTENT-COPY §2, đã cập nhật wording theo
-// docs/khupho_dieuchinh_28_7.xlsx (bản duyệt 28/7). Không tự ý sửa lời.
+// Copy chuẩn — gốc từ 06-CONTENT-COPY §2, cập nhật wording theo
+// docs/khupho_dieuchinh_28_7.xlsx (bản duyệt 28/7) và docs/dieuchinh.1.8.xlsx
+// (sheet ACTION LIST, bản 1/8). Không tự ý sửa lời.
 export const COPY = {
   heroTitle1: "Muốn gửi một lời thương cho xóm mình?",
   heroTitle2: "Hãy viết một câu nhắc nhỏ nhẹ nhé!",
   heroBody:
     "Chọn một góc xóm, cùng mọi người gửi những câu nhắc dễ thương theo tinh thần 4N và bấm “Thương” để bình chọn. Câu được nhiều lượt “Thương” nhất sẽ được FPT đưa lên biển thật, nối tiếp hơn 10.000 lời nhắc đã hiện diện khắp ngõ hẻm Việt Nam.",
-  ctaMain: "+ Gửi lời nhắc cho xóm mình",
+  // dieuchinh.1.8 #4: nút mở popup đề xuất góc phố — đổi text cho đúng chức năng
+  ctaMain: "+ Đề xuất góc phố mới",
   ctaSecondary: "Xem góc phố đang chờ",
   ctaTertiary: "🧧 Quà dành cho cư dân",
   ctaCampaign: "Gửi một lời nhắc, thêm một chút thương cho xóm mình.",
@@ -41,4 +43,11 @@ export const COPY = {
   leaderboardSub: "Những cây bút nhận được nhiều lượt “Thương” nhất từ bà con",
   toastSuggestionSent: "Câu của bạn đã vào hàng chờ duyệt — cảm ơn bạn đã thương xóm mình 💛",
   emptySuggestions: "Chưa có câu nào. Bạn viết câu đầu tiên cho điểm này nhé!",
+  // dieuchinh.1.8 #15: thông báo duyệt / không duyệt (nguyên văn action list)
+  notifApproved: "Chúc mừng! Câu nhắc/Đề xuất của bạn đã được duyệt",
+  notifRejected: "Rất tiếc! Câu nhắc/Đề xuất của bạn chưa phù hợp 🥲 Hãy đề xuất lại nhé!",
+  // dieuchinh.1.8 #8: popup để lại SĐT nhận ưu đãi tại các luồng tương tác
+  leadPromptTitle: "Tôi muốn nhận ưu đãi 🧧",
+  leadPromptBody:
+    "Cảm ơn bạn đã góp lời thương cho xóm mình! Để lại số điện thoại, FPT sẽ liên hệ tư vấn ưu đãi dành riêng cho cư dân “Khu phố biết thương”.",
 } as const;

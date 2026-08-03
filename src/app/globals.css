@@ -58,6 +58,15 @@ body {
   font-family: var(--font-sans);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  /* dieuchinh.1.8 #12/#14: chặn tràn ngang trên mobile (hở rìa phải khi zoom).
+     Dùng clip (không phải hidden) để position:sticky của top bar vẫn hoạt động. */
+  overflow-x: clip;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
 }
 
 /* Nút chạm tối thiểu 44px (07 §1) */

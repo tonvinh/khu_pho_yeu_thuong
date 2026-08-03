@@ -16,7 +16,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   try {
     await tx(async (c) => {
       const r = await c.query(
-        `SELECT id, status, proposed_by FROM issues WHERE id = $1 FOR UPDATE`, [id]
+        `SELECT id, status, proposed_by, neighborhood_id, location_text
+         FROM issues WHERE id = $1 FOR UPDATE`, [id]
       );
       const issue = r.rows[0];
       if (!issue) throw new Error("NOT_FOUND");
@@ -26,6 +27,11 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         await c.query(
           `UPDATE issues SET status = 'waiting', approved_at = now() WHERE id = $1`, [id]
         );
+        // Khu phố dân tự nhập (hidden) hiện công khai khi đề xuất đầu tiên được duyệt (#11)
+        await c.query(
+          `UPDATE neighborhoods SET hidden = false WHERE id = $1 AND hidden`,
+          [issue.neighborhood_id]
+        );
         if (issue.proposed_by) {
           await recordScoreEvent(c, issue.proposed_by, "issue_approved", id);
         }
@@ -33,6 +39,16 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         await c.query(
           `UPDATE issues SET status = 'rejected', review_note = $2 WHERE id = $1`,
           [id, String(body?.note || "").slice(0, 500) || null]
+        );
+      }
+      // Báo tin duyệt/từ chối in-web cho người đề xuất (dieuchinh.1.8 #15)
+      if (issue.proposed_by) {
+        await c.query(
+          `INSERT INTO notifications (user_id, type, ref_id, payload)
+           VALUES ($1, $2, $3, $4)`,
+          [issue.proposed_by,
+           action === "approve" ? "issue_approved" : "issue_rejected",
+           id, JSON.stringify({ location_text: issue.location_text })]
         );
       }
     });

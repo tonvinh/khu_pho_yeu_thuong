@@ -16,6 +16,7 @@ export default function IssueDrawer({
   onClose,
   showToast,
   onChanged,
+  onEngaged,
 }: {
   issueId: string;
   me: Me | null;
@@ -23,6 +24,8 @@ export default function IssueDrawer({
   onClose: () => void;
   showToast: (msg: string) => void;
   onChanged: () => void;
+  /** Gọi sau khi viết câu / vote thành công — mở popup ưu đãi (#8) */
+  onEngaged?: () => void;
 }) {
   const [issue, setIssue] = useState<IssueDetail | null>(null);
   const [suggestions, setSuggestions] = useState<SuggestionItem[]>([]);
@@ -60,6 +63,7 @@ export default function IssueDrawer({
       try {
         await apiSend("POST", `/api/v1/suggestions/${s.id}/vote`);
         onChanged();
+        if (!s.voted) onEngaged?.();
       } catch (e) {
         setSuggestions((list) =>
           list.map((it) =>
@@ -84,6 +88,7 @@ export default function IssueDrawer({
         setOptIn(false);
         showToast(COPY.toastSuggestionSent);
         onChanged();
+        onEngaged?.();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Có lỗi xảy ra");
       } finally {

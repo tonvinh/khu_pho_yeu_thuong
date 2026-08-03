@@ -13,8 +13,10 @@ export async function GET(req: NextRequest) {
   const rows = await q(
     `SELECT i.id, i.category, i.location_text, i.description, i.status, i.pin_x, i.pin_y,
        i.photo_key, i.created_at, i.review_note,
-       n.id AS neighborhood_id, n.name AS neighborhood_name,
-       u.display_name AS proposer_name
+       n.id AS neighborhood_id, n.name AS neighborhood_name, n.ward, n.city, n.hidden,
+       u.display_name AS proposer_name,
+       (SELECT s.content FROM suggestions s
+         WHERE s.issue_id = i.id ORDER BY s.created_at ASC LIMIT 1) AS attached_suggestion
      FROM issues i
      JOIN neighborhoods n ON n.id = i.neighborhood_id
      LEFT JOIN users u ON u.id = i.proposed_by

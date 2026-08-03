@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   try {
     await tx(async (c) => {
       const r = await c.query(
-        `SELECT s.id, s.status, s.author_id, s.issue_id FROM suggestions s
+        `SELECT s.id, s.status, s.author_id, s.issue_id, s.content FROM suggestions s
          WHERE s.id = $1 FOR UPDATE`,
         [id]
       );
@@ -49,12 +49,23 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
             `UPDATE issues SET status='voting' WHERE id=$1 AND status='waiting'`,
             [s.issue_id]
           );
+          // Báo tin duyệt in-web cho tác giả (dieuchinh.1.8 #15)
+          await c.query(
+            `INSERT INTO notifications (user_id, type, ref_id, payload)
+             VALUES ($1, 'suggestion_approved', $2, $3)`,
+            [s.author_id, id, JSON.stringify({ content: s.content })]
+          );
           break;
         }
         case "reject":
           await c.query(
             `UPDATE suggestions SET status='rejected', review_note=$2 WHERE id=$1`,
             [id, String(body?.note || "").slice(0, 500) || null]
+          );
+          await c.query(
+            `INSERT INTO notifications (user_id, type, ref_id, payload)
+             VALUES ($1, 'suggestion_rejected', $2, $3)`,
+            [s.author_id, id, JSON.stringify({ content: s.content })]
           );
           break;
         case "select": {

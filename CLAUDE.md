@@ -21,3 +21,20 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
 - Seed ưu tiên đúng CÔNG THỨC điểm; vài con số hiển thị trong design (52 thương của Bà Liên)
   mâu thuẫn công thức nên seed dùng số khớp điểm (45 thương → 82đ).
 - Node scripts trong `scripts/` là .mjs thuần (không TS) để chạy được trong image production.
+
+## Điều chỉnh 1/8 (docs/dieuchinh.1.8.xlsx — sheet ACTION LIST)
+
+- Danh mục còn ĐÚNG 6 chủ đề (`src/lib/taxonomy.ts`); migration 002 remap 8 mã cũ → 6 mã mới.
+- Trang chủ KHÔNG còn bản đồ — thay bằng `NeighborhoodSlider` (slide ảnh khu phố, 3 tag trạng
+  thái theo ORDER #2). Ảnh lấy từ `neighborhoods.photo_key`/`map_stylized_key`.
+- Đề xuất góc phố: flow 5 bước trong `ProposeModal` — kèm câu nhắc tuỳ chọn
+  (`suggested_content` → suggestions.submitted, admin thấy ở màn duyệt đề xuất; hàng duyệt câu
+  lọc bỏ câu của issue chưa duyệt).
+- Phường/xã chọn bằng `NeighborhoodPicker` (search + TỰ NHẬP free text). Free text → tạo
+  neighborhood `hidden=true`, unhide khi admin duyệt đề xuất đầu tiên của khu đó.
+- Notification in-web thêm 4 type: issue/suggestion × approved/rejected (wording #15 trong copy.ts).
+- Popup lead "Tôi muốn nhận ưu đãi" (`LeadPromptModal`) hiện 1 lần/thiết bị sau đề xuất/viết câu/vote.
+- Modal định danh z-50 (PHẢI trên drawer z-40) — fix vote "Thương" mobile bị che (#16).
+- TVC/KV demo ở `CampaignMedia.tsx` (YOUTUBE_ID placeholder, chờ final design).
+- Còn CHỜ ASSET từ team Design/trade: ảnh 20 khu phố (#1), biển bảng 6 chủ đề (#3),
+  bảng chứng nhận chính thức (#9, #10) — flow upload theo sheet ORDER chưa dựng.

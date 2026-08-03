@@ -1,53 +1,45 @@
-// Ví dụ minh hoạ theo từng danh mục — lấy từ seed 06 §5 và prototype v4.
+// Ví dụ minh hoạ theo từng chủ đề (6 chủ đề — dieuchinh.1.8 ACTION LIST #2).
 // Chỉ dùng làm gợi ý/placeholder trên UI, KHÔNG phải dữ liệu thật.
 import type { CategoryCode } from "./taxonomy";
 
 /** Câu nhắc mẫu chuẩn 4N — chip bấm để điền nhanh trong form viết câu */
 export const EXAMPLE_SUGGESTIONS: Record<CategoryCode, string[]> = {
-  toc_do: [
+  khoe_moi_ngay: [
+    "Chiều mát ra đầu ngõ đi bộ vài vòng, khoẻ người vui xóm.",
+    "Rủ nhau tập thể dục sáng, ngõ mình rộn ràng hẳn ra.",
+  ],
+  tre_con_trong_xom: [
     "Đi chậm chút nha, trong hẻm có đứa nhỏ đang chơi.",
-    "Hẻm nhỏ, lòng người thì rộng — chạy chậm giùm nhau.",
-  ],
-  trom_cap: [
-    "Khoá cửa cẩn thận nha, đi đâu cũng an tâm hơn.",
-    "Thấy người lạ, mình hỏi thăm một câu cho ấm ngõ.",
-  ],
-  an_toan_tre_em: [
-    "Tụi nhỏ hay chơi trước sân, mình để mắt giùm một chút nha.",
     "Tan học đông vui, nhường tụi nhỏ qua đường trước nha.",
   ],
-  chieu_sang: [
-    "Bật giùm bóng đèn trước ngõ, tối về ai cũng thấy đường.",
-    "Đèn nhà mình sáng thêm chút, ngõ mình ấm thêm nhiều.",
-  ],
-  ve_sinh: [
-    "Bỏ rác đúng chỗ một chút, khu mình thơm cả ngày.",
-    "Quét thêm một nhát trước cửa, sạch nhà mình vui cả xóm.",
-  ],
-  phong_chay: [
-    "Ra khỏi phòng nhớ tắt bếp, cả khu trọ ngủ ngon.",
-    "Sạc xe chỗ thoáng, ngủ ngon cả xóm trọ mình.",
-  ],
-  giup_nhau: [
-    "Trời sắp mưa, hô nhau cất đồ — một tiếng gọi đỡ cả buổi phơi.",
-    "Nhà ai có chuyện, mình ghé hỏi một câu cho đỡ tủi.",
-  ],
-  nguoi_gia: [
+  van_minh_tu_te: [
+    "Gặp nhau đầu ngõ, cười một cái — nhẹ cả ngày.",
+    "Bật giùm bóng đèn trước hiên, tối về ai cũng thấy đường.",
     "Đi ngang nhà cụ, chào một tiếng — cụ vui cả buổi.",
-    "Ông bà đi chậm, mình chờ chút một — ngõ mình đâu có vội.",
+  ],
+  giup_do_san_se: [
+    "Trời sắp mưa, hô nhau cất đồ — một tiếng gọi đỡ cả buổi phơi.",
+    "Đi đâu vài bữa, gửi xóm để mắt giùm căn nhà nha.",
+    "Để lối đi thông thoáng chút, có chuyện còn chạy kịp.",
+  ],
+  xom_xanh_sach: [
+    "Bỏ rác đúng chỗ một chút, khu mình thơm cả ngày.",
+    "Dắt cưng đi dạo nhớ hốt dọn, ngõ sạch ai cũng vui.",
+  ],
+  song_vui_co_ich: [
+    "Hẻm nhỏ, lòng người thì rộng — chạy chậm giùm nhau.",
+    "Khuya rồi vặn nhỏ tiếng chút, cả xóm ngủ ngon.",
   ],
 };
 
-/** Placeholder mô tả vấn đề khi đề xuất góc xóm — theo danh mục */
+/** Placeholder mô tả vấn đề khi đề xuất góc phố — theo chủ đề */
 export const EXAMPLE_ISSUE_DESC: Record<CategoryCode, string> = {
-  toc_do: "VD: Xe hay phóng nhanh đoạn cua, gần chỗ trẻ con chơi.",
-  trom_cap: "VD: Dạo này hay mất đồ vặt để trước cửa.",
-  an_toan_tre_em: "VD: Tụi nhỏ hay chạy ra đường lúc tan học, xe đông.",
-  chieu_sang: "VD: Đoạn giữa ngách tối, buổi tối khó thấy đường.",
-  ve_sinh: "VD: Góc cuối hẻm hay bị bỏ rác không đúng giờ.",
-  phong_chay: "VD: Khu trọ đông người, nhiều xe sạc qua đêm.",
-  giup_nhau: "VD: Nhiều cô chú lớn tuổi sống một mình, cần xóm để ý giúp nhau.",
-  nguoi_gia: "VD: Ông bà hay đi bộ buổi chiều, xe ra vào đông.",
+  khoe_moi_ngay: "VD: Xóm ít vận động, muốn rủ nhau đi bộ buổi chiều cho khoẻ.",
+  tre_con_trong_xom: "VD: Tụi nhỏ hay chạy ra đường lúc tan học, xe đông.",
+  van_minh_tu_te: "VD: Đoạn giữa ngách tối, mong nhà nào cũng treo đèn trước hiên.",
+  giup_do_san_se: "VD: Nhiều cô chú lớn tuổi sống một mình, cần xóm để ý giúp nhau.",
+  xom_xanh_sach: "VD: Góc cuối hẻm hay bị bỏ rác không đúng giờ.",
+  song_vui_co_ich: "VD: Xe hay phóng nhanh đoạn cua, buổi tối còn ồn khuya.",
 };
 
 /** Biển mẫu cho mục "ví dụ minh hoạ" trên trang chủ */

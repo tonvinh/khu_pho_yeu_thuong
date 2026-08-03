@@ -4,6 +4,7 @@
 import { useState } from "react";
 import type { MapNeighborhood, Me } from "./types";
 import { apiSend } from "../client-api";
+import NeighborhoodPicker from "./NeighborhoodPicker";
 import { Field } from "./ui";
 
 export default function IdentifyModal({
@@ -17,7 +18,8 @@ export default function IdentifyModal({
 }) {
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
-  const [nbId, setNbId] = useState("");
+  const [nbId, setNbId] = useState<string | null>(null);
+  const [nbText, setNbText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +30,8 @@ export default function IdentifyModal({
       const res = await apiSend<{ me: Me }>("POST", "/api/v1/auth/identify", {
         phone,
         display_name: name,
-        neighborhood_id: nbId || null,
+        neighborhood_id: nbId,
+        neighborhood_text: nbId ? null : nbText || null,
       });
       onDone(res.me);
     } catch (e) {
@@ -63,16 +66,13 @@ export default function IdentifyModal({
         />
       </Field>
       <Field label="Khu phố của bạn" className="mt-3.5">
-        <select
-          value={nbId}
-          onChange={(e) => setNbId(e.target.value)}
-          className="kp-input tap cursor-pointer"
-        >
-          <option value="">— Chọn khu phố —</option>
-          {neighborhoods.map((n) => (
-            <option key={n.id} value={n.id}>{n.name}</option>
-          ))}
-        </select>
+        {/* #11: search + thanh trượt + cho phép tự nhập tên phường */}
+        <NeighborhoodPicker
+          neighborhoods={neighborhoods}
+          valueId={nbId}
+          valueText={nbText}
+          onChange={(id, text) => { setNbId(id); setNbText(text); }}
+        />
       </Field>
       {error && <p className="m-0 mt-2 text-sm font-medium text-status-waiting">{error}</p>}
       <button
@@ -88,7 +88,9 @@ export default function IdentifyModal({
 
 export function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 backdrop-blur-[2px] sm:items-center" onClick={onClose}>
+    // z-50: PHẢI cao hơn Drawer (z-40) — modal định danh mở từ nút "thương" trong drawer
+    // từng bị drawer che mất trên mobile (dieuchinh.1.8 #16)
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-[2px] sm:items-center" onClick={onClose}>
       <div
         className="slide-up max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-cream p-6 shadow-kp sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}

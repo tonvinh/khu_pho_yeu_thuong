@@ -79,7 +79,7 @@ function parseWorkbook(buf: Buffer): { khupho: KhuPhoRow[]; vande: VanDeRow[]; f
     else if (!kpNames.has(row.ten_khu_pho.toLowerCase()))
       row.errors.push("Tên khu phố không khớp sheet KhuPho");
     if (!CATEGORY_CODES.includes(row.loai as never))
-      row.errors.push(`Loại vấn đề sai mã (8 mã hợp lệ: ${CATEGORY_CODES.join(", ")})`);
+      row.errors.push(`Chủ đề sai mã (6 mã hợp lệ: ${CATEGORY_CODES.join(", ")})`);
     if (!row.vi_tri) row.errors.push("Thiếu vị trí");
     if (r[4] !== "" && !(row.pin_x !== null && row.pin_x >= 0 && row.pin_x <= 100))
       row.errors.push("pin_x phải là số 0–100");

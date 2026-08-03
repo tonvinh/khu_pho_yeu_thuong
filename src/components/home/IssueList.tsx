@@ -74,7 +74,7 @@ export default function IssueList({
         <div className="kp-card flex flex-col items-center gap-3 p-6 text-center text-sm text-ink-soft">
           Chưa có góc xóm nào đang chờ — bạn đề xuất điểm đầu tiên nhé!
           <button onClick={onPropose} className="kp-btn kp-btn-primary tap px-5 py-2">
-            + Đề xuất khu phố mới
+            + Đề xuất góc phố mới
           </button>
         </div>
       )}
