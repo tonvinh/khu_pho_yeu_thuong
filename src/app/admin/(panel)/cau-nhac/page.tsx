@@ -149,7 +149,7 @@ export default function SuggestionsTablePage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-extrabold">✍️ Quản lý câu duyệt</h1>
+        <h1 className="text-xl font-extrabold">✍️ Quản lý lời nhắc</h1>
         <Btn variant="outline" onClick={() => setImporting(true)}>📥 Import file</Btn>
       </div>
 
@@ -226,7 +226,7 @@ export default function SuggestionsTablePage() {
         <table className="w-full min-w-[1060px] text-sm">
           <thead>
             <tr className="text-left text-xs text-ink-soft">
-              <Th className="w-[30%]">Câu duyệt</Th>
+              <Th className="w-[30%]">Lời nhắc</Th>
               <Th className="w-[72px] text-center">Hình ảnh</Th>
               <Th className="min-w-[160px]">Khu phố</Th>
               <Th>Chủ đề</Th>
@@ -532,7 +532,7 @@ function EditDrawer({
         }`}
       >
         <div className="flex items-center justify-between gap-2 border-b border-cream-dark px-5 py-4">
-          <h2 className="font-extrabold">✏️ Sửa câu duyệt</h2>
+          <h2 className="font-extrabold">✏️ Sửa lời nhắc</h2>
           <button onClick={close} aria-label="Đóng" className="rounded-full px-2 text-lg text-ink-soft hover:text-brick">
             ✕
           </button>

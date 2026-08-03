@@ -122,11 +122,21 @@ export interface SiteContentData {
   lead_privacy: string;
 }
 
+/** Lời nhắc đã duyệt — hiện trong block "Lời nhắc khi lên biển trông như thế nào?" */
+export interface ApprovedSign {
+  id: string;
+  content: string;
+  author_name: string;
+  location_text: string;
+  image_url: string | null;
+}
+
 export interface HomeData {
   counters: CounterData;
   issues: IssueCard[];
   map: MapData;
   ambassadors: Ambassador[];
   neighborhoodOfMonth: NeighborhoodOfMonth | null;
+  approvedSigns: ApprovedSign[];
   content: SiteContentData;
 }

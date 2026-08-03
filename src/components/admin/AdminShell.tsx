@@ -10,7 +10,7 @@ import { apiGet, apiSend } from "../client-api";
 const NAV = [
   { href: "/admin", icon: "📊", label: "Dashboard" },
   { href: "/admin/khu-pho", icon: "🏘️", label: "Khu phố" },
-  { href: "/admin/cau-nhac", icon: "✍️", label: "Câu duyệt" },
+  { href: "/admin/cau-nhac", icon: "✍️", label: "Lời nhắc" },
   { href: "/admin/voting", icon: "💛", label: "Theo dõi thương" },
   { href: "/admin/leads", icon: "🧧", label: "Leads" },
   { href: "/admin/noi-dung", icon: "📝", label: "Nội dung" },
