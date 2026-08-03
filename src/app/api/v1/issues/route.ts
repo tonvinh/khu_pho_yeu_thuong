@@ -4,6 +4,7 @@ import { jsonError, requireUserWrite } from "@/lib/api";
 import { getSessionUser } from "@/lib/session";
 import { CATEGORY_CODES } from "@/lib/taxonomy";
 import { resolveNeighborhoodId } from "@/lib/neighborhoods";
+import { geoError } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 
@@ -56,12 +57,15 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return jsonError(400, "Dữ liệu không hợp lệ");
   const { category, location_text, description, neighborhood_id, neighborhood_text,
-    suggested_content } = body;
+    neighborhood_city, neighborhood_ward, suggested_content } = body;
 
   if (!CATEGORY_CODES.includes(category)) {
     return jsonError(400, "Chủ đề không thuộc danh mục cho phép");
   }
   if (!location_text?.trim()) return jsonError(400, "Vui lòng nhập vị trí (ngõ/hẻm/ngách)");
+  // Địa lý hành chính mới kèm khu phố tự nhập — đối chiếu danh mục chính thức trong DB
+  const geoErr = await geoError(neighborhood_city, neighborhood_ward);
+  if (geoErr) return jsonError(400, geoErr);
 
   // Câu nhắc thương gửi kèm (dieuchinh.1.8 #5) — tuỳ chọn, ≤120 ký tự như câu nhắc thường
   const suggestion = String(suggested_content || "").trim();
@@ -72,7 +76,8 @@ export async function POST(req: NextRequest) {
   const created = await tx(async (c) => {
     // #11: chọn từ danh sách HOẶC tự nhập tên phường (free text → khu phố ẩn chờ duyệt)
     const nbId =
-      (await resolveNeighborhoodId(c, neighborhood_id || null, neighborhood_text || null)) ||
+      (await resolveNeighborhoodId(c, neighborhood_id || null, neighborhood_text || null,
+        { city: neighborhood_city, ward: neighborhood_ward })) ||
       auth.user.neighborhood_id;
     if (!nbId) throw new Error("NB_NOT_FOUND");
     const r = await c.query(

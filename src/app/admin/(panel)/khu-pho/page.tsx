@@ -8,8 +8,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGet, apiSend, apiUpload } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import ImportModal from "@/components/admin/ImportModal";
-import { PROVINCES } from "@/lib/vn-geo";
 
+interface GeoUnit { code: string; name: string }
 interface NbPhoto { position: number; url: string }
 interface Nb {
   id: string; name: string; ward: string | null; city: string | null; slug: string;
@@ -365,6 +365,24 @@ function NbFormFields({
 }
 
 function FormGrid({ form, setForm }: { form: FormState; setForm: (f: FormState) => void }) {
+  // Danh mục chính quy (bảng provinces/wards, migration 009) — chọn thay vì nhập tay
+  const [provinces, setProvinces] = useState<GeoUnit[]>([]);
+  const [wards, setWards] = useState<GeoUnit[]>([]);
+  useEffect(() => {
+    apiGet<{ provinces: GeoUnit[] }>("/api/v1/geo")
+      .then((r) => setProvinces(r.provinces)).catch(() => {});
+  }, []);
+  const cityCode = provinces.find((p) => p.name === form.city)?.code ?? "";
+  useEffect(() => {
+    if (!cityCode) { setWards([]); return; }
+    let stale = false;
+    apiGet<{ wards: GeoUnit[] }>(`/api/v1/geo?province=${cityCode}`)
+      .then((r) => { if (!stale) setWards(r.wards); }).catch(() => {});
+    return () => { stale = true; };
+  }, [cityCode]);
+  // Giá trị cũ không còn trong danh mục (nhập tay trước đây) — vẫn hiển thị để admin thấy mà sửa
+  const legacyWard = form.ward && !wards.some((w) => w.name === form.ward);
+
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <label className="block">
@@ -385,29 +403,40 @@ function FormGrid({ form, setForm }: { form: FormState; setForm: (f: FormState) 
       <label className="block">
         <span className="text-xs font-bold">Tỉnh / Thành phố *</span>
         <select
-          value={form.city}
-          onChange={(e) => setForm({ ...form, city: e.target.value })}
+          value={cityCode}
+          onChange={(e) => {
+            const name = provinces.find((p) => p.code === e.target.value)?.name ?? "";
+            setForm({ ...form, city: name, ward: "" });
+          }}
           className="mt-1 w-full rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
         >
           <option value="">— Chọn tỉnh/thành phố —</option>
-          {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+          {provinces.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
         </select>
         <span className="mt-1 block text-[11px] leading-4 text-ink-soft">
-          Danh sách 34 tỉnh/thành theo địa giới hành chính mới (hiệu lực 1/7/2025).
+          34 tỉnh/thành theo địa giới hành chính mới (Quyết định 19/2025/QĐ-TTg,
+          hiệu lực 1/7/2025).
         </span>
       </label>
 
       <label className="block">
         <span className="text-xs font-bold">Phường / Xã *</span>
-        <input
+        <select
           value={form.ward}
           onChange={(e) => setForm({ ...form, ward: e.target.value })}
-          placeholder="VD: Phường Bàn Cờ"
-          maxLength={120}
-          className="mt-1 w-full rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
-        />
+          disabled={!cityCode}
+          className="mt-1 w-full rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm disabled:opacity-60"
+        >
+          <option value="">
+            {cityCode ? "— Chọn phường/xã —" : "Chọn tỉnh/thành phố trước"}
+          </option>
+          {legacyWard && (
+            <option value={form.ward}>{form.ward} (ngoài danh mục — chọn lại)</option>
+          )}
+          {wards.map((w) => <option key={w.code} value={w.name}>{w.name}</option>)}
+        </select>
         <span className="mt-1 block text-[11px] leading-4 text-ink-soft">
-          Ghi đầy đủ “Phường …” hoặc “Xã …” theo địa giới mới — <strong>không còn cấp
+          Danh mục phường/xã của tỉnh/thành đã chọn — <strong>không còn cấp
           quận/huyện</strong>, phường/xã trực thuộc thẳng tỉnh/thành.
         </span>
       </label>

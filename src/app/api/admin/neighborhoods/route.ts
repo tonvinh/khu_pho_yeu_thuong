@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { q, one } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
 import { imgUrl } from "@/lib/storage";
-import { geoError } from "@/lib/vn-geo";
+import { geoError } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   if (name.length > 200) return jsonError(400, "Tên khu phố tối đa 200 ký tự");
   if (!city) return jsonError(400, "Chưa chọn Tỉnh/Thành phố");
   if (!ward) return jsonError(400, "Thiếu Phường/Xã");
-  const geoErr = geoError(city, ward);
+  const geoErr = await geoError(city, ward);
   if (geoErr) return jsonError(400, geoErr);
 
   const slug = String(body.slug || name)
