@@ -21,6 +21,8 @@ export interface IssueCard {
 export interface MapNeighborhood {
   id: string;
   name: string;
+  ward: string | null;
+  city: string | null;
   slug: string;
   certified_4n: boolean;
   certified_at: string | null;

@@ -1,7 +1,8 @@
 // Định danh KHÔNG OTP (02 §8): SĐT → HMAC-SHA256+PEPPER → upsert user → cookie phiên.
 // Response KHÔNG BAO GIỜ trả lại SĐT hay hash (quy tắc cứng 3b).
 import { NextRequest, NextResponse } from "next/server";
-import { one, q } from "@/lib/db";
+import { getPool, one, q } from "@/lib/db";
+import { resolveNeighborhoodId } from "@/lib/neighborhoods";
 import { normalizePhone, looksFake } from "@/lib/phone";
 import { phoneHash, randomSlug, encryptPhone } from "@/lib/crypto";
 import { createSession, sessionCookieOptions, SESSION_COOKIE } from "@/lib/session";
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   if (!body) return jsonError(400, "Dữ liệu không hợp lệ");
-  const { phone, display_name, neighborhood_id } = body;
+  const { phone, display_name, neighborhood_id, neighborhood_text } = body;
 
   const normalized = normalizePhone(String(phone || ""));
   if (!normalized) return jsonError(400, "Số điện thoại chưa đúng — kiểm tra lại giúp mình nhé");
@@ -29,18 +30,23 @@ export async function POST(req: NextRequest) {
     [hash]
   );
 
+  // #11: chọn từ danh sách HOẶC tự nhập tên phường (free text → khu phố ẩn chờ duyệt)
+  const nbId = await resolveNeighborhoodId(
+    getPool(), neighborhood_id || null, neighborhood_text || null
+  );
+
   let userId: string;
   if (existing) {
     userId = existing.id;
     // Cập nhật hồ sơ nếu có gửi kèm
-    if (display_name?.trim() || neighborhood_id) {
+    if (display_name?.trim() || nbId) {
       await q(
         `UPDATE users SET
            display_name = COALESCE(NULLIF($2, ''), display_name),
            neighborhood_id = COALESCE($3, neighborhood_id),
            last_login_at = now()
          WHERE id = $1`,
-        [userId, (display_name || "").trim().slice(0, 120), neighborhood_id || null]
+        [userId, (display_name || "").trim().slice(0, 120), nbId]
       );
     } else {
       await q(`UPDATE users SET last_login_at = now() WHERE id = $1`, [userId]);
@@ -54,7 +60,7 @@ export async function POST(req: NextRequest) {
     const created = await one<{ id: string }>(
       `INSERT INTO users (phone_hash, display_name, share_slug, neighborhood_id, last_login_at)
        VALUES ($1, $2, $3, $4, now()) RETURNING id`,
-      [hash, display_name.trim().slice(0, 120), randomSlug(), neighborhood_id || null]
+      [hash, display_name.trim().slice(0, 120), randomSlug(), nbId]
     );
     userId = created!.id;
   }

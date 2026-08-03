@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { Ambassador, MapNeighborhood, NeighborhoodOfMonth } from "./types";
 import { COPY } from "@/lib/copy";
 import { BASE } from "../client-api";
+import NeighborhoodPicker from "./NeighborhoodPicker";
 
 const RANK_STYLE = [
   "bg-fpt text-white",
@@ -21,8 +22,11 @@ export default function Leaderboard({
   neighborhoodOfMonth: NeighborhoodOfMonth | null;
   neighborhoods: MapNeighborhood[];
 }) {
-  const [lookupId, setLookupId] = useState("");
+  const [lookupId, setLookupId] = useState<string | null>(null);
+  const [lookupText, setLookupText] = useState("");
   const lookup = neighborhoods.find((n) => n.id === lookupId) ?? null;
+  const lookupMiss = !lookup && lookupText.trim().length > 0 &&
+    !neighborhoods.some((n) => n.name.toLowerCase().includes(lookupText.trim().toLowerCase()));
   const certified = neighborhoods.find((n) => n.certified_4n) ?? null;
 
   return (
@@ -107,20 +111,23 @@ export default function Leaderboard({
 
       {/* Tra cứu chứng nhận */}
       <div className="kp-card flex flex-col gap-2.5 p-4">
-        <label htmlFor="cert-lookup" className="text-[13px] font-semibold">
+        <label className="text-[13px] font-semibold">
           Tra cứu: Xóm mình đã đạt chuẩn 4N chưa?
         </label>
-        <select
-          id="cert-lookup"
-          value={lookupId}
-          onChange={(e) => setLookupId(e.target.value)}
-          className="kp-input tap cursor-pointer"
-        >
-          <option value="">— Chọn khu phố của bạn —</option>
-          {neighborhoods.map((n) => (
-            <option key={n.id} value={n.id}>{n.name}</option>
-          ))}
-        </select>
+        {/* #11: search + thanh trượt + tự nhập tên phường */}
+        <NeighborhoodPicker
+          neighborhoods={neighborhoods}
+          valueId={lookupId}
+          valueText={lookupText}
+          onChange={(id, text) => { setLookupId(id); setLookupText(text); }}
+          placeholder="Gõ tên phường/khu phố để tra cứu…"
+          allowFreeText={false}
+        />
+        {lookupMiss && (
+          <div className="rounded-[10px] bg-cream px-3.5 py-2.5 text-[13px] text-ink-soft">
+            Chưa tìm thấy “{lookupText.trim()}” — khu phố này chưa tham gia. Bạn đề xuất góc phố mới cho xóm mình nhé!
+          </div>
+        )}
         {lookup && (
           <div
             className={`rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold ${

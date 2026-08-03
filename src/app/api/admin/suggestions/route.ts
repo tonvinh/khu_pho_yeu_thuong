@@ -26,6 +26,8 @@ export async function GET(req: NextRequest) {
      JOIN neighborhoods n ON n.id = i.neighborhood_id
      JOIN users u ON u.id = s.author_id
      WHERE s.status = $1${extra}
+       -- Câu gửi kèm đề xuất chưa duyệt: xử lý ở màn duyệt đề xuất, không vào hàng này (#17)
+       AND i.status NOT IN ('pending_review','rejected')
      ORDER BY s.created_at ASC`,
     params
   );

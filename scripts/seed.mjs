@@ -81,19 +81,19 @@ async function issue(opts) {
   return r.rows[0].id;
 }
 
-const i1 = await issue({ nb: leLoi, cat: "toc_do", loc: "Hẻm 42 Lê Lợi",
+const i1 = await issue({ nb: leLoi, cat: "tre_con_trong_xom", loc: "Hẻm 42 Lê Lợi",
   desc: "Xe hay phóng nhanh đoạn cua, gần chỗ trẻ con chơi.", status: "voting", by: coTam, px: 35, py: 60 });
-const i2 = await issue({ nb: leLoi, cat: "trom_cap", loc: "Ngõ 7 Trần Phú",
+const i2 = await issue({ nb: leLoi, cat: "giup_do_san_se", loc: "Ngõ 7 Trần Phú",
   desc: "Dạo này hay mất đồ vặt để trước cửa.", status: "voting", by: coBay, px: 62, py: 30 });
-const i3 = await issue({ nb: tanDinh, cat: "phong_chay", loc: "Khu trọ 88 Hai Bà Trưng",
+const i3 = await issue({ nb: tanDinh, cat: "giup_do_san_se", loc: "Khu trọ 88 Hai Bà Trưng",
   desc: "Khu trọ đông người, nhiều xe sạc qua đêm.", status: "voting", by: minh, px: 48, py: 72 });
-const i4 = await issue({ nb: xomMoi, cat: "ve_sinh", loc: "Cuối hẻm chợ Xóm Mới",
+const i4 = await issue({ nb: xomMoi, cat: "xom_xanh_sach", loc: "Cuối hẻm chợ Xóm Mới",
   desc: "Góc cuối hẻm hay bị bỏ rác không đúng giờ.", status: "signed", by: baLien, px: 70, py: 55, approvedDaysAgo: 20 });
-const i5 = await issue({ nb: leLoi, cat: "giup_nhau", loc: "Ngách 12/3 Nguyễn Du",
+const i5 = await issue({ nb: leLoi, cat: "giup_do_san_se", loc: "Ngách 12/3 Nguyễn Du",
   desc: "Nhiều cô chú lớn tuổi sống một mình, cần xóm để ý giúp nhau.", status: "waiting", by: coBay, px: 20, py: 40 });
-const i6 = await issue({ nb: leLoi, cat: "nguoi_gia", loc: "Đầu ngõ 7 Trần Phú",
+const i6 = await issue({ nb: leLoi, cat: "van_minh_tu_te", loc: "Đầu ngõ 7 Trần Phú",
   desc: "Ông bà hay đi bộ buổi chiều, xe ra vào đông.", status: "voting", by: minh, px: 80, py: 20 });
-const i7 = await issue({ nb: banCo, cat: "chieu_sang", loc: "Ngách 5 Bàn Cờ",
+const i7 = await issue({ nb: banCo, cat: "van_minh_tu_te", loc: "Ngách 5 Bàn Cờ",
   desc: "Đoạn giữa ngách tối, buổi tối khó thấy đường.", status: "signed", by: coBay, px: 55, py: 45, approvedDaysAgo: 25 });
 
 // ===== Câu nhắc =====

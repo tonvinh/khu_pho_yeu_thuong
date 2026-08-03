@@ -9,12 +9,14 @@ import { apiGet, apiSend, BASE } from "../client-api";
 import { COPY } from "@/lib/copy";
 import { EXAMPLE_SIGNS } from "@/lib/examples";
 import Counters from "./Counters";
-import MapSection from "./MapSection";
+import NeighborhoodSlider from "./NeighborhoodSlider";
+import CampaignMedia from "./CampaignMedia";
 import IssueList from "./IssueList";
 import Leaderboard from "./Leaderboard";
 import LeadSection from "./LeadSection";
 import IdentifyModal from "./IdentifyModal";
 import ProposeModal from "./ProposeModal";
+import LeadPromptModal from "./LeadPromptModal";
 import IssueDrawer from "./IssueDrawer";
 import { Eyebrow, HangSign, SectionHead } from "./ui";
 
@@ -28,6 +30,16 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   const [drawerIssueId, setDrawerIssueId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [notifs, setNotifs] = useState<NotificationItem[]>([]);
+  const [leadPromptOpen, setLeadPromptOpen] = useState(false);
+
+  // #8: popup "Tôi muốn nhận ưu đãi" sau các luồng tương tác — tối đa 1 lần/thiết bị
+  const maybeShowLeadPrompt = useCallback(() => {
+    try {
+      if (window.localStorage.getItem("kp_lead_prompted")) return;
+      window.localStorage.setItem("kp_lead_prompted", "1");
+    } catch { /* private mode → vẫn hiện */ }
+    window.setTimeout(() => setLeadPromptOpen(true), 600);
+  }, []);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -149,27 +161,58 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         </div>
       </div>
 
-      {/* Banner báo tin vui in-web (thay SMS — Q1) */}
+      {/* Banner báo tin in-web (thay SMS — Q1): biển đã treo + duyệt/từ chối (#15) */}
       {notifs.length > 0 && (
         <div className="mx-auto max-w-[1120px] px-5 pt-4">
-          {notifs.map((n) => (
-            <div key={n.id} className="kp-card slide-up mb-3 border-[#CFE2D5] bg-[#E9F1EB] p-4">
-              <p className="m-0 font-semibold">{COPY.bannerGoodNews(n.payload.location_text || "xóm mình")}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <a href={`${BASE}/bien/${n.ref_id}`} className="kp-btn kp-btn-primary tap px-4 py-1.5 text-sm">
-                  Chia sẻ
-                </a>
-                <button onClick={() => dismissNotif(n.id)} className="tap cursor-pointer px-3 py-2 text-sm text-ink-soft">
-                  Đóng
-                </button>
+          {notifs.map((n) => {
+            const rejected = n.type === "issue_rejected" || n.type === "suggestion_rejected";
+            const detail = n.payload.content
+              ? `“${n.payload.content}”`
+              : n.payload.location_text || null;
+            return (
+              <div
+                key={n.id}
+                className={`kp-card slide-up mb-3 p-4 ${
+                  rejected ? "border-[#EAD3CB] bg-[#FBEFE9]" : "border-[#CFE2D5] bg-[#E9F1EB]"
+                }`}
+              >
+                <p className="m-0 font-semibold">
+                  {n.type === "sign_installed"
+                    ? COPY.bannerGoodNews(n.payload.location_text || "xóm mình")
+                    : rejected
+                      ? COPY.notifRejected
+                      : COPY.notifApproved}
+                </p>
+                {n.type !== "sign_installed" && detail && (
+                  <p className="m-0 mt-0.5 text-[13px] text-ink-soft">{detail}</p>
+                )}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {n.type === "sign_installed" && (
+                    <a href={`${BASE}/bien/${n.ref_id}`} className="kp-btn kp-btn-primary tap px-4 py-1.5 text-sm">
+                      Chia sẻ
+                    </a>
+                  )}
+                  {rejected && (
+                    <button
+                      onClick={() => { dismissNotif(n.id); requireIdentity(() => setProposeOpen(true)); }}
+                      className="kp-btn kp-btn-outline tap px-4 py-1.5 text-sm"
+                    >
+                      Đề xuất lại
+                    </button>
+                  )}
+                  <button onClick={() => dismissNotif(n.id)} className="tap cursor-pointer px-3 py-2 text-sm text-ink-soft">
+                    Đóng
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* ===== HERO: chữ trái + bản đồ phải (prototype .hero-grid) ===== */}
-      <header className="mx-auto grid max-w-[1120px] items-center gap-8 px-5 pb-7 pt-10 lg:grid-cols-[1fr_1.05fr]">
+      {/* ===== HERO: chữ trái + slide ảnh khu phố phải (#1 thay bản đồ) =====
+          minmax(0,…) để cột không nở quá viewport trên mobile (#13, #14) */}
+      <header className="mx-auto grid max-w-[1120px] items-center gap-8 px-5 pb-7 pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
         <div className="flex flex-col items-start">
           <Eyebrow>● Cùng xây khu phố biết thương</Eyebrow>
           <h1 className="m-0 mt-4 font-display text-[clamp(30px,4.4vw,46px)] font-extrabold leading-[1.15] tracking-[-0.01em]">
@@ -193,8 +236,14 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           <Counters counters={data.counters} />
         </div>
 
-        <MapSection map={data.map} onOpenIssue={(id) => setDrawerIssueId(id)} />
+        <NeighborhoodSlider
+          map={data.map}
+          onPropose={() => requireIdentity(() => setProposeOpen(true))}
+        />
       </header>
+
+      {/* ===== TVC / KV CHIẾN DỊCH (#19 — demo chờ final) ===== */}
+      <CampaignMedia />
 
       {/* ===== VÍ DỤ MINH HOẠ: biển treo mẫu ===== */}
       <section className="mx-auto max-w-[1120px] px-5 py-7">
@@ -230,10 +279,10 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
             onClick={() => requireIdentity(() => setProposeOpen(true))}
             className="kp-btn kp-btn-outline tap px-4 py-2 text-sm"
           >
-            + Đề xuất khu phố mới
+            + Đề xuất góc phố mới
           </button>
         </div>
-        <div className="mt-2 grid items-start gap-6 lg:grid-cols-[1.35fr_1fr]">
+        <div className="mt-2 grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
           <IssueList
             issues={data.issues}
             onOpenIssue={(id) => setDrawerIssueId(id)}
@@ -286,6 +335,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
             setProposeOpen(false);
             showToast("Đề xuất của bạn đã vào danh sách chờ duyệt — cảm ơn bạn 💛");
             refresh();
+            maybeShowLeadPrompt();
           }}
         />
       )}
@@ -297,12 +347,16 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           onClose={() => setDrawerIssueId(null)}
           showToast={showToast}
           onChanged={refresh}
+          onEngaged={maybeShowLeadPrompt}
         />
       )}
+      {leadPromptOpen && (
+        <LeadPromptModal me={me} onClose={() => setLeadPromptOpen(false)} showToast={showToast} />
+      )}
 
-      {/* Toast (prototype .toast: nền ink, đáy giữa) */}
+      {/* Toast (prototype .toast: nền ink, đáy giữa) — trên cả modal z-50 */}
       {toast && (
-        <div className="fixed inset-x-4 bottom-6 z-50 mx-auto max-w-md">
+        <div className="fixed inset-x-4 bottom-6 z-[60] mx-auto max-w-md">
           <div className="slide-up rounded-xl bg-ink px-5 py-3 text-center text-sm text-white shadow-kp">
             {toast}
           </div>

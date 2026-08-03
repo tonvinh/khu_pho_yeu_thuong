@@ -91,18 +91,18 @@ export async function seedAdminDemo(client) {
     );
     return r.rows[0].id;
   };
-  await pendingIssue(leLoi, "an_toan_tre_em", "Sân trước Trường Tiểu học Lê Lợi",
+  await pendingIssue(leLoi, "tre_con_trong_xom", "Sân trước Trường Tiểu học Lê Lợi",
     "Giờ tan học xe đông, tụi nhỏ hay băng ra bất ngờ.", coTam, 3);
-  await pendingIssue(leLoi, "chieu_sang", "Cuối ngách 3 Lê Lợi",
+  await pendingIssue(leLoi, "van_minh_tu_te", "Cuối ngách 3 Lê Lợi",
     "Bóng đèn đầu ngách cháy cả tuần, tối về khó thấy đường.", huong, 8);
-  await pendingIssue(tanDinh, "ve_sinh", "Góc chợ Tân Định",
+  await pendingIssue(tanDinh, "xom_xanh_sach", "Góc chợ Tân Định",
     "Cuối buổi chợ rác dồn một góc, mùi khó chịu cả xóm.", minh, 26);
-  await pendingIssue(xomMoi, "giup_nhau", "Dãy trọ 15 hẻm chợ Xóm Mới",
+  await pendingIssue(xomMoi, "giup_do_san_se", "Dãy trọ 15 hẻm chợ Xóm Mới",
     "Mấy nhà mới chuyển tới chưa quen ai, muốn xóm mình kết nối.", baLien, 50);
 
   // Tài khoản khả nghi + đề xuất ĐÍCH DANH (vi phạm "Không đích danh người/nhà" → demo Từ chối)
   const soLa = await newUser("Số Lạ 0908", banCo);
-  const spamIssue = await pendingIssue(banCo, "trom_cap", "Trước nhà số 12 Ngách 5 Bàn Cờ",
+  const spamIssue = await pendingIssue(banCo, "giup_do_san_se", "Trước nhà số 12 Ngách 5 Bàn Cờ",
     "Nhà số 12 hay mất đồ, nghi người trong xóm lấy — đề nghị gắn camera theo dõi nhà bên cạnh.", soLa, 1);
 
   // ===== 2) CÂU NHẮC CHỜ DUYỆT 4N (04 §3) — xen kẽ đạt / không đạt =====

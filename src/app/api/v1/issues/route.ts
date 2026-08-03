@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { q, tx } from "@/lib/db";
 import { jsonError, requireUserWrite } from "@/lib/api";
 import { CATEGORY_CODES } from "@/lib/taxonomy";
+import { resolveNeighborhoodId } from "@/lib/neighborhoods";
 
 export const dynamic = "force-dynamic";
 
@@ -47,28 +48,42 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   if (!body) return jsonError(400, "Dữ liệu không hợp lệ");
-  const { category, location_text, description, neighborhood_id } = body;
+  const { category, location_text, description, neighborhood_id, neighborhood_text,
+    suggested_content } = body;
 
   if (!CATEGORY_CODES.includes(category)) {
-    return jsonError(400, "Loại vấn đề không thuộc danh mục cho phép");
+    return jsonError(400, "Chủ đề không thuộc danh mục cho phép");
   }
   if (!location_text?.trim()) return jsonError(400, "Vui lòng nhập vị trí (ngõ/hẻm/ngách)");
 
-  const nbId = neighborhood_id || auth.user.neighborhood_id;
-  if (!nbId) return jsonError(400, "Vui lòng chọn khu phố của bạn");
+  // Câu nhắc thương gửi kèm (dieuchinh.1.8 #5) — tuỳ chọn, ≤120 ký tự như câu nhắc thường
+  const suggestion = String(suggested_content || "").trim();
+  if (suggestion.length > 120) {
+    return jsonError(400, "Câu nhắc tối đa 120 ký tự (tiêu chí Nhỏ)");
+  }
 
   const created = await tx(async (c) => {
-    const nb = await c.query(`SELECT id FROM neighborhoods WHERE id = $1`, [nbId]);
-    if (nb.rowCount === 0) throw new Error("NB_NOT_FOUND");
+    // #11: chọn từ danh sách HOẶC tự nhập tên phường (free text → khu phố ẩn chờ duyệt)
+    const nbId =
+      (await resolveNeighborhoodId(c, neighborhood_id || null, neighborhood_text || null)) ||
+      auth.user.neighborhood_id;
+    if (!nbId) throw new Error("NB_NOT_FOUND");
     const r = await c.query(
       `INSERT INTO issues (neighborhood_id, category, location_text, description, proposed_by)
        VALUES ($1,$2,$3,$4,$5) RETURNING id, status`,
       [nbId, category, location_text.trim().slice(0, 300),
        (description || "").trim().slice(0, 1000), auth.user.id]
     );
+    // Câu nhắc kèm đề xuất vào hàng chờ duyệt câu — admin thấy ngay ở màn duyệt đề xuất (#17)
+    if (suggestion) {
+      await c.query(
+        `INSERT INTO suggestions (issue_id, author_id, content) VALUES ($1,$2,$3)`,
+        [r.rows[0].id, auth.user.id, suggestion]
+      );
+    }
     return r.rows[0];
   }).catch((e) => (e.message === "NB_NOT_FOUND" ? null : Promise.reject(e)));
 
-  if (!created) return jsonError(400, "Khu phố không tồn tại");
+  if (!created) return jsonError(400, "Vui lòng chọn khu phố của bạn");
   return NextResponse.json({ ok: true, issue: created }, { status: 201 });
 }
