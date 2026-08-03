@@ -1,10 +1,38 @@
 "use client";
-// Danh sách "góc xóm đang chờ" (02 §2) — card dọc theo prototype .issue:
-// ô icon danh mục, tiêu đề "Loại · địa điểm", foot chip số liệu (không hiện pill trạng thái)
+// Danh sách "góc xóm đang chờ" (02 §2) — chia 3 mục dạng tab để trang gọn, cân với cột phải:
+// Mới nhất (thứ tự duyệt mới → cũ) · Chờ bạn bình chọn (có câu, mình chưa thương)
+// · Được yêu thích nhất (nhiều lượt thương nhất). Mỗi tab hiện tối đa 6 card + "Xem thêm".
+// Card dọc theo prototype .issue: ô icon danh mục, tiêu đề "Loại · địa điểm", foot chip số liệu.
+import { useState } from "react";
 import type { IssueCard } from "./types";
 import { categoryIcon, categoryLabel } from "@/lib/taxonomy";
 
-const ORDER: Record<IssueCard["status"], number> = { voting: 0, waiting: 1, signed: 2 };
+const PAGE = 6;
+
+type TabKey = "newest" | "unvoted" | "loved";
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: "newest", label: "Mới nhất" },
+  { key: "unvoted", label: "Chờ bạn bình chọn" },
+  { key: "loved", label: "Được yêu thích nhất" },
+];
+
+const EMPTY_HINT: Record<TabKey, string> = {
+  newest: "Chưa có góc xóm nào đang chờ — bạn đề xuất điểm đầu tiên nhé!",
+  unvoted: "Bạn đã bình chọn hết các góc phố đang mở rồi — cảm ơn bạn 🧡",
+  loved: "Chưa có câu nào được thương — bạn bình chọn mở hàng nhé!",
+};
+
+function tabItems(issues: IssueCard[], tab: TabKey): IssueCard[] {
+  // API đã sắp approved_at DESC (signed cuối) — "Mới nhất" giữ nguyên thứ tự đó
+  if (tab === "unvoted") {
+    return issues.filter((it) => it.status !== "signed" && it.suggestion_count > 0 && !it.voted);
+  }
+  if (tab === "loved") {
+    return issues.filter((it) => it.top_votes > 0).sort((a, b) => b.top_votes - a.top_votes);
+  }
+  return issues;
+}
 
 export default function IssueList({
   issues,
@@ -17,11 +45,39 @@ export default function IssueList({
   onPropose: () => void;
   onToggleVote: (it: IssueCard) => void;
 }) {
-  const list = [...issues].sort((a, b) => ORDER[a.status] - ORDER[b.status]);
+  const [tab, setTab] = useState<TabKey>("newest");
+  const [expanded, setExpanded] = useState(false);
+
+  const list = tabItems(issues, tab);
+  const shown = expanded ? list : list.slice(0, PAGE);
+  const hidden = list.length - shown.length;
 
   return (
     <div className="flex flex-col gap-3">
-      {list.map((it) => (
+      <div className="flex flex-wrap gap-1.5">
+        {TABS.map((t) => {
+          const n = tabItems(issues, t.key).length;
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => { setTab(t.key); setExpanded(false); }}
+              className={`tap cursor-pointer rounded-full border px-3.5 py-1.5 text-[12.5px] font-semibold transition ${
+                active
+                  ? "border-brick bg-brick text-white shadow-kp-s"
+                  : "border-cream-dark bg-white text-ink-soft hover:border-brick/35 hover:text-brick-dark"
+              }`}
+            >
+              {t.label}
+              <span className={`ml-1.5 text-[11px] ${active ? "text-white/80" : "text-ink-soft/70"}`}>
+                {n}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {shown.map((it) => (
         <button
           key={it.id}
           onClick={() => onOpenIssue(it.id)}
@@ -90,12 +146,31 @@ export default function IssueList({
         </button>
       ))}
 
+      {hidden > 0 && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="kp-btn kp-btn-outline tap self-center px-5 py-2 text-sm"
+        >
+          Xem thêm {hidden} góc phố
+        </button>
+      )}
+      {expanded && list.length > PAGE && (
+        <button
+          onClick={() => setExpanded(false)}
+          className="tap cursor-pointer self-center px-3 py-1 text-[12.5px] font-semibold text-ink-soft hover:text-brick-dark"
+        >
+          Thu gọn
+        </button>
+      )}
+
       {list.length === 0 && (
         <div className="kp-card flex flex-col items-center gap-3 p-6 text-center text-sm text-ink-soft">
-          Chưa có góc xóm nào đang chờ — bạn đề xuất điểm đầu tiên nhé!
-          <button onClick={onPropose} className="kp-btn kp-btn-primary tap px-5 py-2">
-            + Đề xuất góc phố mới
-          </button>
+          {EMPTY_HINT[tab]}
+          {tab === "newest" && (
+            <button onClick={onPropose} className="kp-btn kp-btn-primary tap px-5 py-2">
+              + Đề xuất góc phố mới
+            </button>
+          )}
         </div>
       )}
     </div>
