@@ -14,7 +14,7 @@ interface SignData {
   author_name: string;
   location_text: string;
   neighborhood_name: string;
-  sign_photo_key: string | null;
+  image_key: string | null;
   installed_date: string | null;
 }
 
@@ -22,7 +22,7 @@ async function loadSign(id: string): Promise<SignData | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   return one<SignData>(
     `SELECT s.id, s.content, u.display_name AS author_name, i.location_text,
-       n.name AS neighborhood_name, s.sign_photo_key, s.installed_date
+       n.name AS neighborhood_name, s.image_key, s.installed_date
      FROM suggestions s
      JOIN issues i ON i.id = s.issue_id
      JOIN neighborhoods n ON n.id = i.neighborhood_id
@@ -56,7 +56,7 @@ export default async function SignPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const s = await loadSign(id);
   if (!s) notFound();
-  const photo = imgUrl(s.sign_photo_key);
+  const photo = imgUrl(s.image_key);
 
   return (
     <main className="mx-auto max-w-md px-4 py-10 text-center">

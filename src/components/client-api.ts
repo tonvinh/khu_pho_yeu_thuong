@@ -27,7 +27,7 @@ export async function apiGet<T = unknown>(path: string): Promise<T> {
 }
 
 export async function apiSend<T = unknown>(
-  method: "POST" | "PATCH",
+  method: "POST" | "PATCH" | "DELETE",
   path: string,
   body?: unknown
 ): Promise<T> {

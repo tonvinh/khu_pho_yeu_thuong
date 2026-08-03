@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (!issue) return jsonError(404, "Không tìm thấy vấn đề");
 
   const suggestions = await q(
-    `SELECT s.id, s.content, s.status, s.sign_photo_key, u.display_name AS author_name,
+    `SELECT s.id, s.content, s.status, s.image_key, u.display_name AS author_name,
        (s.author_id = $2) AS is_mine,
        (SELECT count(*)::int FROM votes v WHERE v.suggestion_id = s.id AND v.is_valid) AS votes,
        EXISTS (SELECT 1 FROM votes v WHERE v.suggestion_id = s.id AND v.user_id = $2) AS voted
@@ -35,8 +35,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     issue: { ...issue, photo_url: imgUrl(issue.photo_key as string | null), photo_key: undefined },
     suggestions: suggestions.map((s) => ({
       ...s,
-      sign_photo_url: imgUrl(s.sign_photo_key as string | null),
-      sign_photo_key: undefined,
+      sign_photo_url: imgUrl(s.image_key as string | null),
+      image_key: undefined,
     })),
   });
 }

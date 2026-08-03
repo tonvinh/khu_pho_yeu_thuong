@@ -48,7 +48,7 @@ export default function SignsPage() {
     const form = new FormData();
     form.append("file", file);
     try {
-      await apiUpload(`/api/admin/suggestions/${id}/sign-photo`, form);
+      await apiUpload(`/api/admin/suggestions/${id}/photo`, form);
       setMsg("Đã lưu ảnh biển");
     } catch (e) { setMsg(e instanceof Error ? e.message : "Lỗi upload"); }
   };

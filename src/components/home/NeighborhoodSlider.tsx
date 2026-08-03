@@ -1,8 +1,9 @@
 "use client";
 // Thay bản đồ khu phố bằng slide ảnh khu phố tiêu biểu (dieuchinh.1.8 #1, ORDER #2):
-// chọn phường → pack [ảnh + tag trạng thái + tên + địa chỉ]. Ảnh do admin upload
-// (photo_key / map_stylized_key); chưa có ảnh → nền cách điệu placeholder.
-import { useMemo, useState } from "react";
+// chọn phường → pack [ảnh + tag trạng thái + tên + địa chỉ]. Chỉ hiện khu phố admin
+// bật "tiêu biểu"; ảnh tổng quan tối đa 4 (neighborhood_photos, kích thước đồng nhất,
+// admin upload); chưa có ảnh → bản đồ cách điệu / nền placeholder.
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { MapData } from "./types";
 import { formatAddress } from "@/lib/address";
 
@@ -30,8 +31,26 @@ export default function NeighborhoodSlider({
   onPropose: () => void;
 }) {
   const [index, setIndex] = useState(0);
-  const list = map.neighborhoods;
-  const nb = list[index];
+  const [photoIdx, setPhotoIdx] = useState(0);
+  // Block "Khu phố tiêu biểu": chỉ khu admin bật tiêu biểu (đã kèm điều kiện đang
+  // hiển thị — server tự tắt tiêu biểu khi ẩn). Chưa chọn khu nào → hiện tất cả
+  // để trang chủ không trống.
+  const list = useMemo(() => {
+    const featured = map.neighborhoods.filter((n) => n.is_featured);
+    return featured.length > 0 ? featured : map.neighborhoods;
+  }, [map.neighborhoods]);
+  const nb = list[Math.min(index, list.length - 1)];
+  const chipRowRef = useRef<HTMLDivElement>(null);
+
+  // 20 khu phố tiêu chuẩn → hàng chip dài quá khung: giữ chip đang xem trong tầm nhìn
+  // khi chuyển slide bằng mũi tên (không dùng scrollIntoView để khỏi cuộn cả trang)
+  useEffect(() => {
+    const row = chipRowRef.current;
+    const chip = row?.children[index] as HTMLElement | undefined;
+    if (!row || !chip) return;
+    const left = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;
+    row.scrollTo({ left, behavior: "smooth" });
+  }, [index]);
 
   const status = useMemo(() => {
     if (!nb) return NB_STATUS.empty;
@@ -43,9 +62,12 @@ export default function NeighborhoodSlider({
   }, [map.pins, nb]);
 
   if (!nb) return null;
-  const photo = nb.photo_url || nb.map_url;
-  const prev = () => setIndex((i) => (i - 1 + list.length) % list.length);
-  const next = () => setIndex((i) => (i + 1) % list.length);
+  // Tối đa 4 ảnh tổng quan (kích thước đồng nhất) — chưa có thì dùng bản đồ cách điệu
+  const photos = nb.photo_urls.length > 0 ? nb.photo_urls : nb.map_url ? [nb.map_url] : [];
+  const photo = photos[Math.min(photoIdx, photos.length - 1)] ?? null;
+  const goto = (i: number) => { setIndex(i); setPhotoIdx(0); };
+  const prev = () => goto((index - 1 + list.length) % list.length);
+  const next = () => goto((index + 1) % list.length);
 
   return (
     <div className="kp-card kp-card-3 relative overflow-hidden border border-cream-dark bg-gradient-to-br from-[#FBF7EF] to-[#EFE6D6] p-3.5">
@@ -56,12 +78,12 @@ export default function NeighborhoodSlider({
 
       {/* Chọn phường đang xem (ORDER #2: "Ấn chọn Phường sẽ xuất hiện pack") */}
       {list.length > 1 && (
-        <div className="flex gap-1.5 overflow-x-auto px-2 pb-2.5">
+        <div ref={chipRowRef} className="flex gap-1.5 overflow-x-auto px-2 pb-2.5">
           {list.map((n, i) => (
             <button
               key={n.id}
               type="button"
-              onClick={() => setIndex(i)}
+              onClick={() => goto(i)}
               className={`shrink-0 cursor-pointer rounded-full border px-3 py-1 text-[12.5px] font-semibold transition ${
                 i === index
                   ? "border-brick bg-brick text-white"
@@ -92,6 +114,23 @@ export default function NeighborhoodSlider({
         >
           {status.label}
         </span>
+
+        {/* Chấm chuyển giữa tối đa 4 ảnh tổng quan của khu phố đang xem */}
+        {photos.length > 1 && (
+          <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5">
+            {photos.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Ảnh ${i + 1}/${photos.length}`}
+                onClick={() => setPhotoIdx(i)}
+                className={`h-2 w-2 cursor-pointer rounded-full shadow-kp-s transition ${
+                  i === Math.min(photoIdx, photos.length - 1) ? "bg-white" : "bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Điều hướng slide */}
         {list.length > 1 && (

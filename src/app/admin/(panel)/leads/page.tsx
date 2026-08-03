@@ -53,17 +53,16 @@ export default function LeadsPage() {
 
       <Card>
         {rows.length === 0 && <p className="text-sm text-ink-soft">Chưa có lead nào.</p>}
-        <div className="overflow-x-auto">
+        <div className="max-h-[70vh] overflow-auto">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
-              <tr className="border-b border-cream-dark text-left text-xs text-ink-soft">
-                <th className="py-2 pr-3">Thời gian</th>
-                <th className="py-2 pr-3">Tên</th>
-                <th className="py-2 pr-3">SĐT</th>
-                <th className="py-2 pr-3">Khu phố</th>
-                <th className="py-2 pr-3">Quan tâm</th>
-                <th className="py-2 pr-3">Nguồn</th>
-                <th className="py-2 pr-3">Trạng thái</th>
+              {/* Header đông cứng khi cuộn: sticky + kẻ dưới bằng shadow */}
+              <tr className="text-left text-xs text-ink-soft">
+                {["Thời gian", "Tên", "SĐT", "Khu phố", "Quan tâm", "Nguồn", "Trạng thái"].map((h) => (
+                  <th key={h} className="sticky top-0 z-10 bg-white py-2 pr-3 shadow-[0_1px_0_0_var(--color-cream-dark)]">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>

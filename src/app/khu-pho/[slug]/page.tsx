@@ -13,13 +13,16 @@ interface NbData {
   certified_4n: boolean;
   certified_at: string | null;
   photo_key: string | null;
+  certificate_photo_key: string | null;
   total: number;
   signed: number;
 }
 
 async function loadNb(slug: string): Promise<NbData | null> {
   return one<NbData>(
-    `SELECT n.name, n.certified_4n, n.certified_at, n.photo_key,
+    `SELECT n.name, n.certified_4n, n.certified_at, n.certificate_photo_key,
+       (SELECT p.photo_key FROM neighborhood_photos p
+          WHERE p.neighborhood_id = n.id ORDER BY p.position LIMIT 1) AS photo_key,
        (SELECT count(*)::int FROM issues WHERE neighborhood_id=n.id
           AND status IN ('waiting','voting','signed')) AS total,
        (SELECT count(*)::int FROM issues WHERE neighborhood_id=n.id AND status='signed') AS signed
@@ -56,7 +59,8 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
   const { slug } = await params;
   const nb = await loadNb(slug);
   if (!nb) notFound();
-  const photo = imgUrl(nb.photo_key);
+  // Đã đạt chuẩn 4N & có ảnh chứng nhận → ưu tiên khoe bảng chứng nhận
+  const photo = imgUrl(nb.certified_4n ? nb.certificate_photo_key || nb.photo_key : nb.photo_key);
   const pct = nb.total === 0 ? 0 : Math.round((nb.signed / nb.total) * 100);
 
   return (

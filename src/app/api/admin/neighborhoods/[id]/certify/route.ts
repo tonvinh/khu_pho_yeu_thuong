@@ -19,7 +19,10 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   );
   if (!nb) return jsonError(404, "Không tìm thấy khu phố");
   if (body?.revoke === true) {
-    await q(`UPDATE neighborhoods SET certified_4n=false, certified_at=NULL WHERE id=$1`, [id]);
+    // Thu hồi chứng nhận — ảnh chứng nhận GIỮ NGUYÊN (độc lập trạng thái 4N từ migration 005)
+    await q(
+      `UPDATE neighborhoods SET certified_4n=false, certified_at=NULL WHERE id=$1`, [id]
+    );
     return NextResponse.json({ ok: true });
   }
   // Điều kiện: 100% biển của các vấn đề đã duyệt trong khu được treo (02 §6)

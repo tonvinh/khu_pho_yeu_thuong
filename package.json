@@ -10,6 +10,7 @@
     "lint": "next lint",
     "migrate": "node scripts/migrate.mjs",
     "seed": "node scripts/seed.mjs",
+    "seed:images": "node scripts/seed-images.mjs",
     "create-admin": "node scripts/create-admin.mjs",
     "test": "vitest run",
     "seed:admin-demo": "node scripts/seed-admin-demo.mjs"

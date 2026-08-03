@@ -26,8 +26,11 @@ export interface MapNeighborhood {
   slug: string;
   certified_4n: boolean;
   certified_at: string | null;
+  /** Bật ở admin → xuất hiện trong block "Khu phố tiêu biểu" đầu trang chủ */
+  is_featured: boolean;
   map_url: string | null;
-  photo_url: string | null;
+  /** Tối đa 4 ảnh tổng quan, kích thước đồng nhất (admin upload, theo position) */
+  photo_urls: string[];
 }
 
 export interface MapPin {

@@ -25,8 +25,12 @@ async function loadHomeData(): Promise<HomeData> {
        FROM issues i JOIN neighborhoods n ON n.id = i.neighborhood_id
        WHERE i.status IN ('waiting','voting','signed')
        ORDER BY (i.status = 'signed'), i.approved_at DESC NULLS LAST`),
-    q(`SELECT id, name, ward, city, slug, certified_4n, certified_at, map_stylized_key, photo_key
-       FROM neighborhoods WHERE NOT hidden ORDER BY name`),
+    q(`SELECT n.id, n.name, n.ward, n.city, n.slug, n.certified_4n, n.certified_at,
+         n.is_featured, n.map_stylized_key,
+         COALESCE((SELECT json_agg(p.photo_key ORDER BY p.position)
+           FROM neighborhood_photos p WHERE p.neighborhood_id = n.id), '[]'::json) AS photo_keys
+       FROM neighborhoods n WHERE NOT n.hidden
+       ORDER BY n.featured_position NULLS LAST, n.name`),
     q(`SELECT id, neighborhood_id, category, location_text, status, pin_x, pin_y
        FROM issues WHERE status IN ('waiting','voting','signed')
          AND pin_x IS NOT NULL AND pin_y IS NOT NULL`),
@@ -46,8 +50,9 @@ async function loadHomeData(): Promise<HomeData> {
         slug: n.slug as string,
         certified_4n: n.certified_4n as boolean,
         certified_at: n.certified_at as string | null,
+        is_featured: n.is_featured as boolean,
         map_url: imgUrl(n.map_stylized_key as string | null),
-        photo_url: imgUrl(n.photo_key as string | null),
+        photo_urls: (n.photo_keys as string[]).map((k) => imgUrl(k)!),
       })),
       pins: pins as HomeData["map"]["pins"],
     },

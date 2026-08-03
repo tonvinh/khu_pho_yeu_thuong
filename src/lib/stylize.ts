@@ -9,18 +9,36 @@ export async function stylizeMap(original: Buffer): Promise<Buffer> {
     withoutEnlargement: true,
   });
 
-  // Grayscale + median (mờ chi tiết) + posterize nhẹ qua gamma, rồi tint đỏ gạch trên nền kem
+  // Desaturate GIỮ 3 band (KHÔNG dùng .grayscale() — ảnh 1 band làm .tint()/.linear()
+  // của sharp 0.34 không ăn màu, ra đen trắng), median (mờ chi tiết) + posterize nhẹ
+  // qua gamma, rồi map tông bằng linear(): đen → đỏ gạch (178,58,46), trắng → kem (251,245,236)
   const duotone = await base
-    .grayscale()
+    .flatten({ background: "#fff" })
+    .removeAlpha()
+    .modulate({ saturation: 0 })
     .median(3)
     .normalise()
     .gamma(1.2)
-    .tint({ r: 178, g: 58, b: 46 }) // đỏ gạch
-    .modulate({ brightness: 1.18, saturation: 0.85 })
+    .linear(
+      [(251 - 178) / 255, (245 - 58) / 255, (236 - 46) / 255],
+      [178, 58, 46]
+    )
     .webp({ quality: 78 })
     .toBuffer();
 
   return duotone;
+}
+
+/** Ảnh tổng quan khu phố: kích thước ĐỒNG NHẤT 1280×720 (16:9, crop vùng nổi bật) → WebP.
+ *  Mọi ảnh upload đều qua đây nên 4 slot của một khu phố luôn cùng cỡ. */
+export async function toCover(
+  original: Buffer, width = 1280, height = 720, quality = 82
+): Promise<Buffer> {
+  return sharp(original)
+    .rotate()
+    .resize(width, height, { fit: "cover", position: "attention" })
+    .webp({ quality })
+    .toBuffer();
 }
 
 /** Resize ảnh thường (địa điểm, biển, khu phố) → WebP */
