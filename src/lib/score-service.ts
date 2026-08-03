@@ -55,6 +55,43 @@ export async function invalidateScoreEvent(
 }
 
 /**
+ * Ghi n event vote_received một lượt (admin điều chỉnh số thương ở trang Theo dõi thương).
+ * Validity theo shadow-ban của NGƯỜI NHẬN — cùng quy tắc với recordScoreEvent.
+ */
+export async function recordVoteReceivedBulk(
+  client: PoolClient,
+  userId: string,
+  refId: string,
+  n: number
+): Promise<void> {
+  if (n <= 0) return;
+  await client.query(
+    `INSERT INTO score_events (user_id, type, points, ref_id, is_valid)
+     SELECT u.id, 'vote_received', 1, $2, NOT u.is_shadow_banned
+     FROM users u, generate_series(1, $3)
+     WHERE u.id = $1`,
+    [userId, refId, n]
+  );
+}
+
+/** Vô hiệu n event vote_received mới nhất (admin hạ số thương) — sổ cái append-only */
+export async function invalidateVoteReceivedBulk(
+  client: PoolClient,
+  userId: string,
+  refId: string,
+  n: number
+): Promise<void> {
+  if (n <= 0) return;
+  await client.query(
+    `UPDATE score_events SET is_valid = false
+     WHERE id IN (SELECT id FROM score_events
+                  WHERE user_id = $1 AND type = 'vote_received' AND ref_id = $2 AND is_valid
+                  ORDER BY created_at DESC LIMIT $3)`,
+    [userId, refId, n]
+  );
+}
+
+/**
  * Side-effects khi câu nhắc chuyển installed (02 §9):
  * issue → signed (pin xanh), +30 điểm tác giả, tạo notification in-web (KHÔNG SMS — Q1).
  */

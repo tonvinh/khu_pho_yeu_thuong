@@ -21,6 +21,11 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
 - Seed ưu tiên đúng CÔNG THỨC điểm; vài con số hiển thị trong design (52 thương của Bà Liên)
   mâu thuẫn công thức nên seed dùng số khớp điểm (45 thương → 82đ).
 - Node scripts trong `scripts/` là .mjs thuần (không TS) để chạy được trong image production.
+- Trang admin "Theo dõi thương" (`/admin/voting`): admin sửa số thương của câu/người qua
+  `PATCH /api/admin/votes`. Tăng = phiếu `votes` thật với `source='admin'`, `user_id NULL`
+  (migration 007) nên mọi query đếm votes không phải sửa; giảm = xoá phiếu admin trước rồi
+  vô hiệu phiếu cư dân mới nhất. Điểm ghi/thu hồi kèm theo qua `recordVoteReceivedBulk` /
+  `invalidateVoteReceivedBulk` (score-service), có audit_logs `votes_adjust`.
 
 ## Điều chỉnh 1/8 (docs/dieuchinh.1.8.xlsx — sheet ACTION LIST)
 
