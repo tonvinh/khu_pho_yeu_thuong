@@ -40,12 +40,15 @@ export function Drawer({
   sub,
   onClose,
   children,
+  wide = false,
 }: {
   icon?: React.ReactNode;
   title: React.ReactNode;
   sub?: React.ReactNode;
   onClose: () => void;
   children: React.ReactNode;
+  /** Bản rộng cho form dài (VD: đề xuất góc phố) */
+  wide?: boolean;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -59,7 +62,9 @@ export function Drawer({
       <aside
         role="dialog"
         aria-modal="true"
-        className="kp-drawer absolute right-0 top-0 flex h-full w-full max-w-[440px] flex-col bg-cream shadow-[-12px_0_40px_rgba(40,25,10,0.2)]"
+        className={`kp-drawer absolute right-0 top-0 flex h-full w-full flex-col bg-cream shadow-[-12px_0_40px_rgba(40,25,10,0.2)] ${
+          wide ? "max-w-[600px]" : "max-w-[440px]"
+        }`}
       >
         <div className="flex items-start gap-3 border-b border-cream-dark px-5 py-[18px]">
           {icon && (

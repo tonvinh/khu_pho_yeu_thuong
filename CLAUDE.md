@@ -27,6 +27,13 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
   vô hiệu phiếu cư dân mới nhất. Điểm ghi/thu hồi kèm theo qua `recordVoteReceivedBulk` /
   `invalidateVoteReceivedBulk` (score-service), có audit_logs `votes_adjust`.
 
+- Địa lý hành chính MỚI (1/7/2025): danh mục chính quy 34 tỉnh/thành + 3.321 phường/xã
+  (Quyết định 19/2025/QĐ-TTg) nằm trong bảng `provinces`/`wards` (migration 009, tên chính
+  thức "Thành phố Hồ Chí Minh"/"Tỉnh ..."). Client load qua GET `/api/v1/geo`
+  (`?province=<mã|tên>` → wards) để CHỌN thay vì nhập tay (form đề xuất + admin Khu phố);
+  validate server dùng `geoError()` async trong `src/lib/geo.ts` (vn-geo.ts tĩnh đã xoá).
+  `neighborhoods.city/ward` vẫn lưu TÊN — không có phường trùng tên trong cùng tỉnh.
+
 - Trang admin "Nội dung" (`/admin/noi-dung`): sửa text trang chủ (hero, khu "Câu chuyện
   chiến dịch" + video YouTube + ảnh KV, khối ưu đãi lead). Bảng `site_content` (migration
   008) CHỈ lưu ghi đè key–value — key vắng/xoá → fallback mặc định trong

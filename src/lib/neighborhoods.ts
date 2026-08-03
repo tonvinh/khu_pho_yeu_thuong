@@ -20,7 +20,9 @@ function slugify(s: string): string {
 export async function resolveNeighborhoodId(
   db: Db,
   id?: string | null,
-  text?: string | null
+  text?: string | null,
+  // Địa lý hành chính mới (1/7/2025): Tỉnh/Thành + Phường/Xã kèm khi tự nhập khu phố
+  geo?: { city?: string | null; ward?: string | null }
 ): Promise<string | null> {
   if (id) {
     const r = await db.query(`SELECT id FROM neighborhoods WHERE id = $1`, [id]);
@@ -35,9 +37,11 @@ export async function resolveNeighborhoodId(
   if (found.rows[0]) return found.rows[0].id as string;
   const base = slugify(name) || "khu-pho";
   const ins = await db.query(
-    `INSERT INTO neighborhoods (name, slug, hidden)
-     VALUES ($1, $2 || '-' || substr(md5(random()::text), 1, 6), true) RETURNING id`,
-    [name, base]
+    `INSERT INTO neighborhoods (name, slug, hidden, city, ward)
+     VALUES ($1, $2 || '-' || substr(md5(random()::text), 1, 6), true, $3, $4) RETURNING id`,
+    [name, base,
+     String(geo?.city || "").trim().slice(0, 120) || null,
+     String(geo?.ward || "").trim().slice(0, 120) || null]
   );
   return ins.rows[0].id as string;
 }

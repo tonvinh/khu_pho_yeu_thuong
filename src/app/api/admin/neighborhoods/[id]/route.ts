@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { one } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
-import { geoError } from "@/lib/vn-geo";
+import { geoError } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const city = body.city !== undefined ? String(body.city).trim() || null : nb.city;
   if (!name) return jsonError(400, "Tên khu phố không được để trống");
   if (name.length > 200) return jsonError(400, "Tên khu phố tối đa 200 ký tự");
-  const geoErr = geoError(city, ward);
+  const geoErr = await geoError(city, ward);
   if (geoErr) return jsonError(400, geoErr);
 
   const hidden = body.visible !== undefined ? body.visible !== true : nb.hidden;

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { q, tx } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
-import { geoError, PROVINCES } from "@/lib/vn-geo";
+import { geoError } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   if ("error" in auth) return auth.error;
   const ws = XLSX.utils.aoa_to_sheet([
     ["Tên khu phố", "Tỉnh/Thành phố", "Phường/Xã"],
-    ["Xóm Đình An Nhơn (VÍ DỤ — xoá dòng này)", PROVINCES[1], "Phường Bàn Cờ"],
+    ["Xóm Đình An Nhơn (VÍ DỤ — xoá dòng này)", "Thành phố Hồ Chí Minh", "Phường Bàn Cờ"],
   ]);
   ws["!cols"] = [{ wch: 40 }, { wch: 24 }, { wch: 24 }];
   const wb = XLSX.utils.book_new();
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     else if (row.ten.length > 200) row.errors.push("Tên khu phố tối đa 200 ký tự");
     if (!row.tinhthanh) row.errors.push("Thiếu Tỉnh/Thành phố");
     if (!row.phuongxa) row.errors.push("Thiếu Phường/Xã");
-    const geoErr = geoError(row.tinhthanh, row.phuongxa);
+    const geoErr = await geoError(row.tinhthanh, row.phuongxa);
     if (geoErr) row.errors.push(geoErr);
     rows.push(row);
   }
