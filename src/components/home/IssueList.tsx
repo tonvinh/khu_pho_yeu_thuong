@@ -1,14 +1,8 @@
 "use client";
 // Danh sách "góc xóm đang chờ" (02 §2) — card dọc theo prototype .issue:
-// ô icon danh mục, tiêu đề "Loại · địa điểm", pill trạng thái, foot chip số liệu
+// ô icon danh mục, tiêu đề "Loại · địa điểm", foot chip số liệu (không hiện pill trạng thái)
 import type { IssueCard } from "./types";
-import { categoryIcon, categoryLabel, ISSUE_STATUS_LABEL } from "@/lib/taxonomy";
-
-const PILL: Record<IssueCard["status"], string> = {
-  waiting: "bg-status-waiting-bg text-status-waiting",
-  voting: "bg-status-voting-bg text-status-voting",
-  signed: "bg-status-signed-bg text-status-signed",
-};
+import { categoryIcon, categoryLabel } from "@/lib/taxonomy";
 
 const ORDER: Record<IssueCard["status"], number> = { voting: 0, waiting: 1, signed: 2 };
 
@@ -45,11 +39,6 @@ export default function IssueList({
                 {it.description || "Góc xóm đang chờ một lời nhắc dễ thương"} · {it.neighborhood_name}
               </div>
             </div>
-            <span
-              className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${PILL[it.status]}`}
-            >
-              {ISSUE_STATUS_LABEL[it.status]}
-            </span>
           </div>
           <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-soft">
             {it.status === "signed" && it.top_quote ? (
@@ -64,27 +53,33 @@ export default function IssueList({
                     <span className="rounded-full bg-[#F3ECE0] px-2.5 py-0.5 text-[11.5px]">
                       🧡 {it.top_votes.toLocaleString("vi-VN")} lượt thương
                     </span>
-                    {/* Thương nhanh ngay trên card (không mở drawer) — toggle theo cookie
-                        người xem; span vì card đã là <button> (không lồng button) */}
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => { e.stopPropagation(); onToggleVote(it); }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onToggleVote(it);
-                        }
-                      }}
-                      className={`tap ml-auto cursor-pointer rounded-full border px-2.5 py-1 text-[11.5px] font-semibold transition ${
-                        it.voted
-                          ? "border-olive bg-olive text-white hover:bg-olive-dark"
-                          : "border-cream-dark bg-white text-ink-soft hover:border-olive hover:text-olive-dark"
-                      }`}
-                    >
-                      {it.voted ? "🧡 Đã bình chọn" : "Chưa bình chọn"}
-                    </span>
+                    {/* Thương nhanh ngay trên card (không mở drawer) — span vì card đã là
+                        <button> (không lồng button). Đã bình chọn rồi thì chip chỉ hiển thị,
+                        bấm lại không đổi kết quả. */}
+                    {it.voted ? (
+                      <span
+                        onClick={(e) => e.stopPropagation()}
+                        className="ml-auto inline-flex cursor-default items-center gap-1 rounded-full border border-brick/25 bg-brick-light px-3 py-1.5 text-[11.5px] font-semibold text-brick-dark"
+                      >
+                        🧡 Đã bình chọn
+                      </span>
+                    ) : (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => { e.stopPropagation(); onToggleVote(it); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onToggleVote(it);
+                          }
+                        }}
+                        className="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-full border border-brick/35 bg-white px-3 py-1.5 text-[11.5px] font-semibold text-brick-dark transition hover:bg-brick-light"
+                      >
+                        🧡 Bình chọn
+                      </span>
+                    )}
                   </>
                 ) : (
                   <span>Chưa có ai viết — bạn mở hàng nhé!</span>
