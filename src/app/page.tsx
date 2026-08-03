@@ -14,7 +14,7 @@ async function loadHomeData(): Promise<HomeData> {
   // Người xem hiện tại (cookie kp_session) — để đánh dấu góc phố đã bình chọn hay chưa
   const viewer = await getSessionUser();
   const viewerId = viewer?.id ?? "00000000-0000-0000-0000-000000000000";
-  const [counters, issues, neighborhoods, pins, ambassadors, nom, content] = await Promise.all([
+  const [counters, issues, neighborhoods, pins, ambassadors, nom, approvedSigns, content] = await Promise.all([
     getCounters(),
     q(`SELECT i.id, i.category, i.location_text, i.description, i.status,
          i.neighborhood_id, n.name AS neighborhood_name,
@@ -44,6 +44,16 @@ async function loadHomeData(): Promise<HomeData> {
          AND pin_x IS NOT NULL AND pin_y IS NOT NULL`),
     getAmbassadors(10),
     getNeighborhoodOfMonth(),
+    // Lời nhắc đã duyệt (kèm hình) cho block "Lời nhắc khi lên biển trông như thế nào?"
+    // — ưu tiên câu được thương nhiều, thiếu thì HomeShell bù ví dụ mẫu
+    q(`SELECT s.id, s.content, s.image_key, i.location_text, u.display_name AS author_name,
+         (SELECT count(*)::int FROM votes v WHERE v.suggestion_id = s.id AND v.is_valid) AS votes
+       FROM suggestions s
+       JOIN issues i ON i.id = s.issue_id
+       JOIN users u ON u.id = s.author_id
+       WHERE s.status IN ('approved','selected','produced','installed')
+       ORDER BY votes DESC, s.created_at DESC
+       LIMIT 6`),
     getSiteContent(),
   ]);
 
@@ -68,6 +78,13 @@ async function loadHomeData(): Promise<HomeData> {
     },
     ambassadors,
     neighborhoodOfMonth: nom,
+    approvedSigns: approvedSigns.map((s) => ({
+      id: s.id as string,
+      content: s.content as string,
+      author_name: s.author_name as string,
+      location_text: s.location_text as string,
+      image_url: imgUrl(s.image_key as string | null),
+    })),
     content,
   };
 }

@@ -85,28 +85,40 @@ export function Drawer({
   );
 }
 
-/** Biển treo minh hoạ (prototype .donebox .sign) — có móc treo, nghiêng nhẹ */
+/** Biển treo minh hoạ (prototype .donebox .sign) — có móc treo, nghiêng nhẹ,
+ *  lời nhắc đã duyệt có hình thì hiện hình ngay trong biển */
 export function HangSign({
   quote,
   by,
   spot,
+  imageUrl,
   tilt = -1.5,
 }: {
   quote: string;
   by?: string;
   spot?: string;
+  imageUrl?: string | null;
   tilt?: number;
 }) {
   return (
-    <figure className="m-0 flex flex-col items-center gap-2 text-center">
+    <figure className="m-0 flex w-full flex-col items-center gap-2 text-center">
       <span aria-hidden className="flex flex-col items-center">
         <span className="h-1.5 w-1.5 rounded-full bg-[#b9a888]" />
         <span className="h-3 w-[2px] bg-[#b9a888]" />
       </span>
       <blockquote
-        className="m-0 rounded-xl border-[1.5px] border-olive bg-white px-[18px] py-[13px] font-display text-[17px] font-semibold leading-snug shadow-kp-s"
+        className="m-0 w-full rounded-xl border-[1.5px] border-olive bg-white px-[18px] py-[13px] font-display text-[17px] font-semibold leading-snug shadow-kp-s"
         style={{ transform: `rotate(${tilt}deg)` }}
       >
+        {imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={imageUrl}
+            alt=""
+            loading="lazy"
+            className="mb-2.5 h-32 w-full rounded-lg object-cover"
+          />
+        )}
         {quote}
       </blockquote>
       {(by || spot) && (

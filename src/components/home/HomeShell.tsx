@@ -56,13 +56,14 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           "/api/v1/leaderboard"
         ),
       ]);
-      // content (nội dung admin sửa) chỉ SSR lúc đầu — polling giữ nguyên bản đang có
+      // content + lời nhắc đã duyệt chỉ SSR lúc đầu — polling giữ nguyên bản đang có
       setData((prev) => ({
         counters,
         issues: issuesRes.issues,
         map: mapRes,
         ambassadors: lb.ambassadors,
         neighborhoodOfMonth: lb.neighborhood_of_month,
+        approvedSigns: prev.approvedSigns,
         content: prev.content,
       }));
     } catch {
@@ -148,6 +149,16 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   const featured = data.issues
     .filter((it) => it.top_quote && it.status !== "signed")
     .sort((a, b) => b.top_votes - a.top_votes)[0];
+
+  // Lời nhắc đã duyệt (kèm hình) — bỏ câu trùng card "được thương nhất",
+  // thiếu chỗ (dưới 6 card) thì bù bằng ví dụ minh hoạ tĩnh
+  const approvedSigns = data.approvedSigns.filter((s) => s.content !== featured?.top_quote);
+  const signSlots = 6 - (featured ? 1 : 0) - approvedSigns.length;
+  const fillerSigns = signSlots > 0
+    ? EXAMPLE_SIGNS.filter(
+        (e) => e.quote !== featured?.top_quote && !approvedSigns.some((s) => s.content === e.quote)
+      ).slice(0, signSlots)
+    : [];
 
   return (
     <div>
@@ -282,10 +293,18 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
               tilt={1.5}
             />
           )}
-          {EXAMPLE_SIGNS.filter((s) => s.quote !== featured?.top_quote)
-            .slice(0, featured ? 5 : 6)
-            .map((s, i) => (
-            <HangSign key={s.quote} quote={`“${s.quote}”`} by={s.by} spot={s.spot} tilt={i % 2 ? 1.5 : -1.5} />
+          {approvedSigns.map((s, i) => (
+            <HangSign
+              key={s.id}
+              quote={`“${s.content}”`}
+              by={s.author_name}
+              spot={s.location_text}
+              imageUrl={s.image_url}
+              tilt={i % 2 ? 1.5 : -1.5}
+            />
+          ))}
+          {fillerSigns.map((s, i) => (
+            <HangSign key={s.quote} quote={`“${s.quote}”`} by={s.by} spot={s.spot} tilt={i % 2 ? -1.5 : 1.5} />
           ))}
         </div>
       </section>
