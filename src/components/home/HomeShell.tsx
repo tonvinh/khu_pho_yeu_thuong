@@ -136,6 +136,28 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
     [requireIdentity, refresh, maybeShowLeadPrompt, showToast]
   );
 
+  /** Bình chọn lời nhắc đã duyệt ở block biển mẫu — chỉ thương, đã thương thì thôi */
+  const voteSign = useCallback(
+    (id: string) =>
+      requireIdentity(async () => {
+        setData((prev) => ({
+          ...prev,
+          approvedSigns: prev.approvedSigns.map((s) => (s.id === id ? { ...s, voted: true } : s)),
+        }));
+        try {
+          await apiSend("POST", `/api/v1/suggestions/${id}/vote`);
+          maybeShowLeadPrompt();
+        } catch (e) {
+          setData((prev) => ({
+            ...prev,
+            approvedSigns: prev.approvedSigns.map((s) => (s.id === id ? { ...s, voted: false } : s)),
+          }));
+          if (e instanceof Error && e.message !== "api") showToast(e.message);
+        }
+      }),
+    [requireIdentity, maybeShowLeadPrompt, showToast]
+  );
+
   const dismissNotif = useCallback(async (id: string) => {
     setNotifs((ns) => ns.filter((n) => n.id !== id));
     try {
@@ -301,6 +323,8 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
               spot={s.location_text}
               imageUrl={s.image_url}
               tilt={i % 2 ? 1.5 : -1.5}
+              voted={s.voted}
+              onVote={() => voteSign(s.id)}
             />
           ))}
           {fillerSigns.map((s, i) => (

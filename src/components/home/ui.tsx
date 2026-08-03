@@ -86,19 +86,24 @@ export function Drawer({
 }
 
 /** Biển treo minh hoạ (prototype .donebox .sign) — có móc treo, nghiêng nhẹ,
- *  lời nhắc đã duyệt có hình thì hiện hình ngay trong biển */
+ *  lời nhắc đã duyệt có hình thì hiện hình ngay trong biển; truyền onVote để
+ *  hiện nút bình chọn dưới dòng tác giả (đã bình chọn thì chip chỉ hiển thị) */
 export function HangSign({
   quote,
   by,
   spot,
   imageUrl,
   tilt = -1.5,
+  voted,
+  onVote,
 }: {
   quote: string;
   by?: string;
   spot?: string;
   imageUrl?: string | null;
   tilt?: number;
+  voted?: boolean;
+  onVote?: () => void;
 }) {
   return (
     <figure className="m-0 flex w-full flex-col items-center gap-2 text-center">
@@ -127,6 +132,20 @@ export function HangSign({
           {spot && ` · ${spot}`}
         </figcaption>
       )}
+      {onVote &&
+        (voted ? (
+          <span className="inline-flex cursor-default items-center gap-1 rounded-full border border-brick/25 bg-brick-light px-3 py-1.5 text-[11.5px] font-semibold text-brick-dark">
+            🧡 Đã bình chọn
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={onVote}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-brick/35 bg-white px-3 py-1.5 text-[11.5px] font-semibold text-brick-dark transition hover:bg-brick-light"
+          >
+            🧡 Bình chọn
+          </button>
+        ))}
     </figure>
   );
 }
