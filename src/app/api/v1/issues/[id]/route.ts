@@ -13,7 +13,11 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
 
   const issue = await one(
     `SELECT i.id, i.category, i.location_text, i.description, i.status,
-       i.photo_key, i.pin_x, i.pin_y, i.neighborhood_id, n.name AS neighborhood_name
+       i.pin_x, i.pin_y, i.neighborhood_id, n.name AS neighborhood_name,
+       n.certificate_photo_key,
+       (SELECT np.photo_key FROM neighborhood_photos np
+        WHERE np.neighborhood_id = i.neighborhood_id
+        ORDER BY np.position ASC LIMIT 1) AS neighborhood_photo_key
      FROM issues i JOIN neighborhoods n ON n.id = i.neighborhood_id
      WHERE i.id = $1 AND i.status IN ('waiting','voting','signed')`,
     [id]
@@ -31,8 +35,18 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     [id, user?.id ?? "00000000-0000-0000-0000-000000000000"]
   );
 
+  // Ảnh drawer: ưu tiên chứng nhận 4N của khu phố → ảnh tổng quan → không có thì trống
+  const photoKey =
+    (issue.certificate_photo_key as string | null) ??
+    (issue.neighborhood_photo_key as string | null);
+
   return NextResponse.json({
-    issue: { ...issue, photo_url: imgUrl(issue.photo_key as string | null), photo_key: undefined },
+    issue: {
+      ...issue,
+      photo_url: imgUrl(photoKey),
+      certificate_photo_key: undefined,
+      neighborhood_photo_key: undefined,
+    },
     suggestions: suggestions.map((s) => ({
       ...s,
       sign_photo_url: imgUrl(s.image_key as string | null),
