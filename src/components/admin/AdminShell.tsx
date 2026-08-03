@@ -5,28 +5,41 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { apiGet, apiSend } from "../client-api";
 
+// Mục "Khu phố" tách riêng (yêu cầu 3/8) — bảng quản lý thông tin, ảnh, trạng thái
+// hiển thị/tiêu biểu/chứng nhận 4N + vị trí block tiêu biểu (bỏ quản lý bản đồ/pin).
 const NAV = [
-  { href: "/admin", label: "📊 Dashboard" },
-  { href: "/admin/de-xuat", label: "📥 Duyệt đề xuất" },
-  { href: "/admin/cau-nhac", label: "✍️ Duyệt câu nhắc" },
-  { href: "/admin/bien", label: "🪧 Chọn câu & biển" },
-  { href: "/admin/khu-pho", label: "🏘️ Khu phố & bản đồ" },
-  { href: "/admin/leads", label: "🧧 Leads" },
-  { href: "/admin/gian-lan", label: "🛡️ Chống gian lận" },
-  { href: "/admin/diem", label: "🧾 Sổ cái điểm" },
-  { href: "/admin/import", label: "📦 Bulk import" },
+  { href: "/admin", icon: "📊", label: "Dashboard" },
+  { href: "/admin/khu-pho", icon: "🏘️", label: "Khu phố" },
+  { href: "/admin/cau-nhac", icon: "✍️", label: "Câu duyệt" },
+  { href: "/admin/leads", icon: "🧧", label: "Leads" },
+  { href: "/admin/gian-lan", icon: "🛡️", label: "Chống gian lận" },
+  { href: "/admin/diem", icon: "🧾", label: "Sổ cái điểm" },
+  { href: "/admin/import", icon: "📦", label: "Bulk import" },
 ];
+
+const SIDEBAR_KEY = "kp_admin_sidebar"; // localStorage: "collapsed" | "open"
 
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
+  // Thu gọn sidebar (chỉ icon) — đọc localStorage sau mount để không lệch SSR
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     apiGet<{ admin: { email: string } }>("/api/admin/me")
       .then((r) => setEmail(r.admin.email))
       .catch(() => router.push("/admin/login"));
   }, [router]);
+
+  useEffect(() => {
+    setCollapsed(localStorage.getItem(SIDEBAR_KEY) === "collapsed");
+  }, []);
+  const toggleSidebar = () =>
+    setCollapsed((c) => {
+      localStorage.setItem(SIDEBAR_KEY, c ? "open" : "collapsed");
+      return !c;
+    });
 
   const logout = async () => {
     try { await apiSend("POST", "/api/admin/auth/logout"); } catch { /* bỏ qua */ }
@@ -35,29 +48,52 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex min-h-screen bg-cream">
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-cream-dark bg-white p-4 md:flex">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-brick text-lg text-white">💛</span>
-          <div>
-            <div className="text-sm font-extrabold text-brick">Admin Khu Phố</div>
-            <div className="max-w-[140px] truncate text-[11px] text-ink-soft">{email || "…"}</div>
-          </div>
+      <aside
+        className={`hidden shrink-0 flex-col border-r border-cream-dark bg-white transition-[width] duration-200 md:flex ${
+          collapsed ? "w-[64px] p-2" : "w-60 p-4"
+        }`}
+      >
+        <div className={`mb-4 flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brick text-lg text-white">💛</span>
+          {!collapsed && (
+            <div className="min-w-0">
+              <div className="text-sm font-extrabold text-brick">Admin Khu Phố</div>
+              <div className="max-w-[140px] truncate text-[11px] text-ink-soft">{email || "…"}</div>
+            </div>
+          )}
         </div>
+        <button
+          onClick={toggleSidebar}
+          title={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
+          className={`mb-2 rounded-xl py-1.5 text-sm font-bold text-ink-soft hover:bg-cream hover:text-brick ${
+            collapsed ? "px-0 text-center" : "px-3 text-left"
+          }`}
+        >
+          {collapsed ? "»" : "« Thu gọn"}
+        </button>
         <nav className="flex flex-col gap-1">
           {NAV.map((n) => (
             <Link
               key={n.href}
               href={n.href}
-              className={`rounded-xl px-3 py-2.5 text-sm font-semibold ${
-                pathname === n.href ? "bg-brick text-white" : "text-ink hover:bg-cream"
-              }`}
+              title={n.label}
+              className={`rounded-xl py-2.5 text-sm font-semibold ${
+                collapsed ? "px-0 text-center text-base" : "px-3"
+              } ${pathname === n.href ? "bg-brick text-white" : "text-ink hover:bg-cream"}`}
             >
-              {n.label}
+              {n.icon}
+              {!collapsed && <span className="ml-1.5">{n.label}</span>}
             </Link>
           ))}
         </nav>
-        <button onClick={logout} className="mt-auto rounded-xl px-3 py-2.5 text-left text-sm text-ink-soft hover:bg-cream">
-          ← Đăng xuất
+        <button
+          onClick={logout}
+          title="Đăng xuất"
+          className={`mt-auto rounded-xl py-2.5 text-sm text-ink-soft hover:bg-cream ${
+            collapsed ? "px-0 text-center" : "px-3 text-left"
+          }`}
+        >
+          ←{!collapsed && " Đăng xuất"}
         </button>
       </aside>
 
@@ -72,7 +108,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
                 pathname === n.href ? "bg-brick text-white" : "bg-cream"
               }`}
             >
-              {n.label}
+              {n.icon} {n.label}
             </Link>
           ))}
         </div>

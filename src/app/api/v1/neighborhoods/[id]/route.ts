@@ -9,7 +9,9 @@ export const dynamic = "force-dynamic";
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   const nb = await one(
-    `SELECT n.id, n.name, n.slug, n.certified_4n, n.certified_at, n.photo_key,
+    `SELECT n.id, n.name, n.slug, n.certified_4n, n.certified_at, n.certificate_photo_key,
+       (SELECT p.photo_key FROM neighborhood_photos p
+         WHERE p.neighborhood_id = n.id ORDER BY p.position LIMIT 1) AS photo_key,
        (SELECT count(*)::int FROM issues WHERE neighborhood_id = n.id
          AND status IN ('waiting','voting','signed')) AS total_issues,
        (SELECT count(*)::int FROM issues WHERE neighborhood_id = n.id
@@ -23,7 +25,9 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
     neighborhood: {
       ...nb,
       photo_url: imgUrl(nb.photo_key as string | null),
+      certificate_photo_url: imgUrl(nb.certificate_photo_key as string | null),
       photo_key: undefined,
+      certificate_photo_key: undefined,
       progress_pct: total === 0 ? 0 : Math.round((Number(nb.signed_issues) / total) * 100),
     },
   });

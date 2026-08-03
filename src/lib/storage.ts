@@ -37,6 +37,11 @@ export async function putObject(key: string, buf: Buffer, contentType: string): 
   return key;
 }
 
+/** Xoá object (dọn ảnh cũ khi thay/xoá ảnh khu phố). Lỗi nuốt lặng — key mồ côi vô hại. */
+export async function removeObject(key: string): Promise<void> {
+  await minio().removeObject(env.MINIO.bucket, key).catch(() => {});
+}
+
 export async function getObjectBuffer(key: string): Promise<Buffer> {
   const stream = await minio().getObject(env.MINIO.bucket, key);
   const chunks: Buffer[] = [];

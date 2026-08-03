@@ -1,7 +1,10 @@
 // Seed data demo theo 06-CONTENT-COPY §5 — điểm khớp CHÍNH XÁC công thức 05-SCORING-RULES.
 // Bà Liên 82đ (2+5+45+30) · Anh Dũng 77đ (0+15+32+30) · Chú Ba 41đ (0+10+31)
 // · Cô Tám 34đ (2+5+27) · Minh 21đ (4+5+12) · Hương 18đ · Cô Bảy 6đ
-// Counters: 2 biển đã treo · 5 góc xóm đang chờ · 7 người đóng góp · 5 khu phố.
+// Counters: 2 biển đã treo · 5 góc xóm đang chờ · 7 người đóng góp · 20 khu phố
+// (06 §5 ghi 5 khu phố nhưng dieuchinh.1.8 #1 chốt slide 20 khu phố tiêu chuẩn — dùng 20).
+// Chạy lại trên DB ĐÃ CÓ dữ liệu: chỉ bổ sung khu phố tiêu chuẩn còn thiếu (top-up),
+// không đụng dữ liệu khác.
 // GHI CHÚ: vài con số hiển thị trong design (VD "52 lượt thương") không khớp công thức
 // điểm đã duyệt — seed ưu tiên CÔNG THỨC (test case 05 §4 là nguồn sự thật).
 import pg from "pg";
@@ -21,28 +24,68 @@ const slug = () => randomBytes(16).toString("base64url").replace(/[-_]/g, "").sl
 const client = new pg.Client({ connectionString: DATABASE_URL });
 await client.connect();
 
+// ===== 20 khu phố tiêu chuẩn (dieuchinh.1.8 #1 — slide ảnh trang chủ) =====
+// [name, ward, city, slug] — địa lý hành chính MỚI (từ 1/7/2025): phường/xã thuộc thẳng
+// tỉnh/thành, KHÔNG còn quận/huyện. slug là khoá top-up (UNIQUE), chạy lại không nhân đôi.
+const STANDARD_NEIGHBORHOODS = [
+  ["Phường Bàn Cờ", "Phường Bàn Cờ", "TP. Hồ Chí Minh", "phuong-ban-co"],
+  ["Phường Lê Lợi", "Phường Bến Thành", "TP. Hồ Chí Minh", "phuong-le-loi"],
+  ["Hẻm chợ Xóm Mới", "Phường An Hội Đông", "TP. Hồ Chí Minh", "hem-cho-xom-moi"],
+  ["Phường Tân Định", "Phường Tân Định", "TP. Hồ Chí Minh", "phuong-tan-dinh"],
+  ["Xóm Đình An Nhơn", "Phường An Nhơn", "TP. Hồ Chí Minh", "xom-dinh-an-nhon"],
+  ["Phường Đa Kao", "Phường Tân Định", "TP. Hồ Chí Minh", "phuong-da-kao"],
+  ["Phường Cầu Ông Lãnh", "Phường Cầu Ông Lãnh", "TP. Hồ Chí Minh", "phuong-cau-ong-lanh"],
+  ["Phường Võ Thị Sáu", "Phường Xuân Hòa", "TP. Hồ Chí Minh", "phuong-vo-thi-sau"],
+  ["Xóm Chùa Tân Quy", "Phường Tân Hưng", "TP. Hồ Chí Minh", "xom-chua-tan-quy"],
+  ["Hẻm 160 Bùi Đình Tuý", "Phường Gia Định", "TP. Hồ Chí Minh", "hem-160-bui-dinh-tuy"],
+  ["Cư xá Thanh Đa", "Phường Bình Quới", "TP. Hồ Chí Minh", "cu-xa-thanh-da"],
+  ["Phường Hạnh Thông", "Phường Hạnh Thông", "TP. Hồ Chí Minh", "phuong-hanh-thong"],
+  ["Xóm Lò Gốm", "Phường Phú Lâm", "TP. Hồ Chí Minh", "xom-lo-gom"],
+  ["Phường Bến Thành", "Phường Bến Thành", "TP. Hồ Chí Minh", "phuong-ben-thanh"],
+  ["Khu chợ Bà Chiểu", "Phường Gia Định", "TP. Hồ Chí Minh", "khu-cho-ba-chieu"],
+  ["Hẻm 51 Cao Thắng", "Phường Bàn Cờ", "TP. Hồ Chí Minh", "hem-51-cao-thang"],
+  ["Xóm Bàu Cát", "Phường Bảy Hiền", "TP. Hồ Chí Minh", "xom-bau-cat"],
+  ["Phường Phú Nhuận", "Phường Phú Nhuận", "TP. Hồ Chí Minh", "phuong-phu-nhuan"],
+  ["Hẻm 200 Xóm Chiếu", "Phường Xóm Chiếu", "TP. Hồ Chí Minh", "hem-200-xom-chieu"],
+  ["Xóm Vườn Lài", "Phường Phú Thọ Hòa", "TP. Hồ Chí Minh", "xom-vuon-lai"],
+];
+
+/** Chèn đủ 20 khu phố tiêu chuẩn, trả map slug → id. DO UPDATE để RETURNING id cả khi đã có.
+ *  is_featured=true: 20 khu tiêu chuẩn là nội dung block "Khu phố tiêu biểu" trang chủ. */
+async function ensureStandardNeighborhoods() {
+  const ids = {};
+  for (const [name, ward, city, s] of STANDARD_NEIGHBORHOODS) {
+    const r = await client.query(
+      `INSERT INTO neighborhoods (name, ward, city, slug, is_featured) VALUES ($1,$2,$3,$4,true)
+       ON CONFLICT (slug) DO UPDATE SET ward = EXCLUDED.ward, city = EXCLUDED.city RETURNING id`,
+      [name, ward, city, s]
+    );
+    ids[s] = r.rows[0].id;
+  }
+  return ids;
+}
+
 const existing = await client.query("SELECT count(*)::int AS n FROM neighborhoods");
 if (existing.rows[0].n > 0) {
-  console.log("DB đã có dữ liệu — bỏ qua seed (xoá dữ liệu trước nếu muốn seed lại).");
+  const before = existing.rows[0].n;
+  await ensureStandardNeighborhoods();
+  const after = await client.query("SELECT count(*)::int AS n FROM neighborhoods");
+  console.log(
+    `DB đã có dữ liệu — chỉ top-up khu phố tiêu chuẩn (${before} → ${after.rows[0].n}).` +
+    " Chạy `pnpm seed:images` để sinh ảnh cho khu phố mới."
+  );
   await client.end();
   process.exit(0);
 }
 
 await client.query("BEGIN");
 
-// ===== Khu phố (5) =====
-async function nb(name, ward, district, city, s) {
-  const r = await client.query(
-    `INSERT INTO neighborhoods (name, ward, district, city, slug) VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-    [name, ward, district, city, s]
-  );
-  return r.rows[0].id;
-}
-const banCo = await nb("Phường Bàn Cờ", "Phường Bàn Cờ", "Quận 3", "TP. Hồ Chí Minh", "phuong-ban-co");
-const leLoi = await nb("Phường Lê Lợi", "Phường Lê Lợi", "Quận 1", "TP. Hồ Chí Minh", "phuong-le-loi");
-const xomMoi = await nb("Hẻm chợ Xóm Mới", "Phường 12", "Gò Vấp", "TP. Hồ Chí Minh", "hem-cho-xom-moi");
-const tanDinh = await nb("Phường Tân Định", "Phường Tân Định", "Quận 1", "TP. Hồ Chí Minh", "phuong-tan-dinh");
-await nb("Xóm Đình An Nhơn", "Phường An Nhơn", "Gò Vấp", "TP. Hồ Chí Minh", "xom-dinh-an-nhon");
+// ===== Khu phố (20 tiêu chuẩn) =====
+const nbIds = await ensureStandardNeighborhoods();
+const banCo = nbIds["phuong-ban-co"];
+const leLoi = nbIds["phuong-le-loi"];
+const xomMoi = nbIds["hem-cho-xom-moi"];
+const tanDinh = nbIds["phuong-tan-dinh"];
 
 // ===== Cư dân =====
 let phoneSeq = 0;
@@ -200,6 +243,7 @@ await seedAdminDemo(client);
 
 await client.end();
 
-console.log("✔ Seed xong: 5 khu phố · 7 vấn đề · 9 câu nhắc · sổ cái điểm khớp 05-SCORING-RULES");
+console.log("✔ Seed xong: 20 khu phố tiêu chuẩn · 7 vấn đề · 9 câu nhắc · sổ cái điểm khớp 05-SCORING-RULES");
+console.log("  Sinh ảnh mock cho slider: pnpm seed:images");
 console.log(`✔ Admin demo: admin@fpt.com / ${adminPass}`);
 console.log("  (đổi mật khẩu bằng: pnpm create-admin <email@fpt.com> <mật khẩu mới>)");

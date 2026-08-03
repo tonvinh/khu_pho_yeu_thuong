@@ -1,4 +1,5 @@
-// Upload ảnh biển thực tế (bước installed — 04 §4)
+// Hình DUY NHẤT của câu duyệt (yêu cầu 3/8) — upload/thay bất kỳ lúc nào từ bảng
+// quản lý; cũng chính là ảnh biển thật hiển thị ở trang share /bien/[id].
 import { NextRequest, NextResponse } from "next/server";
 import { q } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
@@ -17,9 +18,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const key = `public/signs/${id}/photo.webp`;
   await putObject(key, await toWebp(buf), "image/webp");
   const rows = await q(
-    `UPDATE suggestions SET sign_photo_key = $2 WHERE id = $1 RETURNING id`,
+    `UPDATE suggestions SET image_key = $2 WHERE id = $1 RETURNING id`,
     [id, key]
   );
   if (rows.length === 0) return jsonError(404, "Không tìm thấy câu nhắc");
-  return NextResponse.json({ ok: true, sign_photo_url: `/api/img/${key}` });
+  return NextResponse.json({ ok: true, image_url: `/api/img/${key}` });
 }

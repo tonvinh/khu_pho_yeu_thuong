@@ -7,7 +7,8 @@ import { tx } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
 import { CATEGORY_CODES } from "@/lib/taxonomy";
 import { putObject } from "@/lib/storage";
-import { stylizeMap, toWebp } from "@/lib/stylize";
+import { stylizeMap, toWebp, toCover } from "@/lib/stylize";
+import { isProvince, PROVINCES } from "@/lib/vn-geo";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -40,14 +41,17 @@ function parseWorkbook(buf: Buffer): { khupho: KhuPhoRow[]; vande: VanDeRow[]; f
     const r = kpRaw[i].map((c) => String(c ?? "").trim());
     if (r.every((c) => !c)) continue;
     if (/ví dụ minh hoạ/i.test(r[6] || "")) continue; // bỏ dòng ví dụ của template
+    // Cột 'quan' (quận/huyện) giữ trong template cho tương thích file cũ nhưng KHÔNG
+    // còn dùng — địa lý hành chính mới chỉ có Tỉnh/Thành + Phường/Xã (migration 003).
     const row: KhuPhoRow = {
       row: i + 1, ten: r[0], phuong: r[1], quan: r[2], thanhpho: r[3],
       anh_ban_do: r[4], anh_khu_pho: r[5], errors: [],
     };
     if (!row.ten) row.errors.push("Thiếu tên khu phố");
-    if (!row.phuong) row.errors.push("Thiếu phường");
-    if (!row.quan) row.errors.push("Thiếu quận/huyện");
-    if (!row.thanhpho) row.errors.push("Thiếu thành phố");
+    if (!row.phuong) row.errors.push("Thiếu phường/xã (theo địa giới mới)");
+    if (!row.thanhpho) row.errors.push("Thiếu tỉnh/thành phố");
+    else if (!isProvince(row.thanhpho))
+      row.errors.push(`Tỉnh/thành không có trong 34 tỉnh/thành mới (VD: ${PROVINCES[1]})`);
     khupho.push(row);
   }
   // Trùng tên trong file
@@ -161,9 +165,9 @@ export async function POST(req: NextRequest) {
     const nbIds = new Map<string, string>();
     for (const r of khupho) {
       const res = await c.query(
-        `INSERT INTO neighborhoods (name, ward, district, city, slug) VALUES ($1,$2,$3,$4,$5)
+        `INSERT INTO neighborhoods (name, ward, city, slug) VALUES ($1,$2,$3,$4)
          RETURNING id`,
-        [r.ten, r.phuong, r.quan, r.thanhpho, slugify(r.ten)]
+        [r.ten, r.phuong, r.thanhpho, slugify(r.ten)]
       );
       const nbId = res.rows[0].id as string;
       nbIds.set(r.ten.toLowerCase(), nbId);
@@ -183,10 +187,15 @@ export async function POST(req: NextRequest) {
       }
       const nbPhoto = r.anh_khu_pho ? zipEntries.get(r.anh_khu_pho.toLowerCase()) : undefined;
       if (nbPhoto) {
-        const key = `public/neighborhoods/${nbId}/photo.webp`;
-        await c.query(`UPDATE neighborhoods SET photo_key=$2 WHERE id=$1`, [nbId, key]);
+        // Ảnh tổng quan slot 1 — toCover chuẩn hoá 1280×720 để đồng nhất kích thước
+        const key = `public/neighborhoods/${nbId}/photo-1-${Date.now()}.webp`;
+        await c.query(
+          `INSERT INTO neighborhood_photos (neighborhood_id, photo_key, position)
+           VALUES ($1,$2,1)`,
+          [nbId, key]
+        );
         uploads.push(async () => {
-          await putObject(key, await toWebp(nbPhoto), "image/webp");
+          await putObject(key, await toCover(nbPhoto), "image/webp");
         });
       }
     }
