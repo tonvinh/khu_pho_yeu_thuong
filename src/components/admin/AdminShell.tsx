@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/cau-nhac", icon: "✍️", label: "Câu duyệt" },
   { href: "/admin/voting", icon: "💛", label: "Theo dõi thương" },
   { href: "/admin/leads", icon: "🧧", label: "Leads" },
+  { href: "/admin/noi-dung", icon: "📝", label: "Nội dung" },
   { href: "/admin/gian-lan", icon: "🛡️", label: "Chống gian lận" },
 ];
 

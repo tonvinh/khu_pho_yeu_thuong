@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const neighborhoods = await q(
     `SELECT n.id, n.name, n.ward, n.city, n.slug, n.certified_4n, n.certified_at,
-       n.is_featured, n.map_stylized_key,
+       n.is_featured, n.map_stylized_key, n.certificate_photo_key,
        COALESCE((SELECT json_agg(p.photo_key ORDER BY p.position)
          FROM neighborhood_photos p WHERE p.neighborhood_id = n.id), '[]'::json) AS photo_keys
      FROM neighborhoods n WHERE NOT n.hidden
@@ -31,6 +31,7 @@ export async function GET() {
       certified_at: n.certified_at,
       is_featured: n.is_featured,
       map_url: imgUrl(n.map_stylized_key as string | null),
+      certificate_url: imgUrl(n.certificate_photo_key as string | null),
       photo_urls: (n.photo_keys as string[]).map((k) => imgUrl(k)!),
     })),
     pins: issues,
