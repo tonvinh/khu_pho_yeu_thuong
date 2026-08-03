@@ -129,6 +129,7 @@ export interface ApprovedSign {
   author_name: string;
   location_text: string;
   image_url: string | null;
+  voted: boolean;
 }
 
 export interface HomeData {

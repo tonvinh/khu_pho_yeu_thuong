@@ -47,13 +47,15 @@ async function loadHomeData(): Promise<HomeData> {
     // Lời nhắc đã duyệt (kèm hình) cho block "Lời nhắc khi lên biển trông như thế nào?"
     // — ưu tiên câu được thương nhiều, thiếu thì HomeShell bù ví dụ mẫu
     q(`SELECT s.id, s.content, s.image_key, i.location_text, u.display_name AS author_name,
-         (SELECT count(*)::int FROM votes v WHERE v.suggestion_id = s.id AND v.is_valid) AS votes
+         (SELECT count(*)::int FROM votes v WHERE v.suggestion_id = s.id AND v.is_valid) AS votes,
+         EXISTS (SELECT 1 FROM votes v WHERE v.suggestion_id = s.id AND v.user_id = $1) AS voted
        FROM suggestions s
        JOIN issues i ON i.id = s.issue_id
        JOIN users u ON u.id = s.author_id
        WHERE s.status IN ('approved','selected','produced','installed')
        ORDER BY votes DESC, s.created_at DESC
-       LIMIT 6`),
+       LIMIT 6`,
+      [viewerId]),
     getSiteContent(),
   ]);
 
@@ -84,6 +86,7 @@ async function loadHomeData(): Promise<HomeData> {
       author_name: s.author_name as string,
       location_text: s.location_text as string,
       image_url: imgUrl(s.image_key as string | null),
+      voted: s.voted as boolean,
     })),
     content,
   };
