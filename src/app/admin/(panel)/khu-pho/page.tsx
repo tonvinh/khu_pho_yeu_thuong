@@ -5,7 +5,6 @@
 // Sửa thông tin + ảnh tổng quan + ảnh chứng nhận qua DRAWER trượt từ phải (không popup);
 // ảnh chứng nhận upload được bất kỳ lúc nào (không phụ thuộc 4N). KHÔNG còn bản đồ/pin.
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { apiGet, apiSend, apiUpload } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import ImportModal from "@/components/admin/ImportModal";
@@ -151,8 +150,7 @@ export default function NeighborhoodsPage() {
       {rows.length === 0 ? (
         <Card>
           <p className="text-sm text-ink-soft">
-            Chưa có khu phố nào. Bấm <strong>➕ Thêm khu phố</strong> để tạo khu phố đầu tiên,
-            hoặc dùng <Link href="/admin/import" className="underline">Bulk import</Link>.
+            Chưa có khu phố nào. Bấm <strong>➕ Thêm khu phố</strong> để tạo khu phố đầu tiên.
           </p>
         </Card>
       ) : (

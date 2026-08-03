@@ -35,7 +35,6 @@ Tất cả 8 câu hỏi mở đã được chốt — xem bảng 07-NFR-TECH §4
 
 ## Definition of Done cho MVP
 - Chạy được luồng end-to-end: đề xuất → duyệt → viết câu → thương (định danh SĐT + cookie) → admin duyệt với checklist 4N → chọn câu → installed → pin xanh + counter + điểm +30 + banner báo tin vui in-web.
-- Bulk import 20 khu phố từ `import-template.xlsx` chạy trọn trong 1 lần (validate → preview → commit all-or-nothing).
 - Upload ảnh bản đồ → hiển thị bản cách điệu + đặt pin bằng click hoạt động; bấm pin hiện ảnh thật địa điểm.
 - Share URL + OG image render đúng cho Đại sứ / biển đã treo / chứng nhận khu phố (test preview Facebook & Zalo debugger).
 - `docker compose up -d` từ máy sạch (chỉ cần Docker + file `.env`) dựng được toàn bộ hệ thống chạy end-to-end; không service nào ngoài `proxy` mở port ra ngoài.

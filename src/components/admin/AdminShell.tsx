@@ -14,8 +14,6 @@ const NAV = [
   { href: "/admin/voting", icon: "💛", label: "Theo dõi thương" },
   { href: "/admin/leads", icon: "🧧", label: "Leads" },
   { href: "/admin/gian-lan", icon: "🛡️", label: "Chống gian lận" },
-  { href: "/admin/diem", icon: "🧾", label: "Sổ cái điểm" },
-  { href: "/admin/import", icon: "📦", label: "Bulk import" },
 ];
 
 const SIDEBAR_KEY = "kp_admin_sidebar"; // localStorage: "collapsed" | "open"
