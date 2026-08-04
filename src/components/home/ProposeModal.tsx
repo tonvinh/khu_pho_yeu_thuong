@@ -106,14 +106,14 @@ export default function ProposeModal({
                 key={code}
                 type="button"
                 onClick={() => setCategory(code)}
-                className={`cursor-pointer rounded-[10px] border px-3 py-2 text-left text-[13px] transition ${
+                className={`cursor-pointer rounded-[10px] border px-3 py-2.5 text-left text-[14px] transition sm:py-2 sm:text-[13px] ${
                   category === code
                     ? "border-brick bg-brick text-white"
                     : "border-cream-dark bg-white text-ink hover:border-brick"
                 }`}
               >
                 <span className="font-semibold">{c.icon} {c.label}</span>
-                <span className={`block text-[11.5px] ${category === code ? "text-white/85" : "text-ink-soft"}`}>
+                <span className={`mt-0.5 block text-[12px] leading-snug sm:mt-0 sm:text-[11.5px] ${category === code ? "text-white/85" : "text-ink-soft"}`}>
                   {c.desc}
                 </span>
               </button>

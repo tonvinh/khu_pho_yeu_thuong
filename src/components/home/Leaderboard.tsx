@@ -35,7 +35,7 @@ function ShareArrow({ slug }: { slug: string }) {
     <a
       href={`${BASE}/dai-su/${slug}`}
       title="Chia sẻ thành tích"
-      className="grid h-8 w-8 flex-none place-items-center rounded-full border border-cream-dark bg-cream-panel text-xs text-ink-soft hover:text-brick"
+      className="grid h-9 w-9 flex-none place-items-center rounded-full border border-cream-dark bg-cream-panel text-xs text-ink-soft hover:text-brick sm:h-8 sm:w-8"
     >
       ↗
     </a>
@@ -98,10 +98,10 @@ export default function Leaderboard({
     <div className="flex flex-col gap-4">
       {/* Bảng xếp hạng */}
       <div className="kp-card overflow-hidden rounded-[18px]">
-        <div className="bg-gradient-to-r from-olive to-olive-dark px-[17px] py-[15px] text-white">
-          <div className="flex items-center justify-between gap-2">
+        <div className="bg-gradient-to-r from-olive to-olive-dark px-4 py-3.5 text-white sm:px-[17px] sm:py-[15px]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="font-display text-base font-bold">{COPY.leaderboardTitle}</div>
-            <div className="flex gap-1">
+            <div className="flex flex-none gap-1">
               {([["all", "Từ đầu mùa"], ["week", "Tuần này"]] as const).map(([k, label]) => (
                 <button
                   key={k}
@@ -120,13 +120,13 @@ export default function Leaderboard({
 
         {/* Hạng 1: spotlight kèm câu được thương nhất */}
         {top && (
-          <div className="border-t border-cream-dark bg-[#FBF7EF] px-[17px] py-3.5">
+          <div className="border-t border-cream-dark bg-[#FBF7EF] px-4 py-3.5 sm:px-[17px]">
             <div className="flex items-center gap-3">
               <span className={`grid h-[30px] w-[30px] flex-none place-items-center rounded-full font-display text-[14px] font-bold ${RANK_STYLE[0]}`}>
                 1
               </span>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[15px] font-semibold">
+                <div className="line-clamp-2 text-[15px] font-semibold leading-snug">
                   {name(top)}
                   {top.neighborhood_name && (
                     <span className="font-normal text-ink-soft"> · {top.neighborhood_name}</span>
@@ -157,36 +157,41 @@ export default function Leaderboard({
         )}
 
         {/* Hạng 2-5: câu được thương nhất thay cho dòng số liệu */}
+        {/* Lưới 3 cột: hạng · tên+điểm · câu nhắc trải hết bề ngang hàng dưới —
+            trên mobile xếp một dòng ngang thì câu nhắc chỉ còn vài chữ rồi cụt */}
         {rest.map((a, i) => (
-          <div key={a.user_id} className="flex items-center gap-3 border-t border-cream-dark px-[17px] py-3">
+          <div
+            key={a.user_id}
+            className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-1 border-t border-cream-dark px-4 py-3 sm:px-[17px]"
+          >
             <span
-              className={`grid h-[26px] w-[26px] flex-none place-items-center rounded-full font-display text-[13px] font-bold ${
+              className={`row-span-2 grid h-[26px] w-[26px] flex-none place-items-center self-start rounded-full font-display text-[13px] font-bold ${
                 RANK_STYLE[i + 1] ?? "bg-[#F3ECE0] text-ink-soft"
               }`}
             >
               {i + 2}
             </span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold">
-                {name(a)}
-                {a.neighborhood_name && (
-                  <span className="font-normal text-ink-soft"> · {a.neighborhood_name}</span>
-                )}
-              </div>
-              <div className="truncate text-[11.5px] text-ink-soft">
-                {a.top_quote
-                  ? <>“{a.top_quote}”</>
-                  : <>{a.signs_installed} câu được treo · {a.votes_received} lượt thương</>}
-              </div>
+            <div className="truncate text-sm font-semibold">
+              {name(a)}
+              {a.neighborhood_name && (
+                <span className="font-normal text-ink-soft"> · {a.neighborhood_name}</span>
+              )}
             </div>
-            <RankDelta delta={delta(a, i + 1)} />
-            <span className="font-display font-bold text-olive-dark">{points(a)}</span>
-            <ShareArrow slug={a.share_slug} />
+            <div className="flex flex-none items-center gap-2">
+              <RankDelta delta={delta(a, i + 1)} />
+              <span className="font-display font-bold text-olive-dark">{points(a)}</span>
+              <ShareArrow slug={a.share_slug} />
+            </div>
+            <div className="col-span-2 truncate text-[11.5px] text-ink-soft">
+              {a.top_quote
+                ? <>“{a.top_quote}”</>
+                : <>{a.signs_installed} câu được treo · {a.votes_received} lượt thương</>}
+            </div>
           </div>
         ))}
 
         {list.length === 0 && (
-          <p className="m-0 border-t border-cream-dark px-[17px] py-5 text-center text-sm text-ink-soft">
+          <p className="m-0 border-t border-cream-dark px-4 py-5 text-center text-sm text-ink-soft sm:px-[17px]">
             {range === "week"
               ? "Tuần này chưa có điểm mới — bạn viết câu nhắc mở hàng tuần nhé!"
               : "Chưa có ai lên bảng — viết câu nhắc đầu tiên cho xóm bạn nhé!"}
@@ -195,7 +200,7 @@ export default function Leaderboard({
 
         {/* Hàng của người xem — chỉ hiện khi đã định danh */}
         {identified && (
-          <div className="border-t border-cream-dark bg-cream-panel px-[17px] py-3 text-[12.5px]">
+          <div className="border-t border-cream-dark bg-cream-panel px-4 py-3 sm:px-[17px] text-[12.5px]">
             {viewerRank ? (
               <>
                 <b>Bạn đang ở hạng #{viewerRank.rank}</b>{" "}
@@ -217,7 +222,7 @@ export default function Leaderboard({
         )}
 
         {neighborhoodOfMonth && (
-          <div className="border-t border-cream-dark px-[17px] py-3.5 text-[13px] text-ink-soft">
+          <div className="border-t border-cream-dark px-4 py-3.5 sm:px-[17px] text-[13px] text-ink-soft">
             Khu phố dễ thương nhất tháng này: <b className="text-ink">{neighborhoodOfMonth.name}</b> —{" "}
             {neighborhoodOfMonth.new_signs} biển mới, {neighborhoodOfMonth.votes} lượt thương.
           </div>
@@ -225,7 +230,7 @@ export default function Leaderboard({
       </div>
 
       {/* Biển chứng nhận 4N — có ảnh: slideshow bấm để chuyển khu; chưa có: biển placeholder */}
-      <div className="rounded-[18px] border border-[#CFE2D5] bg-[#E9F1EB] p-5 text-center">
+      <div className="rounded-[18px] border border-[#CFE2D5] bg-[#E9F1EB] p-4 text-center sm:p-5">
         <div className="text-[12.5px] text-ink-soft">Chứng nhận “Khu phố biết thương” chuẩn 4N</div>
         {cert ? (
           <>

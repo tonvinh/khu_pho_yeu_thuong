@@ -104,7 +104,7 @@ docker compose run --rm web node scripts/create-admin.mjs admin@fpt.com 'MatKhau
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1/api/v1/counters   # → 200
 ```
 
-Caddy (`deploy/Caddyfile`) đặt sẵn: HSTS 1 năm, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, CSP `default-src 'self'`, ẩn header `Server`, gzip.
+Caddy (`deploy/Caddyfile`) đặt sẵn: HSTS 1 năm, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, CSP `default-src 'self'` (kèm `frame-src` cho YouTube — xem §5.2), ẩn header `Server`, gzip.
 
 ---
 
@@ -141,11 +141,18 @@ khupho.ailab.city {
         X-Frame-Options "DENY"
         X-Content-Type-Options "nosniff"
         Referrer-Policy "no-referrer"
+        Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-src https://www.youtube-nocookie.com https://www.youtube.com"
         -Server
     }
     reverse_proxy 127.0.0.1:3001
 }
 ```
+
+> **`frame-src` không được bỏ.** Thiếu directive này thì iframe TVC rơi về `default-src 'self'`
+> và Chrome chặn — trang chủ lẫn ô "Xem trước video" ở `/admin/noi-dung` chỉ còn ô xám
+> *"This content is blocked. Contact the site owner to fix the issue."* Đây là lỗi cấu hình
+> proxy, không phải lỗi ID video. Giữ block header này **khớp từng chữ** với
+> [`deploy/Caddyfile`](../deploy/Caddyfile) (mode 4 service) để hai môi trường không lệch nhau.
 
 ```bash
 sudo systemctl reload caddy      # Let's Encrypt tự cấp cert trong ~30s
@@ -266,6 +273,7 @@ Restore xong nhớ dùng **đúng `.env` cùng thời điểm** (cùng `PHONE_PE
 | Deploy fail ở bước "Ensure .env" | `/opt/khu_pho/.env` không tồn tại hoặc `PHONE_PEPPER` rỗng. Đây là chốt chặn cố ý — khôi phục `.env` từ backup, **đừng sinh pepper mới** |
 | `web` unhealthy | `docker compose -f $F logs web`. Thường do thiếu `PHONE_PEPPER`/`PHONE_AES_KEY` hoặc `db` chưa healthy |
 | 502 từ Caddy host | `web` chưa lên hoặc lệch port. Kiểm `curl 127.0.0.1:3001/api/v1/counters`, và Caddyfile trỏ đúng `127.0.0.1:3001` |
+| Video TVC là ô xám "This content is blocked" (trang chủ + `/admin/noi-dung`) | CSP của Caddy **host** thiếu `frame-src https://www.youtube-nocookie.com`. Kiểm `curl -sI https://<domain>/ \| grep -i content-security`, sửa `/etc/caddy/Caddyfile` theo §5.2 → `sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy`. Không cần rebuild app |
 | Ảnh không hiện | `storage` healthy chưa? `MINIO_*` khớp chưa? Ảnh public đi qua `/api/img/…`, không truy cập MinIO trực tiếp |
 | Ảnh bản đồ 404 với admin | Ảnh gốc nằm ở `private/`, chỉ đọc qua `/api/admin/neighborhoods/{id}/map-image` |
 | Migration lỗi giữa chừng | `scripts/migrate.mjs` chạy mỗi file trong 1 transaction và idempotent — sửa nguyên nhân rồi chạy lại là đủ |

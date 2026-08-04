@@ -56,11 +56,13 @@ export default function LeadSection({
     });
 
   return (
-    <div className="grid items-start gap-7 rounded-[22px] border border-cream-dark bg-gradient-to-br from-[#FFF9F0] to-[#F7EFE1] p-6 shadow-kp lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+    <div className="grid items-start gap-5 rounded-[22px] border border-cream-dark bg-gradient-to-br from-[#FFF9F0] to-[#F7EFE1] p-4 shadow-kp sm:gap-7 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
       {/* Pitch */}
       <div className="flex flex-col gap-3">
         <Eyebrow>{COPY.leadBadge}</Eyebrow>
-        <h2 className="m-0 font-display text-2xl font-extrabold leading-tight">{content.lead_title}</h2>
+        <h2 className="m-0 font-display text-[21px] font-extrabold leading-tight text-balance sm:text-2xl">
+          {content.lead_title}
+        </h2>
         <p className="m-0 text-[14.5px] text-ink-soft">{content.lead_body}</p>
         <p className="m-0 rounded-xl border border-dashed border-cream-dark bg-white px-[13px] py-2.5 text-[12.5px] leading-relaxed text-ink-soft">
           {content.lead_privacy}
@@ -68,7 +70,7 @@ export default function LeadSection({
       </div>
 
       {/* Form */}
-      <div className="kp-card p-[18px]">
+      <div className="kp-card p-4 sm:p-[18px]">
         {done ? (
           <div className="flex flex-col items-center gap-2 px-2 py-4 text-center">
             <div className="text-3xl">🧧</div>
@@ -108,12 +110,13 @@ export default function LeadSection({
               <div className="mb-1.5 text-[12.5px] font-semibold text-ink-soft">
                 Nhà mình đang muốn tìm hiểu dịch vụ nào?
               </div>
-              <div className="flex flex-wrap gap-2">
+              {/* Mobile: lưới 2 cột đều nhau — 4 nhãn dài xếp flex-wrap sẽ so le, xấu */}
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                 {Object.entries(INTERESTS).map(([k, label]) => (
                   <button
                     key={k}
                     onClick={() => toggleInterest(k)}
-                    className={`cursor-pointer rounded-[10px] border px-3 py-2 text-[13px] transition ${
+                    className={`tap flex cursor-pointer items-center rounded-[10px] border px-3 py-2 text-left text-[12.5px] leading-snug transition sm:text-[13px] ${
                       interests.includes(k)
                         ? "border-olive bg-olive text-white"
                         : "border-cream-dark bg-white text-ink hover:border-olive"

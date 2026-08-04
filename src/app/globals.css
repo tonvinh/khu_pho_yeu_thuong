@@ -74,6 +74,27 @@ iframe {
   min-height: 44px;
 }
 
+/* Hàng cuộn ngang trên mobile (chip khu phố, tab lọc): giấu thanh cuộn,
+   cuộn mượt kiểu native, có điểm dừng ở từng item. */
+.kp-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+}
+.kp-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+.kp-scroll-x > * {
+  scroll-snap-align: start;
+}
+
+/* Chừa lề an toàn đáy máy (thanh home iPhone) cho bottom sheet & drawer */
+.kp-safe-b {
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+}
+
 /* ===== Card theo prototype: viền mảnh + bóng mềm (không còn viền ink dày) ===== */
 .kp-card {
   background: #fff;
@@ -110,6 +131,8 @@ iframe {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 15px;
+  line-height: 1.25;
+  text-align: center;
   border-radius: 12px;
   cursor: pointer;
   border: none;
@@ -156,10 +179,11 @@ iframe {
   border-radius: 10px;
 }
 
-/* Input theo prototype .field: viền mảnh, focus terra */
+/* Input theo prototype .field: viền mảnh, focus terra.
+   Mobile để 16px: Safari iOS tự phóng to trang khi focus ô chữ < 16px. */
 .kp-input {
   font-family: var(--font-sans);
-  font-size: 14.5px;
+  font-size: 16px;
   padding: 11px 12px;
   border: 1px solid var(--color-cream-dark);
   border-radius: 11px;
@@ -174,6 +198,11 @@ iframe {
 }
 .kp-input::placeholder {
   color: rgba(110, 102, 90, 0.7);
+}
+@media (min-width: 640px) {
+  .kp-input {
+    font-size: 14.5px;
+  }
 }
 
 /* Chip 4N tĩnh trong form viết câu — chỉ nhắc, KHÔNG chấm tự động (Q2) */

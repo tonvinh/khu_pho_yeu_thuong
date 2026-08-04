@@ -101,12 +101,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       <div className="min-w-0 flex-1">
         {/* Nav mobile */}
-        <div className="flex gap-1 overflow-x-auto border-b border-cream-dark bg-white p-2 md:hidden">
+        <div className="kp-scroll-x sticky top-0 z-20 flex gap-1 border-b border-cream-dark bg-white p-2 md:hidden">
           {NAV.map((n) => (
             <Link
               key={n.href}
               href={n.href}
-              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
+              className={`flex shrink-0 items-center rounded-full px-3 py-2 text-xs font-semibold ${
                 pathname === n.href ? "bg-brick text-white" : "bg-cream"
               }`}
             >

@@ -92,9 +92,11 @@ export function Modal({ children, onClose }: { children: React.ReactNode; onClos
     // từng bị drawer che mất trên mobile (dieuchinh.1.8 #16)
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-[2px] sm:items-center" onClick={onClose}>
       <div
-        className="slide-up max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-cream p-6 shadow-kp sm:rounded-3xl"
+        className="kp-safe-b slide-up max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-cream px-5 pt-5 shadow-kp sm:rounded-3xl sm:px-6 sm:pt-6"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Tay nắm kéo — gợi ý đây là bottom sheet trên mobile */}
+        <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-cream-dark sm:hidden" />
         {children}
       </div>
     </div>

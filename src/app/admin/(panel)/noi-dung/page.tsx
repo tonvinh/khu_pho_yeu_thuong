@@ -153,6 +153,17 @@ export default function SiteContentPage() {
                 className="h-full w-full border-0"
               />
             </div>
+            {/* Ô xám "This content is blocked" = CSP của proxy thiếu
+                `frame-src https://www.youtube-nocookie.com` (xem deploy/Caddyfile).
+                Link dưới đây để kiểm tra ID đúng chưa kể cả khi iframe bị chặn. */}
+            <a
+              href={`https://www.youtube.com/watch?v=${effectiveYoutube}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-block text-xs font-semibold text-ink-soft underline hover:text-brick"
+            >
+              Mở {effectiveYoutube} trên YouTube ↗
+            </a>
           </div>
         </div>
 
