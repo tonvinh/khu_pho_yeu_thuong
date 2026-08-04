@@ -1,9 +1,17 @@
 # Reverse proxy — service DUY NHẤT mở port (07 §2.2). TLS tự động khi SITE_ADDRESS là domain.
 # Security header nằm ở khupho-headers.caddy (dùng chung với Caddy host của production).
+#
+# ⚠️ File này KHÔNG chạy độc lập. Nó bắt buộc phải có mount thứ hai:
+#     ./deploy/khupho-headers.caddy:/etc/caddy/conf.d/khupho-headers.caddy:ro
+# (đã khai trong docker-compose.yml service `proxy`). Thiếu file đó → caddy báo
+# "File to import not found" và container không khởi động. Đây là CỐ Ý fail-closed:
+# proxy chạy mà không có CSP/HSTS là vi phạm 07 §2.2, tệ hơn việc dừng hẳn và báo lỗi.
+# Sửa CSP thì sửa khupho-headers.caddy, rồi `docker compose restart proxy` (xem compose).
 import /etc/caddy/conf.d/khupho-headers.caddy
 
 {$SITE_ADDRESS} {
-	encode gzip
+	# giữ khớp với site block trên Caddy host (docs/18 §5.2)
+	encode zstd gzip
 
 	import khupho_headers
 

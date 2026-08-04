@@ -136,26 +136,35 @@ cp .env.example .env
 #    nhớ release nếu ngừng dự án). Firewall GCP mở 80/443.
 
 # 2. Cài Caddy trên host (nếu chưa có): https://caddyserver.com/docs/install
-# 3. Thêm site block vào /etc/caddy/Caddyfile:
+# 3. Cài snippet security header — KHÔNG viết header thẳng vào file host:
+sudo mkdir -p /etc/caddy/conf.d
+sudo install -m 0644 /opt/khu_pho/deploy/khupho-headers.caddy /etc/caddy/conf.d/khupho-headers.caddy
+
+# 4. Sửa /etc/caddy/Caddyfile — cần ĐỦ CẢ HAI dòng import bên dưới:
 ```
 
 ```caddyfile
+# đầu file, trước site block
+import /etc/caddy/conf.d/khupho-headers.caddy
+
 khupho.ailab.city {
-    encode gzip
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        X-Frame-Options "DENY"
-        X-Content-Type-Options "nosniff"
-        Referrer-Policy "no-referrer"
-        -Server
-    }
+    encode zstd gzip
+    import khupho_headers            # ← thay cho khối header{...} viết tay
     reverse_proxy 127.0.0.1:3001
 }
 ```
 
 ```bash
-sudo systemctl reload caddy      # Let's Encrypt tự cấp cert trong ~30s
+sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy
+# Let's Encrypt tự cấp cert trong ~30s
 ```
+
+> Security header là **một nguồn duy nhất**: [`deploy/khupho-headers.caddy`](deploy/khupho-headers.caddy)
+> — cả mode 4-service lẫn Caddy host đều `import` đúng file đó, và CI tự đồng bộ nó mỗi lần
+> deploy (job `sync-headers`). Đừng chép khối `header{...}` ra file host: sửa CSP trong repo
+> sẽ không có tác dụng trên production, đúng lỗi đã làm iframe TVC bị chặn suốt một thời gian.
+> Thiếu `import khupho_headers` trong site block là trạng thái nửa vời — CI sẽ báo fail.
+> Chi tiết + xử lý sự cố: [docs/18 §5.2 và §6](docs/18-TRIEN-KHAI-VAN-HANH.md).
 
 ### 6.3. Build + chạy lần đầu
 
