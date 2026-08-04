@@ -1,7 +1,7 @@
 // Trang chủ — SSR dữ liệu ban đầu (LCP < 2.5s), client island lo tương tác + polling
 import { getCounters } from "@/lib/counters";
 import { q } from "@/lib/db";
-import { getAmbassadors, getNeighborhoodOfMonth } from "@/lib/leaderboard";
+import { getAmbassadors, getNeighborhoodOfMonth, getViewerRank } from "@/lib/leaderboard";
 import { getSessionUser } from "@/lib/session";
 import { getSiteContent } from "@/lib/site-content";
 import { imgUrl } from "@/lib/storage";
@@ -14,7 +14,7 @@ async function loadHomeData(): Promise<HomeData> {
   // Người xem hiện tại (cookie kp_session) — để đánh dấu góc phố đã bình chọn hay chưa
   const viewer = await getSessionUser();
   const viewerId = viewer?.id ?? "00000000-0000-0000-0000-000000000000";
-  const [counters, issues, neighborhoods, pins, ambassadors, nom, approvedSigns, content] = await Promise.all([
+  const [counters, issues, neighborhoods, pins, ambassadors, nom, viewerRank, approvedSigns, content] = await Promise.all([
     getCounters(),
     q(`SELECT i.id, i.category, i.location_text, i.description, i.status,
          i.neighborhood_id, n.name AS neighborhood_name,
@@ -44,17 +44,20 @@ async function loadHomeData(): Promise<HomeData> {
          AND pin_x IS NOT NULL AND pin_y IS NOT NULL`),
     getAmbassadors(10),
     getNeighborhoodOfMonth(),
+    viewer ? getViewerRank(viewer.id) : Promise.resolve(null),
     // Lời nhắc đã duyệt (kèm hình) cho block "Lời nhắc khi lên biển trông như thế nào?"
-    // — ưu tiên câu được thương nhiều, thiếu thì HomeShell bù ví dụ mẫu
+    // — SignGallery chia 3 tab (mới nhất / chưa bình chọn / nhiều thương) nên lấy rộng 24 câu,
+    // thiếu thì bù ví dụ mẫu
     q(`SELECT s.id, s.content, s.image_key, i.location_text, u.display_name AS author_name,
          (SELECT count(*)::int FROM votes v WHERE v.suggestion_id = s.id AND v.is_valid) AS votes,
+         COALESCE(s.approved_at, s.created_at) AS approved_at,
          EXISTS (SELECT 1 FROM votes v WHERE v.suggestion_id = s.id AND v.user_id = $1) AS voted
        FROM suggestions s
        JOIN issues i ON i.id = s.issue_id
        JOIN users u ON u.id = s.author_id
        WHERE s.status IN ('approved','selected','produced','installed')
        ORDER BY votes DESC, s.created_at DESC
-       LIMIT 6`,
+       LIMIT 24`,
       [viewerId]),
     getSiteContent(),
   ]);
@@ -80,12 +83,15 @@ async function loadHomeData(): Promise<HomeData> {
     },
     ambassadors,
     neighborhoodOfMonth: nom,
+    viewerRank,
     approvedSigns: approvedSigns.map((s) => ({
       id: s.id as string,
       content: s.content as string,
       author_name: s.author_name as string,
       location_text: s.location_text as string,
       image_url: imgUrl(s.image_key as string | null),
+      votes: s.votes as number,
+      approved_at: String(s.approved_at),
       voted: s.voted as boolean,
     })),
     content,
