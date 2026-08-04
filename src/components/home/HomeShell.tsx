@@ -180,14 +180,14 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
     <div>
       {/* ===== TOP BAR (prototype .top: sticky, nền mờ) ===== */}
       <div className="sticky top-0 z-30 border-b border-cream-dark bg-cream/85 backdrop-blur-lg">
-        <div className="mx-auto flex h-16 max-w-[1120px] items-center gap-3.5 px-5">
-          <div className="flex items-center gap-2.5 font-display text-[19px] font-extrabold">
-            <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-brick text-[15px] text-white shadow-kp-s">
+        <div className="mx-auto flex h-14 max-w-[1120px] items-center gap-3 px-4 sm:h-16 sm:gap-3.5 sm:px-5">
+          <div className="flex min-w-0 items-center gap-2 font-display text-[17px] font-extrabold whitespace-nowrap sm:gap-2.5 sm:text-[19px]">
+            <span className="grid h-7 w-7 flex-none place-items-center rounded-full bg-brick text-[14px] text-white shadow-kp-s sm:h-[30px] sm:w-[30px] sm:text-[15px]">
               ♥
             </span>
             Khu Phố Của Tôi
           </div>
-          <div className="ml-auto flex items-center gap-4">
+          <div className="ml-auto flex min-w-0 items-center gap-4">
             <button
               onClick={() => scrollTo("goc-xom")}
               className="hidden cursor-pointer text-sm font-semibold text-ink-soft hover:text-brick-dark sm:inline"
@@ -201,7 +201,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
               Quà dành cho cư dân
             </button>
             {meLoaded && me ? (
-              <span className="rounded-full border border-cream-dark bg-white px-3 py-1.5 text-[12.5px] text-ink-soft">
+              <span className="max-w-[46vw] truncate rounded-full border border-cream-dark bg-white px-2.5 py-1.5 text-[12px] text-ink-soft sm:max-w-none sm:px-3 sm:text-[12.5px]">
                 Chào {me.display_name} 👋
               </span>
             ) : (
@@ -215,7 +215,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
       {/* Banner báo tin in-web (thay SMS — Q1): biển đã treo + duyệt/từ chối (#15) */}
       {notifs.length > 0 && (
-        <div className="mx-auto max-w-[1120px] px-5 pt-4">
+        <div className="mx-auto max-w-[1120px] px-4 pt-4 sm:px-5">
           {notifs.map((n) => {
             const rejected = n.type === "issue_rejected" || n.type === "suggestion_rejected";
             const detail = n.payload.content
@@ -264,24 +264,34 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
       {/* ===== HERO: chữ trái + slide ảnh khu phố phải (#1 thay bản đồ) =====
           minmax(0,…) để cột không nở quá viewport trên mobile (#13, #14) */}
-      <header className="mx-auto grid max-w-[1120px] items-center gap-8 px-5 pb-7 pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]">
-        <div className="flex flex-col items-start">
+      <header className="mx-auto grid max-w-[1120px] items-center gap-7 px-4 pb-6 pt-6 sm:px-5 sm:pb-7 sm:pt-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8">
+        <div className="flex min-w-0 flex-col items-start">
           <Eyebrow>● Cùng xây khu phố biết thương</Eyebrow>
-          <h1 className="m-0 mt-4 font-display text-[clamp(30px,4.4vw,46px)] font-extrabold leading-[1.15] tracking-[-0.01em]">
+          <h1 className="m-0 mt-3.5 font-display text-[clamp(26px,6.6vw,46px)] font-extrabold leading-[1.18] tracking-[-0.01em] text-balance sm:leading-[1.15]">
             {data.content.hero_title_1} <span className="text-brick">{data.content.hero_title_2}</span>
           </h1>
-          <p className="m-0 mt-3 max-w-[30em] text-[16.5px] text-ink-soft">{data.content.hero_body}</p>
-          <div className="mt-5 flex flex-wrap gap-3">
+          <p className="m-0 mt-3 max-w-[34em] text-[15.5px] leading-relaxed text-ink-soft sm:text-[16.5px]">
+            {data.content.hero_body}
+          </p>
+          {/* Mobile: CTA chính chiếm trọn hàng, 2 CTA phụ chia đôi hàng dưới —
+              khối nút gọn thay vì 3 nút lệch nhau mỗi nút một dòng */}
+          <div className="mt-5 grid w-full grid-cols-2 gap-2.5 sm:flex sm:w-auto sm:flex-wrap sm:gap-3">
             <button
               onClick={() => requireIdentity(() => setProposeOpen(true))}
-              className="kp-btn kp-btn-primary tap px-5 py-3"
+              className="kp-btn kp-btn-primary tap col-span-2 px-5 py-3 sm:col-auto"
             >
               {COPY.ctaMain}
             </button>
-            <button onClick={() => scrollTo("goc-xom")} className="kp-btn kp-btn-outline tap px-5 py-3">
+            <button
+              onClick={() => scrollTo("goc-xom")}
+              className="kp-btn kp-btn-outline tap px-2.5 py-2.5 text-[13.5px] text-balance sm:px-5 sm:py-3 sm:text-[15px]"
+            >
               {COPY.ctaSecondary}
             </button>
-            <button onClick={() => scrollTo("uu-dai")} className="kp-btn kp-btn-outline tap px-5 py-3">
+            <button
+              onClick={() => scrollTo("uu-dai")}
+              className="kp-btn kp-btn-outline tap px-2.5 py-2.5 text-[13.5px] text-balance sm:px-5 sm:py-3 sm:text-[15px]"
+            >
               {COPY.ctaTertiary}
             </button>
           </div>
@@ -298,7 +308,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       <CampaignMedia content={data.content} />
 
       {/* ===== VÍ DỤ MINH HOẠ: biển treo mẫu — 3 tab như danh sách góc phố ===== */}
-      <section className="mx-auto max-w-[1120px] px-5 py-7">
+      <section className="mx-auto max-w-[1120px] px-4 py-6 sm:px-5 sm:py-7">
         <SectionHead title="Lời nhắc khi lên biển trông như thế nào?" />
         <SignGallery
           signs={data.approvedSigns}
@@ -308,20 +318,22 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       </section>
 
       {/* ===== ĐANG CHỜ BẠN SÁNG TẠO: danh sách + bảng xếp hạng (prototype .two) ===== */}
-      <section id="goc-xom" className="mx-auto max-w-[1120px] px-5 py-7">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <section id="goc-xom" className="mx-auto max-w-[1120px] px-4 py-6 sm:px-5 sm:py-7">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
           <SectionHead
             title="Cùng đóng góp một câu cho khu phố của mình!"
             hint="chọn một góc phố, để lại lời nhắn dễ thương và bình chọn cho lời thương ấm áp nhất"
           />
           <button
             onClick={() => requireIdentity(() => setProposeOpen(true))}
-            className="kp-btn kp-btn-primary tap px-5 py-3"
+            className="kp-btn kp-btn-primary tap w-full flex-none px-5 py-3 sm:w-auto"
           >
             {COPY.ctaMain}
           </button>
         </div>
-        <div className="mt-2 grid items-start gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
+        {/* min-w-0 bắt buộc: ô lưới mặc định min-width:auto → cột dài nhất đẩy
+            trang rộng hơn màn hình và bị cắt mất bên phải trên mobile */}
+        <div className="mt-4 grid items-start gap-6 [&>*]:min-w-0 lg:mt-2 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
           <IssueList
             issues={data.issues}
             onOpenIssue={(id) => setDrawerIssueId(id)}
@@ -339,13 +351,13 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       </section>
 
       {/* ===== ƯU ĐÃI CƯ DÂN ===== */}
-      <section id="uu-dai" className="mx-auto max-w-[1120px] px-5 py-7">
+      <section id="uu-dai" className="mx-auto max-w-[1120px] px-4 py-6 sm:px-5 sm:py-7">
         <LeadSection me={me} content={data.content} requireIdentity={requireIdentity} showToast={showToast} />
       </section>
 
       {/* ===== FOOTER (prototype: gọn, giữa trang) ===== */}
       <footer className="mt-3 border-t border-cream-dark">
-        <div className="mx-auto max-w-[1120px] px-5 pb-10 pt-7 text-center text-[12.5px] text-ink-soft">
+        <div className="mx-auto max-w-[1120px] px-5 pb-10 pt-7 text-center text-[12.5px] leading-relaxed text-ink-soft">
           <div className="font-display text-base font-extrabold text-ink">Khu Phố Của Tôi</div>
           <div className="mt-1">Một hoạt động thuộc chiến dịch “Khu phố biết thương” của FPT Telecom</div>
           <div>Nhắc · Nhở · Nhỏ · Nhẹ</div>
@@ -403,7 +415,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
       {/* Toast (prototype .toast: nền ink, đáy giữa) — trên cả modal z-50 */}
       {toast && (
-        <div className="fixed inset-x-4 bottom-6 z-[60] mx-auto max-w-md">
+        <div className="fixed inset-x-4 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-[60] mx-auto max-w-md">
           <div className="slide-up rounded-xl bg-ink px-5 py-3 text-center text-sm text-white shadow-kp">
             {toast}
           </div>

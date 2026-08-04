@@ -62,15 +62,20 @@ export default function SignGallery({
         <FilterTabs
           tabs={[
             { key: "newest" as TabKey, label: "Mới nhất", count: real.length },
-            { key: "unvoted" as TabKey, label: "Chờ bạn bình chọn", count: byTab("unvoted").length },
-            { key: "loved" as TabKey, label: "Được yêu thích nhất", count: byTab("loved").length + (featured ? 1 : 0) },
+            { key: "unvoted" as TabKey, label: "Chờ bạn bình chọn", short: "Chờ bạn", count: byTab("unvoted").length },
+            {
+              key: "loved" as TabKey,
+              label: "Được yêu thích nhất",
+              short: "Yêu thích",
+              count: byTab("loved").length + (featured ? 1 : 0),
+            },
           ]}
           active={tab}
           onChange={(k) => { setTab(k); setExpanded(false); }}
         />
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-x-5 gap-y-5 sm:grid-cols-2 sm:gap-y-6 lg:grid-cols-3">
         {showFeatured && featured && (
           <HangSign
             quote={`“${featured.quote}”`}

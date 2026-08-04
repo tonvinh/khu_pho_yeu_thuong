@@ -12,10 +12,10 @@ const PAGE = 6;
 
 type TabKey = "newest" | "unvoted" | "loved";
 
-const TABS: { key: TabKey; label: string }[] = [
+const TABS: { key: TabKey; label: string; short?: string }[] = [
   { key: "newest", label: "Mới nhất" },
-  { key: "unvoted", label: "Chờ bạn bình chọn" },
-  { key: "loved", label: "Được yêu thích nhất" },
+  { key: "unvoted", label: "Chờ bạn bình chọn", short: "Chờ bạn" },
+  { key: "loved", label: "Được yêu thích nhất", short: "Yêu thích" },
 ];
 
 const EMPTY_HINT: Record<TabKey, string> = {
@@ -65,32 +65,33 @@ export default function IssueList({
         <button
           key={it.id}
           onClick={() => onOpenIssue(it.id)}
-          className="kp-card group cursor-pointer p-4 text-left transition hover:-translate-y-0.5 hover:shadow-kp"
+          className="kp-card group w-full min-w-0 cursor-pointer p-3.5 text-left transition hover:-translate-y-0.5 hover:shadow-kp sm:p-4"
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <div className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[11px] bg-[#F3ECE0] text-[19px]">
               {categoryIcon(it.category)}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[15px] font-semibold">
+              {/* Mobile hẹp: xuống 2 dòng dễ đọc hơn là cắt cụt giữa tên hẻm */}
+              <div className="line-clamp-2 text-[14.5px] font-semibold leading-snug sm:line-clamp-1 sm:text-[15px]">
                 {categoryLabel(it.category)} · {it.location_text}
               </div>
-              <div className="mt-0.5 truncate text-[12.5px] text-ink-soft">
+              <div className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-ink-soft sm:line-clamp-1">
                 {it.description || "Góc xóm đang chờ một lời nhắc dễ thương"} · {it.neighborhood_name}
               </div>
             </div>
           </div>
-          <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-soft">
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-2 text-[12.5px] text-ink-soft">
             {it.status === "signed" && it.top_quote ? (
               <span className="text-status-signed">✓ {it.top_quote}</span>
             ) : (
               <>
-                <span className="rounded-full bg-[#F3ECE0] px-2.5 py-0.5 text-[11.5px]">
+                <span className="rounded-full bg-[#F3ECE0] px-2.5 py-1 text-[11.5px]">
                   {it.suggestion_count} câu đề xuất
                 </span>
                 {it.suggestion_count > 0 ? (
                   <>
-                    <span className="rounded-full bg-[#F3ECE0] px-2.5 py-0.5 text-[11.5px]">
+                    <span className="rounded-full bg-[#F3ECE0] px-2.5 py-1 text-[11.5px]">
                       🧡 {it.top_votes.toLocaleString("vi-VN")} lượt thương
                     </span>
                     {/* Thương nhanh ngay trên card (không mở drawer) — span vì card đã là
@@ -99,7 +100,7 @@ export default function IssueList({
                     {it.voted ? (
                       <span
                         onClick={(e) => e.stopPropagation()}
-                        className="ml-auto inline-flex cursor-default items-center gap-1 rounded-full border border-brick/25 bg-brick-light px-3 py-1.5 text-[11.5px] font-semibold text-brick-dark"
+                        className="ml-auto inline-flex min-h-9 cursor-default items-center gap-1 rounded-full border border-brick/25 bg-brick-light px-3.5 text-[11.5px] font-semibold text-brick-dark"
                       >
                         🧡 Đã bình chọn
                       </span>
@@ -115,7 +116,7 @@ export default function IssueList({
                             onToggleVote(it);
                           }
                         }}
-                        className="ml-auto inline-flex cursor-pointer items-center gap-1 rounded-full border border-brick/35 bg-white px-3 py-1.5 text-[11.5px] font-semibold text-brick-dark transition hover:bg-brick-light"
+                        className="ml-auto inline-flex min-h-9 cursor-pointer items-center gap-1 rounded-full border border-brick/35 bg-white px-3.5 text-[11.5px] font-semibold text-brick-dark transition hover:bg-brick-light"
                       >
                         🧡 Bình chọn
                       </span>

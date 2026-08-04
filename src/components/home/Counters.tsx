@@ -10,14 +10,21 @@ export default function Counters({ counters }: { counters: CounterData }) {
     { value: counters.contributors, label: COPY.counterLabels[2], color: "text-olive-dark" },
     { value: counters.neighborhoods_joined, label: COPY.counterLabels[3], color: "text-fpt" },
   ];
+  // Mobile: gộp 4 ô thành MỘT thẻ chia lưới 2×2 bằng đường kẻ mảnh — gọn hơn
+  // 4 hộp rời; từ sm trở lên tách lại thành 4 thẻ như prototype.
   return (
-    <div className="mt-7 grid w-full grid-cols-2 gap-3 sm:grid-cols-4">
-      {items.map((it) => (
-        <div key={it.label} className="rounded-[14px] border border-cream-dark bg-cream-panel p-3.5">
-          <div className={`font-display text-[26px] font-extrabold leading-none ${it.color}`}>
+    <div className="mt-6 grid w-full grid-cols-2 overflow-hidden rounded-[14px] border border-cream-dark bg-cream-panel sm:mt-7 sm:grid-cols-4 sm:gap-3 sm:border-0 sm:bg-transparent">
+      {items.map((it, i) => (
+        <div
+          key={it.label}
+          className={`px-3.5 py-3 sm:rounded-[14px] sm:border sm:border-cream-dark sm:bg-cream-panel sm:p-3.5 ${
+            i % 2 === 0 ? "border-r border-cream-dark" : ""
+          } ${i < 2 ? "border-b border-cream-dark" : ""}`}
+        >
+          <div className={`font-display text-[24px] font-extrabold leading-none sm:text-[26px] ${it.color}`}>
             {it.value.toLocaleString("vi-VN")}
           </div>
-          <div className="mt-1.5 text-xs text-ink-soft">{it.label}</div>
+          <div className="mt-1 text-[11.5px] leading-snug text-ink-soft sm:mt-1.5 sm:text-xs">{it.label}</div>
         </div>
       ))}
     </div>

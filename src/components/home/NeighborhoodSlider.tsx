@@ -97,21 +97,21 @@ export default function NeighborhoodSlider({
   if (!nb) return null;
 
   return (
-    <div className="kp-card kp-card-3 relative overflow-hidden border border-cream-dark bg-gradient-to-br from-[#FBF7EF] to-[#EFE6D6] p-3.5">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-2 pb-2 pt-1.5">
+    <div className="kp-card kp-card-3 relative overflow-hidden border border-cream-dark bg-gradient-to-br from-[#FBF7EF] to-[#EFE6D6] p-2.5 sm:p-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1.5 pb-2 pt-1 sm:px-2 sm:pt-1.5">
         <span className="font-display text-[15px] font-bold">Khu phố tiêu biểu</span>
         <span className="text-[11.5px] text-ink-soft">{index + 1}/{list.length}</span>
       </div>
 
       {/* Chọn phường đang xem (ORDER #2: "Ấn chọn Phường sẽ xuất hiện pack") */}
       {list.length > 1 && (
-        <div ref={chipRowRef} className="flex gap-1.5 overflow-x-auto px-2 pb-2.5">
+        <div ref={chipRowRef} className="kp-scroll-x flex gap-1.5 px-1.5 pb-2.5 sm:px-2">
           {list.map((n, i) => (
             <button
               key={n.id}
               type="button"
               onClick={() => goto(i)}
-              className={`shrink-0 cursor-pointer rounded-full border px-3 py-1 text-[12.5px] font-semibold transition ${
+              className={`flex-none cursor-pointer whitespace-nowrap rounded-full border px-3 py-2 text-[12.5px] font-semibold transition sm:py-1 ${
                 i === index
                   ? "border-brick bg-brick text-white"
                   : "border-cream-dark bg-white text-ink-soft hover:border-brick hover:text-brick-dark"
@@ -135,9 +135,9 @@ export default function NeighborhoodSlider({
         ) : (
           <PhotoPlaceholder />
         )}
-        {/* Tag trạng thái nổi trên ảnh */}
+        {/* Tag trạng thái nổi trên ảnh — mobile chừa chỗ cho mũi tên hai bên */}
         <span
-          className={`absolute left-3 top-3 rounded-full px-3 py-1.5 text-[12px] font-semibold shadow-kp-s ${status.cls}`}
+          className={`absolute left-2.5 right-12 top-2.5 inline-block rounded-2xl px-2.5 py-1.5 text-[11px] font-semibold leading-snug shadow-kp-s sm:left-3 sm:right-auto sm:top-3 sm:max-w-[85%] sm:rounded-full sm:px-3 sm:text-[12px] ${status.cls}`}
         >
           {status.label}
         </span>
@@ -183,15 +183,19 @@ export default function NeighborhoodSlider({
       </div>
 
       {/* Dòng thông tin: tên + địa chỉ [Phường – Tỉnh] */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 pt-2.5">
-        <div>
+      <div className="flex flex-col gap-2 px-1.5 pb-1 pt-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-2">
+        <div className="min-w-0">
           <div className="font-display text-[15px] font-bold">{nb.name}</div>
           {(nb.ward || nb.city) && (
             <div className="text-[12px] text-ink-soft">📍 {formatAddress(nb.ward, nb.city)}</div>
           )}
         </div>
         {!nb.certified_4n && (
-          <button type="button" onClick={onPropose} className="kp-btn kp-btn-outline tap px-3.5 py-1.5 text-[13px]">
+          <button
+            type="button"
+            onClick={onPropose}
+            className="kp-btn kp-btn-outline tap w-full px-3.5 py-1.5 text-[13px] sm:w-auto"
+          >
             + Đề xuất góc phố mới
           </button>
         )}

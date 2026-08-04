@@ -59,8 +59,8 @@ export default async function SignPage({ params }: { params: Promise<{ id: strin
   const photo = imgUrl(s.image_key);
 
   return (
-    <main className="mx-auto max-w-md px-4 py-10 text-center">
-      <div className="rounded-3xl bg-white p-8 shadow-sm">
+    <main className="mx-auto max-w-md px-4 py-8 text-center sm:py-10">
+      <div className="rounded-3xl bg-white p-5 shadow-sm sm:p-8">
         <div className="inline-block rounded-full bg-status-signed px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
           {COPY.panelSignTitle}
         </div>

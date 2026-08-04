@@ -10,8 +10,10 @@ export function Eyebrow({ children }: { children: React.ReactNode }) {
 export function SectionHead({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-      <h2 className="m-0 font-display text-2xl font-extrabold leading-tight">{title}</h2>
-      {hint && <span className="text-[13.5px] text-ink-soft">{hint}</span>}
+      <h2 className="m-0 font-display text-[21px] font-extrabold leading-tight text-balance sm:text-2xl">
+        {title}
+      </h2>
+      {hint && <span className="text-[13px] leading-snug text-ink-soft sm:text-[13.5px]">{hint}</span>}
     </div>
   );
 }
@@ -23,25 +25,36 @@ export function FilterTabs<K extends string>({
   active,
   onChange,
 }: {
-  tabs: { key: K; label: string; count: number }[];
+  /** `short` là nhãn rút gọn dùng riêng cho mobile (< 640px) để 3 tab nằm gọn
+   *  một hàng; màn rộng vẫn hiện nhãn đầy đủ. */
+  tabs: { key: K; label: string; short?: string; count: number }[];
   active: K;
   onChange: (key: K) => void;
 }) {
+  // Mobile: một hàng cuộn ngang tràn mép màn hình (không xuống dòng lởm chởm);
+  // từ sm trở lên xếp bình thường và tự xuống dòng.
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="kp-scroll-x -mx-4 flex flex-nowrap gap-1.5 px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
       {tabs.map((t) => {
         const isActive = active === t.key;
         return (
           <button
             key={t.key}
             onClick={() => onChange(t.key)}
-            className={`tap cursor-pointer rounded-full border px-3.5 py-1.5 text-[12.5px] font-semibold transition ${
+            className={`tap inline-flex flex-none cursor-pointer items-center whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold transition sm:px-3.5 sm:text-[12.5px] ${
               isActive
                 ? "border-brick bg-brick text-white shadow-kp-s"
                 : "border-cream-dark bg-white text-ink-soft hover:border-brick/35 hover:text-brick-dark"
             }`}
           >
-            {t.label}
+            {t.short ? (
+              <>
+                <span className="sm:hidden">{t.short}</span>
+                <span className="hidden sm:inline">{t.label}</span>
+              </>
+            ) : (
+              t.label
+            )}
             <span className={`ml-1.5 text-[11px] ${isActive ? "text-white/80" : "text-ink-soft/70"}`}>
               {t.count}
             </span>
@@ -102,25 +115,25 @@ export function Drawer({
           wide ? "max-w-[600px]" : "max-w-[440px]"
         }`}
       >
-        <div className="flex items-start gap-3 border-b border-cream-dark px-5 py-[18px]">
+        <div className="flex items-start gap-3 border-b border-cream-dark px-4 py-3.5 sm:px-5 sm:py-[18px]">
           {icon && (
-            <div className="grid h-11 w-11 flex-none place-items-center rounded-[11px] bg-[#F3ECE0] text-[22px]">
+            <div className="grid h-10 w-10 flex-none place-items-center rounded-[11px] bg-[#F3ECE0] text-[20px] sm:h-11 sm:w-11 sm:text-[22px]">
               {icon}
             </div>
           )}
           <div className="min-w-0">
-            <h3 className="m-0 font-display text-[19px] font-bold leading-tight">{title}</h3>
-            {sub && <div className="text-[13px] text-ink-soft">{sub}</div>}
+            <h3 className="m-0 font-display text-[17.5px] font-bold leading-tight sm:text-[19px]">{title}</h3>
+            {sub && <div className="text-[12.5px] leading-snug text-ink-soft sm:text-[13px]">{sub}</div>}
           </div>
           <button
             onClick={onClose}
             aria-label="Đóng"
-            className="tap ml-auto w-[38px] flex-none cursor-pointer rounded-[10px] border border-cream-dark bg-white text-[17px] text-ink-soft hover:text-brick"
+            className="tap ml-auto w-11 flex-none cursor-pointer rounded-[10px] border border-cream-dark bg-white text-[17px] text-ink-soft hover:text-brick sm:w-[38px]"
           >
             ×
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-5 py-[18px]">{children}</div>
+        <div className="kp-safe-b flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-[18px]">{children}</div>
       </aside>
     </div>
   );
@@ -147,13 +160,13 @@ export function HangSign({
   onVote?: () => void;
 }) {
   return (
-    <figure className="m-0 flex w-full flex-col items-center gap-2 text-center">
+    <figure className="m-0 flex w-full flex-col items-center gap-1.5 text-center sm:gap-2">
       <span aria-hidden className="flex flex-col items-center">
         <span className="h-1.5 w-1.5 rounded-full bg-[#b9a888]" />
         <span className="h-3 w-[2px] bg-[#b9a888]" />
       </span>
       <blockquote
-        className="m-0 w-full rounded-xl border-[1.5px] border-olive bg-white px-[18px] py-[13px] font-display text-[17px] font-semibold leading-snug shadow-kp-s"
+        className="m-0 w-full rounded-xl border-[1.5px] border-olive bg-white px-4 py-3 font-display text-[15.5px] font-semibold leading-snug text-balance shadow-kp-s sm:px-[18px] sm:py-[13px] sm:text-[17px]"
         style={{ transform: `rotate(${tilt}deg)` }}
       >
         {imageUrl && (
@@ -162,7 +175,7 @@ export function HangSign({
             src={imageUrl}
             alt=""
             loading="lazy"
-            className="mb-2.5 h-32 w-full rounded-lg object-cover"
+            className="mb-2.5 h-28 w-full rounded-lg object-cover sm:h-32"
           />
         )}
         {quote}
@@ -175,14 +188,14 @@ export function HangSign({
       )}
       {onVote &&
         (voted ? (
-          <span className="inline-flex cursor-default items-center gap-1 rounded-full border border-brick/25 bg-brick-light px-3 py-1.5 text-[11.5px] font-semibold text-brick-dark">
+          <span className="inline-flex cursor-default items-center gap-1 rounded-full border border-brick/25 bg-brick-light px-3.5 py-2 text-[12px] font-semibold text-brick-dark">
             🧡 Đã bình chọn
           </span>
         ) : (
           <button
             type="button"
             onClick={onVote}
-            className="inline-flex cursor-pointer items-center gap-1 rounded-full border border-brick/35 bg-white px-3 py-1.5 text-[11.5px] font-semibold text-brick-dark transition hover:bg-brick-light"
+            className="tap inline-flex cursor-pointer items-center gap-1 rounded-full border border-brick/35 bg-white px-5 text-[12.5px] font-semibold text-brick-dark transition hover:bg-brick-light"
           >
             🧡 Bình chọn
           </button>

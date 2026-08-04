@@ -56,8 +56,8 @@ export default async function AmbassadorPage({ params }: { params: Promise<{ slu
   if (!p) notFound();
 
   return (
-    <main className="mx-auto max-w-md px-4 py-10 text-center">
-      <div className="rounded-3xl bg-white p-8 shadow-sm">
+    <main className="mx-auto max-w-md px-4 py-8 text-center sm:py-10">
+      <div className="rounded-3xl bg-white p-5 shadow-sm sm:p-8">
         <div className="text-5xl">🏆</div>
         <div className="mt-3 inline-block rounded-full bg-brick px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
           Cây bút của khu phố

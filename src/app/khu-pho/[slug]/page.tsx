@@ -64,8 +64,8 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
   const pct = nb.total === 0 ? 0 : Math.round((nb.signed / nb.total) * 100);
 
   return (
-    <main className="mx-auto max-w-md px-4 py-10 text-center">
-      <div className="rounded-3xl bg-white p-8 shadow-sm">
+    <main className="mx-auto max-w-md px-4 py-8 text-center sm:py-10">
+      <div className="rounded-3xl bg-white p-5 shadow-sm sm:p-8">
         {photo && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photo} alt={nb.name} className="mb-4 h-44 w-full rounded-2xl object-cover" />
