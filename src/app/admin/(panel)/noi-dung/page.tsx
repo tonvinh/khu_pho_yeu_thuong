@@ -146,10 +146,12 @@ export default function SiteContentPage() {
           <div>
             <span className="text-xs font-bold">Xem trước video đang hiển thị</span>
             <div className="mt-1 aspect-video overflow-hidden rounded-xl border border-cream-dark">
+              {/* referrerPolicy bắt buộc — xem chú thích ở components/home/CampaignMedia.tsx */}
               <iframe
                 src={`https://www.youtube-nocookie.com/embed/${effectiveYoutube}`}
                 title="Xem trước TVC"
                 allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
                 className="h-full w-full border-0"
               />
             </div>

@@ -274,6 +274,7 @@ Restore xong nhớ dùng **đúng `.env` cùng thời điểm** (cùng `PHONE_PE
 | `web` unhealthy | `docker compose -f $F logs web`. Thường do thiếu `PHONE_PEPPER`/`PHONE_AES_KEY` hoặc `db` chưa healthy |
 | 502 từ Caddy host | `web` chưa lên hoặc lệch port. Kiểm `curl 127.0.0.1:3001/api/v1/counters`, và Caddyfile trỏ đúng `127.0.0.1:3001` |
 | Video TVC là ô xám "This content is blocked" (trang chủ + `/admin/noi-dung`) | CSP của Caddy **host** thiếu `frame-src https://www.youtube-nocookie.com`. Kiểm `curl -sI https://<domain>/ \| grep -i content-security`, sửa `/etc/caddy/Caddyfile` theo §5.2 → `sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy`. Không cần rebuild app |
+| Video TVC ra "Error 153 — Video player configuration error" | Iframe nạp được nhưng thiếu `referrerPolicy="strict-origin-when-cross-origin"` trên thẻ. Site đặt `Referrer-Policy: no-referrer` nên YouTube không xác thực được domain nhúng. **Không phải** lỗi ID video hay video tắt nhúng — đổi ID khác vẫn lỗi y hệt |
 | Ảnh không hiện | `storage` healthy chưa? `MINIO_*` khớp chưa? Ảnh public đi qua `/api/img/…`, không truy cập MinIO trực tiếp |
 | Ảnh bản đồ 404 với admin | Ảnh gốc nằm ở `private/`, chỉ đọc qua `/api/admin/neighborhoods/{id}/map-image` |
 | Migration lỗi giữa chừng | `scripts/migrate.mjs` chạy mỗi file trong 1 transaction và idempotent — sửa nguyên nhân rồi chạy lại là đủ |

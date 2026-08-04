@@ -31,9 +31,14 @@ export default function CampaignMedia({ content }: { content: SiteContentData })
           </div>
         )}
 
-        {/* TVC — nhúng YouTube. Iframe cần CSP `frame-src` cho youtube-nocookie
-            (xem deploy/Caddyfile); proxy nào thiếu directive đó sẽ để lại ô xám,
-            nên luôn kèm link mở thẳng YouTube làm đường lui. */}
+        {/* TVC — nhúng YouTube. HAI điều kiện, thiếu cái nào cũng hỏng:
+            1. CSP của proxy phải có `frame-src` cho youtube-nocookie (deploy/Caddyfile),
+               không thì Chrome chặn → ô xám "This content is blocked".
+            2. referrerPolicy trên chính thẻ iframe: cả site đặt `Referrer-Policy: no-referrer`
+               (07 §63) nên YouTube không xác thực được domain nhúng → "Error 153 — Video
+               player configuration error". Thuộc tính này ghi đè CHỈ request của iframe,
+               gửi đúng origin (không kèm path), phần còn lại của site vẫn no-referrer.
+            Vẫn kèm link mở thẳng YouTube làm đường lui. */}
         <div className="kp-card overflow-hidden">
           <div className="relative aspect-video">
             <iframe
@@ -41,6 +46,7 @@ export default function CampaignMedia({ content }: { content: SiteContentData })
               title={content.campaign_title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin"
               className="absolute inset-0 h-full w-full border-0"
             />
           </div>
