@@ -104,7 +104,19 @@ docker compose run --rm web node scripts/create-admin.mjs admin@fpt.com 'MatKhau
 curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1/api/v1/counters   # → 200
 ```
 
-Caddy (`deploy/Caddyfile`) đặt sẵn: HSTS 1 năm, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, CSP `default-src 'self'` (kèm `frame-src` cho YouTube — xem §5.2), ẩn header `Server`, gzip.
+Caddy (`deploy/Caddyfile`) đặt sẵn: HSTS 1 năm, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, CSP `default-src 'self'` (kèm `frame-src` cho YouTube — xem §5.2), ẩn header `Server`, nén `zstd gzip`.
+
+Header thật nằm ở snippet [`deploy/khupho-headers.caddy`](../deploy/khupho-headers.caddy),
+`deploy/Caddyfile` chỉ `import` nó — cùng một file với Caddy host ở §5.2, nên hai mode
+không bao giờ lệch CSP.
+
+> **Sửa snippet xong phải `docker compose restart proxy`.** Đó là bind mount *nội dung*,
+> không phải đổi service definition, nên `docker compose up -d` không recreate `proxy` và
+> Caddy vẫn giữ config đã parse lúc khởi động — rất dễ tưởng CSP mới đã có tác dụng.
+>
+> Mount `./deploy/khupho-headers.caddy:/etc/caddy/conf.d/khupho-headers.caddy:ro` là **bắt
+> buộc**: thiếu file đó Caddy báo `File to import not found` và `proxy` không khởi động.
+> Cố ý fail-closed — proxy chạy mà không có CSP/HSTS là vi phạm 07 §2.2.
 
 ---
 
@@ -160,9 +172,19 @@ sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy
 # Let's Encrypt tự cấp cert trong ~30s
 ```
 
-Sau bước một lần này, mỗi lần deploy CI tự đồng bộ snippet (§6). Nếu host **chưa** nối,
-bước đó chỉ in cảnh báo rồi bỏ qua — app vẫn deploy bình thường, nhưng CSP sẽ đứng yên
+Wiring gồm **hai vế, phải đủ cả hai**: dòng `import /etc/caddy/conf.d/khupho-headers.caddy`
+ở đầu file, **và** dòng `import khupho_headers` bên trong site block khupho (thay cho khối
+`header{...}` viết tay). Chỉ làm vế đầu là trạng thái *nửa vời* nguy hiểm nhất: `caddy validate`
+vẫn pass (snippet không dùng vẫn hợp lệ), reload vẫn chạy, CI vẫn xanh — nhưng production
+tiếp tục phục vụ header cũ. Job CI ở §6 kiểm tra cả hai dòng và **fail** nếu thiếu vế nào.
+
+Sau bước một lần này, mỗi lần deploy CI tự đồng bộ snippet (§6). Nếu host **chưa** nối gì cả,
+job đó chỉ in cảnh báo rồi bỏ qua — app vẫn deploy bình thường, nhưng CSP sẽ đứng yên
 ở bản cũ, nên đừng để trạng thái đó kéo dài.
+
+Runner phải **đọc** được `/etc/caddy/Caddyfile` và snippet bằng quyền thường (mặc định
+`0644`, thư mục `0755`) — job cố tình không dùng `sudo` cho `test/cmp/grep` vì `sudo -n`
+bị từ chối trả về non-zero y hệt "file không tồn tại", khiến sync im lặng không chạy mãi.
 
 > **`frame-src` không được bỏ.** Thiếu directive này thì iframe TVC rơi về `default-src 'self'`
 > và Chrome chặn — trang chủ lẫn ô "Xem trước video" ở `/admin/noi-dung` chỉ còn ô xám
@@ -201,23 +223,41 @@ Chỉ đổi `.env` (ví dụ `SITE_ORIGIN`) thì không cần build, nhưng ph�
 
 Push lên `main` → runner **chạy ngay trên VM** tự pull + rebuild + migrate + healthcheck (~1 phút). Runner kết nối **outbound-only**, VM không cần mở port SSH. File: `.github/workflows/deploy.yml`; cũng chạy tay được qua tab Actions → "Run workflow".
 
-Các bước:
+Workflow có **hai job độc lập, không `needs` nhau** — cố ý: header là cấu hình của *host*,
+container app là chuyện khác. Build/migrate hỏng thì không được chặn một bản vá CSP, và
+ngược lại. Runner self-hosted chạy tuần tự nên hai job không giẫm chân nhau ở `/opt/khu_pho`.
+
+**Job `deploy`** (app):
 
 1. `git fetch` + `reset --hard FETCH_HEAD` tại `/opt/khu_pho`.
 2. **Chốt chặn `.env`**: kiểm tra file tồn tại và `PHONE_PEPPER` không rỗng — thiếu thì **dừng ngay**, không để container khởi động với secret mới (sinh pepper mới = mất toàn bộ định danh cư dân). Bước này cũng tự nâng `.env` từ layout thư mục lồng cũ lên gốc repo nếu còn sót.
 3. `docker compose -f docker-compose.prod.yml build web` + `up -d`.
 4. `exec -T web node scripts/migrate.mjs`.
 5. Poll `http://127.0.0.1:3001/api/v1/counters` tối đa ~45s; khác 200 → fail.
-6. **Đồng bộ security header** sang Caddy host: so `deploy/khupho-headers.caddy` với
-   `/etc/caddy/conf.d/khupho-headers.caddy`, giống nhau thì thôi; khác thì backup → ghi đè →
-   `caddy validate` **cả file host** → `systemctl reload caddy`, validate fail hoặc caddy
-   không `active` sau reload thì tự khôi phục bản backup. Chưa nối snippet (§5.2) thì chỉ
-   in cảnh báo rồi bỏ qua.
 
-> Bước 6 **chỉ** ghi đúng file `/etc/caddy/conf.d/khupho-headers.caddy`, không bao giờ ghi
-> `/etc/caddy/Caddyfile`. VM dùng chung với `law.ailab.city` và `fb.ailab.city` — nếu ai đó
-> sửa thành copy đè cả Caddyfile thì mỗi lần deploy khupho sẽ đánh sập 2 app kia.
-> Runner chạy bằng user `nct`, cần `sudo` NOPASSWD cho `cp/install/caddy/systemctl`.
+**Job `sync-headers`** (security header sang Caddy host): pull source, rồi
+
+1. Snippet chưa có trên host → `::warning::` + in hướng dẫn §5.2, **exit 0** (chưa nối là
+   trạng thái hợp lệ).
+2. Không đọc được `/etc/caddy/Caddyfile` hoặc snippet → **fail** kèm lệnh sửa quyền —
+   không im lặng coi như "chưa nối".
+3. `/etc/caddy/Caddyfile` thiếu `import …/khupho-headers.caddy` hoặc `import khupho_headers`
+   → **fail**: host nối nửa vời, CSP trong repo không có tác dụng (§5.2).
+4. `cmp` giống nhau → thôi. Khác → backup vào `$HOME/khupho-caddy-backups/` (giữ 10 bản)
+   → `install` đè → `caddy validate` **cả file host** → `systemctl reload caddy` →
+   `systemctl is-active`. **Mọi** bước trong chuỗi này đều được bọc `if !` và tự khôi phục
+   backup khi hỏng — kể cả `reload`, vì step chạy dưới `bash -e` nên một lệnh trần thất bại
+   sẽ giết step trước khi nhánh khôi phục kịp chạy, để lại file hỏng trên đĩa.
+
+> Backup **không** để trong `/etc/caddy/conf.d/`: thư mục đó thường được import bằng glob
+> (`import /etc/caddy/conf.d/*`), file `.bak` nằm trong đó sẽ định nghĩa trùng
+> `(khupho_headers)` → `caddy validate` fail vĩnh viễn.
+
+> Job `sync-headers` **chỉ** ghi đúng file `/etc/caddy/conf.d/khupho-headers.caddy`, không bao
+> giờ ghi `/etc/caddy/Caddyfile`. VM dùng chung với `law.ailab.city` và `fb.ailab.city` — nếu ai
+> đó sửa thành copy đè cả Caddyfile thì mỗi lần deploy khupho sẽ đánh sập 2 app kia.
+> Runner chạy bằng user `nct`, cần `sudo` NOPASSWD đúng 3 binary **ghi**: `install`, `caddy`,
+> `systemctl`. Mọi thao tác đọc (`test/cmp/grep`) chạy quyền thường — xem §5.2.
 
 `concurrency: deploy-vm` đảm bảo không có 2 lần deploy chồng nhau.
 

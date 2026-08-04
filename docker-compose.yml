@@ -63,8 +63,13 @@ services:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      # snippet header dùng chung với Caddy host của production — Caddyfile import theo
-      # đúng đường dẫn này nên hai mode không lệch nhau
+      # Snippet header dùng chung với Caddy host của production — Caddyfile import theo
+      # đúng đường dẫn này nên hai mode không lệch nhau. BẮT BUỘC: thiếu mount này thì
+      # deploy/Caddyfile không parse được và proxy không khởi động (cố ý fail-closed).
+      #
+      # Sửa nội dung snippet xong phải `docker compose restart proxy`: đây là bind mount
+      # nội dung, không phải đổi service definition, nên `up -d` KHÔNG recreate proxy và
+      # caddy vẫn giữ config đã parse lúc khởi động → dễ tưởng CSP mới đã có tác dụng.
       - ./deploy/khupho-headers.caddy:/etc/caddy/conf.d/khupho-headers.caddy:ro
       - caddy_data:/data
       - caddy_config:/config

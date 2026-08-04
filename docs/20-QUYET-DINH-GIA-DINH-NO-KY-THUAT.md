@@ -78,7 +78,7 @@ Xếp theo mức độ cần xử lý.
 | Mục | Chi tiết |
 |---|---|
 | **`Dockerfile` stage `runner` dùng `node:20-alpine`** trong khi `deps`/`builder` dùng `node:22-alpine` (và comment đầu file ghi node:22) | Không gây lỗi hiện tại nhưng lệch với chủ ý ban đầu; nên thống nhất về `node:22-alpine` và kiểm thử lại native deps |
-| **`README 2.md`** ở gốc repo | Bản README cũ (mô tả layout thư mục lồng đã bỏ), là file rác do đồng bộ. Nên xoá |
+| ~~**`README 2.md`** ở gốc repo~~ | ~~Bản README cũ (mô tả layout thư mục lồng đã bỏ), là file rác do đồng bộ. Nên xoá~~ — **đã xoá** (4/8): nó còn là nguồn thứ ba của hướng dẫn Caddy cũ không có CSP |
 | **`docs/CLAUDE.md` §"Nguồn sự thật về UI"** trỏ tới `Khu Pho Yeu Thuong.dc.html` và `Admin Khu Pho.dc.html` | Hai file này **không có** trong `docs/`; design tham chiếu thực tế là `KhuPhoCuaToi-prototype-v4.html` |
 | **`03-DATA-MODEL.md` §4 ghi "Resident (JWT)"** | Triển khai thực tế dùng cookie + bảng `sessions` (xem §2). Là chênh lệch **có chủ ý**, không phải lỗi |
 | **CSP có `script-src 'unsafe-inline'`** | Yêu cầu của Next.js runtime; làm CSP yếu hơn lý tưởng. Có thể siết bằng nonce nếu cần |
