@@ -31,7 +31,7 @@ Ba nguyên tắc nghề nghiệp:
 
 ---
 
-## 2. Duyệt đề xuất góc xóm (`/admin/de-xuat`)
+## 2. Duyệt đề xuất góc xóm (`/admin/khu-pho?tab=de-xuat`)
 
 Đây là bước 3a: quyết định một góc xóm có được mở cho cả xóm viết câu nhắc hay không.
 
@@ -53,7 +53,7 @@ Sau khi duyệt, nhớ sang **Bản đồ** để đặt pin cho góc xóm đó 
 
 ---
 
-## 3. Duyệt câu nhắc — checklist 4N (`/admin/cau-nhac`)
+## 3. Duyệt câu nhắc — checklist 4N (`/admin/loi-nhac`)
 
 **Đây là chốt chặn quan trọng nhất của cả chiến dịch.** Hệ thống **không** chấm điểm tự động: nút "Duyệt hiển thị" chỉ bật khi bạn tự tay tick đủ 4 ô, và server kiểm tra lại lần nữa.
 
@@ -75,7 +75,7 @@ Mẹo thực hành: đọc to câu lên. Nếu nghe như **hàng xóm nói với
 
 ---
 
-## 4. Chọn câu & vòng đời biển (`/admin/bien`)
+## 4. Chọn câu & vòng đời biển (`/admin/loi-nhac?tab=bien`)
 
 Ba khối tương ứng ba giai đoạn.
 
@@ -229,7 +229,7 @@ Sau import: các vấn đề vào thẳng trạng thái **"Đang chờ"** (admin
 | Tần suất | Việc |
 |---|---|
 | **Hằng ngày** | Dọn sạch 2 hàng chờ: đề xuất + câu nhắc 4N. Trả lời hàng chờ trong ngày để người dân không nản |
-| **2–3 lần/tuần** | Xem `/admin/bien`: chọn câu cho những góc xóm đã đủ lượt thương; thúc sản xuất |
+| **2–3 lần/tuần** | Xem `/admin/loi-nhac?tab=bien`: chọn câu cho những góc xóm đã đủ lượt thương; thúc sản xuất |
 | **Hằng tuần** | Lướt `/admin/gian-lan`; cập nhật trạng thái leads; kiểm tra pin của khu phố mới |
 | **Khi treo biển xong** | Upload ảnh biển + xác nhận "Đã treo biển" **ngay trong ngày** (người dân đang chờ banner báo tin vui) |
 | **Hằng tháng** | Đối soát sổ cái điểm, chốt "Khu phố dễ thương nhất tháng", rà khu phố nào sắp đạt 100% để chuẩn bị lễ trao chứng nhận |

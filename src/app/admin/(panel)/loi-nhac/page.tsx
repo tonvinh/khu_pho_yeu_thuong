@@ -1,13 +1,19 @@
 "use client";
-// Quản lý câu duyệt dạng bảng (yêu cầu 3/8): tabs trạng thái lọc nhanh + tìm kiếm/chủ đề/
-// khu phố; mỗi hàng gồm nội dung, 1 hình duy nhất, khu phố (tỉnh/thành · phường/xã),
-// chủ đề, trạng thái, người đăng, thời gian đăng. SỬA MỌI NỘI DUNG qua drawer trượt phải
-// (câu, chủ đề, khu phố, vị trí, tên người đăng, hình, trạng thái). Duyệt hiển thị vẫn
-// qua checklist 4N THỦ CÔNG (Q2, 04 §3) — cả ở nút Duyệt nhanh lẫn khi đổi trạng thái.
+// Quản lý lời nhắc dạng bảng (yêu cầu 3/8, đổi tên route /admin/cau-nhac → /admin/loi-nhac
+// ngày 4/8): tabs trạng thái lọc nhanh + tìm kiếm/chủ đề/khu phố; mỗi hàng gồm nội dung,
+// 1 hình duy nhất, khu phố (tỉnh/thành · phường/xã), chủ đề, trạng thái, người đăng, thời
+// gian đăng. SỬA MỌI NỘI DUNG qua drawer trượt phải (câu, chủ đề, khu phố, vị trí, tên
+// người đăng, hình, trạng thái). Duyệt hiển thị vẫn qua checklist 4N THỦ CÔNG (Q2, 04 §3)
+// — cả ở nút Duyệt nhanh lẫn khi đổi trạng thái.
+// 4/8: gộp thêm màn vòng đời biển (/admin/bien cũ) thành tab thứ hai; bộ lọc / tìm kiếm /
+// phân trang nằm trên URL để chia sẻ link giữ nguyên trạng thái.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiGet, apiSend, apiUpload } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import ImportModal from "@/components/admin/ImportModal";
+import SignsPanel from "@/components/admin/SignsPanel";
+import { NbSelect } from "@/components/admin/IssuesPanel";
+import { Pager, SearchBox, Tabs, Th, useUrlState } from "@/components/admin/table-tools";
 import { CATEGORIES, CATEGORY_CODES, categoryIcon, categoryLabel } from "@/lib/taxonomy";
 
 interface Sugg {
@@ -54,18 +60,19 @@ const FOUR_N: Array<{ key: keyof Checks; label: string; hint: string }> = [
 type Checks = Record<"nhac" | "nho" | "nho2" | "nhe", boolean>;
 const EMPTY_4N: Checks = { nhac: false, nho: false, nho2: false, nhe: false };
 
+const URL_DEFAULTS = { tab: "loi-nhac", status: "all", category: "", nb: "", q: "", page: "1", per: "20" };
+
 export default function SuggestionsTablePage() {
+  // Bộ lọc / tìm kiếm / phân trang giữ trên URL (chia sẻ link ra đúng màn đang xem)
+  const [ui, setUi, uiReady] = useUrlState(URL_DEFAULTS);
+  const { status, category, nb: nbFilter, q: search } = ui;
+  const per = Number(ui.per) || 20;
+  const page = Math.max(1, Number(ui.page) || 1);
+
   const [rows, setRows] = useState<Sugg[]>([]);
+  const [total, setTotal] = useState(0);
   const [nbs, setNbs] = useState<Nb[]>([]);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
-
-  // Filters
-  const [status, setStatus] = useState("all");
-  const [category, setCategory] = useState("");
-  const [city, setCity] = useState("");
-  const [nbId, setNbId] = useState("");
-  const [search, setSearch] = useState("");
-  const [debounced, setDebounced] = useState("");
 
   // Duyệt nhanh / từ chối nhanh
   const [approving, setApproving] = useState<Sugg | null>(null);
@@ -79,21 +86,24 @@ export default function SuggestionsTablePage() {
   // Modal import file
   const [importing, setImporting] = useState(false);
 
-  useEffect(() => {
-    const t = window.setTimeout(() => setDebounced(search.trim()), 300);
-    return () => window.clearTimeout(t);
-  }, [search]);
-
   const load = useCallback(() => {
-    const p = new URLSearchParams({ status });
+    if (!uiReady) return;
+    const p = new URLSearchParams({ status, page: String(page), per: String(per) });
     if (category) p.set("category", category);
-    if (city) p.set("city", city);
-    if (nbId) p.set("neighborhood", nbId);
-    if (debounced) p.set("q", debounced);
-    apiGet<{ suggestions: Sugg[] }>(`/api/admin/suggestions?${p}`)
-      .then((r) => setRows(r.suggestions)).catch(() => {});
-  }, [status, category, city, nbId, debounced]);
+    if (nbFilter.startsWith("city:")) p.set("city", nbFilter.slice(5));
+    else if (nbFilter) p.set("neighborhood", nbFilter);
+    if (search) p.set("q", search);
+    apiGet<{ suggestions: Sugg[]; total: number }>(`/api/admin/suggestions?${p}`)
+      .then((r) => { setRows(r.suggestions); setTotal(r.total); }).catch(() => {});
+  }, [uiReady, status, category, nbFilter, search, page, per]);
   useEffect(load, [load]);
+
+  // Link dán tay trỏ tới trang không còn tồn tại (VD ?page=9) → kéo về trang cuối.
+  // Chỉ xét khi đã có dữ liệu (total > 0) để không phá page của link lúc chưa tải xong.
+  useEffect(() => {
+    const pages = Math.ceil(total / per);
+    if (total > 0 && page > pages) setUi({ page: String(pages) });
+  }, [total, per, page, setUi]);
 
   useEffect(() => {
     apiGet<{ neighborhoods: Nb[] }>("/api/admin/neighborhoods")
@@ -146,11 +156,13 @@ export default function SuggestionsTablePage() {
     setEditing((cur) => (cur ? rows.find((r) => r.id === cur.id) || cur : cur));
   }, [rows]);
 
+  const signsTab = ui.tab === "bien";
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-extrabold">✍️ Quản lý lời nhắc</h1>
-        <Btn variant="outline" onClick={() => setImporting(true)}>📥 Import file</Btn>
+        {!signsTab && <Btn variant="outline" onClick={() => setImporting(true)}>📥 Import file</Btn>}
       </div>
 
       {msg && (
@@ -161,63 +173,55 @@ export default function SuggestionsTablePage() {
         </p>
       )}
 
+      {/* Tab 2 gộp từ trang vòng đời biển cũ */}
+      <Tabs
+        value={ui.tab}
+        onChange={(tab) =>
+          setUi({ tab, status: "all", category: "", nb: "", q: "", page: "1" })
+        }
+        items={[
+          { key: "loi-nhac", label: "✍️ Danh sách lời nhắc" },
+          { key: "bien", label: "🪧 Chọn câu & vòng đời biển" },
+        ]}
+      />
+
+      {signsTab && <SignsPanel onChanged={load} />}
+
+      {!signsTab && (
+      <>
       {/* ===== Tabs trạng thái — lọc nhanh ===== */}
-      <div className="flex flex-wrap gap-1.5">
-        {[["all", "Tất cả"], ...Object.entries(STATUS_LABEL)].map(([k, v]) => (
-          <button
-            key={k}
-            onClick={() => setStatus(k)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-              status === k ? "bg-brick text-white shadow-sm" : "bg-white text-ink hover:bg-cream-dark/50"
-            }`}
-          >
-            {v}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        value={status}
+        onChange={(v) => setUi({ status: v, page: "1" })}
+        items={[{ key: "all", label: "Tất cả" },
+          ...Object.entries(STATUS_LABEL).map(([k, v]) => ({ key: k, label: v }))]}
+      />
 
       {/* ===== Tìm kiếm + filter chủ đề / khu phố ===== */}
       <Card>
         <div className="grid gap-2 md:grid-cols-4">
-          <input
+          <SearchBox
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(v) => setUi({ q: v, page: "1" })}
             placeholder="🔍 Tìm câu, người đăng, khu phố, vị trí…"
-            className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm md:col-span-2"
+            className="md:col-span-2"
           />
-          <select value={category} onChange={(e) => setCategory(e.target.value)}
-            className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm">
+          <select
+            value={category}
+            onChange={(e) => setUi({ category: e.target.value, page: "1" })}
+            className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
+          >
             <option value="">Chủ đề: tất cả</option>
             {CATEGORY_CODES.map((c) => (
               <option key={c} value={c}>{CATEGORIES[c].icon} {CATEGORIES[c].label}</option>
             ))}
           </select>
-          <select
-            value={nbId ? `nb:${nbId}` : city ? `city:${city}` : ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v.startsWith("nb:")) { setNbId(v.slice(3)); }
-              else { setNbId(""); setCity(v.startsWith("city:") ? v.slice(5) : ""); }
-            }}
-            className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
-          >
-            <option value="">Khu phố: tất cả</option>
-            {cities.map((c) => (
-              <optgroup key={c} label={c}>
-                <option value={`city:${c}`}>Cả tỉnh/thành {c}</option>
-                {nbs.filter((n) => n.city === c).map((n) => (
-                  <option key={n.id} value={`nb:${n.id}`}>{n.name}{n.ward ? ` — ${n.ward}` : ""}</option>
-                ))}
-              </optgroup>
-            ))}
-            {nbs.some((n) => !n.city) && (
-              <optgroup label="Chưa có tỉnh/thành">
-                {nbs.filter((n) => !n.city).map((n) => (
-                  <option key={n.id} value={`nb:${n.id}`}>{n.name}</option>
-                ))}
-              </optgroup>
-            )}
-          </select>
+          <NbSelect
+            value={nbFilter}
+            onChange={(v) => setUi({ nb: v, page: "1" })}
+            nbs={nbs}
+            cities={cities}
+          />
         </div>
       </Card>
 
@@ -314,6 +318,16 @@ export default function SuggestionsTablePage() {
         </table>
       </div>
 
+      <Pager
+        page={page}
+        per={per}
+        total={total}
+        onPage={(p) => setUi({ page: String(p) })}
+        onPer={(n) => setUi({ per: String(n), page: "1" })}
+      />
+      </>
+      )}
+
       {/* ===== Modal duyệt nhanh 4N ===== */}
       {approving && (
         <Modal title="Duyệt hiển thị — checklist 4N" onClose={() => setApproving(null)}>
@@ -381,15 +395,6 @@ export default function SuggestionsTablePage() {
         />
       )}
     </div>
-  );
-}
-
-function Th({ children, className = "" }: { children?: React.ReactNode; className?: string }) {
-  // Header đông cứng khi cuộn (như trang Khu phố): sticky + kẻ dưới bằng shadow
-  return (
-    <th className={`sticky top-0 z-10 whitespace-nowrap bg-white px-3 py-2.5 font-bold shadow-[0_1px_0_0_var(--color-cream-dark)] ${className}`}>
-      {children}
-    </th>
   );
 }
 

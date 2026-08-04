@@ -33,13 +33,13 @@ Chuẩn bị: DB sạch → `pnpm migrate && pnpm seed`, hoặc môi trường s
 | 2 | Bấm "Gửi lời nhắc cho xóm mình" | Hiện modal định danh (chưa có phiên) |
 | 3 | Nhập SĐT + tên + khu phố | Vào thẳng form đề xuất đang chờ; góc trên hiện "Chào {tên} 👋" |
 | 4 | Gửi đề xuất | Toast "…đã vào danh sách chờ duyệt"; **trang chủ chưa hiện đề xuất này** |
-| 5 | Admin `/admin/de-xuat` → Duyệt | Góc xóm hiện công khai, pill "Đang chờ"; `/admin/diem` có event +2 cho người đề xuất |
+| 5 | Admin `/admin/khu-pho?tab=de-xuat` → Duyệt | Góc xóm hiện công khai, pill "Đang chờ"; `/admin/diem` có event +2 cho người đề xuất |
 | 6 | Cư dân mở drawer góc xóm, viết câu ≤120 ký tự, gửi | Toast "vào hàng chờ duyệt"; **câu chưa hiện trong danh sách** |
-| 7 | Admin `/admin/cau-nhac`: tick 3/4 ô | Nút "Duyệt hiển thị" **vẫn disabled** |
+| 7 | Admin `/admin/loi-nhac`: tick 3/4 ô | Nút "Duyệt hiển thị" **vẫn disabled** |
 | 8 | Tick đủ 4 ô → Duyệt | Câu hiện công khai, mở bình chọn; pill góc xóm đổi "Đang bình chọn"; tác giả +5đ |
 | 9 | Cư dân **khác** bấm "Thương" | Số tăng ngay (optimistic), tác giả +1đ |
 | 10 | Chính tác giả bấm "Thương" câu mình | Ô hiển thị "câu của bạn", **không bấm được** (gọi API trực tiếp → 409) |
-| 11 | Admin `/admin/bien`: chọn câu cao phiếu nhất | Chuyển "Đã chọn", không cần lý do |
+| 11 | Admin `/admin/loi-nhac?tab=bien`: chọn câu cao phiếu nhất | Chuyển "Đã chọn", không cần lý do |
 | 12 | Admin chọn câu **không** cao phiếu nhất | Bắt buộc nhập lý do mới cho chọn |
 | 13 | Đưa sản xuất → upload ảnh biển → "Đã treo biển" | Pin **xanh**, counter "biển đã treo" +1, tác giả +30đ |
 | 14 | Cư dân tác giả tải lại trang chủ | Hiện **banner báo tin vui in-web** kèm nút Chia sẻ. **Không có SMS nào được gửi** |

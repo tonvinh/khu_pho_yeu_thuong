@@ -18,6 +18,9 @@ export async function GET(req: NextRequest) {
   const neighborhoodId = sp.get("neighborhood");
   const city = sp.get("city");
   const search = (sp.get("q") || "").trim().slice(0, 120);
+  // Phân trang tuỳ chọn: không truyền `per` → trả hết (màn vòng đời biển cần đủ danh sách)
+  const per = sp.get("per") ? Math.min(200, Math.max(1, Number(sp.get("per")) || 20)) : null;
+  const page = Math.max(1, Number(sp.get("page")) || 1);
 
   const params: unknown[] = [];
   const add = (v: unknown) => { params.push(v); return `$${params.length}`; };
@@ -42,13 +45,15 @@ export async function GET(req: NextRequest) {
        s.issue_id, s.category, s.neighborhood_id, s.image_key,
        i.location_text, n.name AS neighborhood_name, n.city, n.ward,
        u.display_name AS author_name,
-       (SELECT count(*)::int FROM votes v WHERE v.suggestion_id = s.id AND v.is_valid) AS votes
+       (SELECT count(*)::int FROM votes v WHERE v.suggestion_id = s.id AND v.is_valid) AS votes,
+       (count(*) OVER())::int AS total
      FROM suggestions s
      JOIN issues i ON i.id = s.issue_id
      JOIN neighborhoods n ON n.id = s.neighborhood_id
      JOIN users u ON u.id = s.author_id
      WHERE ${where.join(" AND ")}
-     ORDER BY s.created_at DESC`,
+     ORDER BY s.created_at DESC
+     ${per ? `LIMIT ${add(per)} OFFSET ${add((page - 1) * per)}` : ""}`,
     params
   );
   return NextResponse.json({
@@ -56,6 +61,8 @@ export async function GET(req: NextRequest) {
       ...(r as Record<string, unknown>),
       image_url: imgUrl((r as { image_key: string | null }).image_key),
       image_key: undefined,
+      total: undefined,
     })),
+    total: (rows[0]?.total as number) ?? 0,
   });
 }

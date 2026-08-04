@@ -13,10 +13,8 @@
 | `/chinh-sach-du-lieu` | Static | Chính sách dữ liệu (PDPD) |
 | `/admin/login` | Client | Đăng nhập admin (2 bước nếu bật TOTP) |
 | `/admin` | Client | Dashboard |
-| `/admin/de-xuat` | Client | Duyệt đề xuất vấn đề |
-| `/admin/cau-nhac` | Client | Duyệt câu nhắc với checklist 4N |
-| `/admin/bien` | Client | Chọn câu & vòng đời biển |
-| `/admin/khu-pho` | Client | Khu phố & chứng nhận |
+| `/admin/khu-pho` | Client | Khu phố & chứng nhận · tab **Đề xuất góc phố** (duyệt đề xuất — gộp `/admin/de-xuat` cũ, 4/8) |
+| `/admin/loi-nhac` | Client | Duyệt lời nhắc với checklist 4N (đổi tên từ `/admin/cau-nhac`) · tab **Chọn câu & vòng đời biển** (gộp `/admin/bien` cũ, 4/8) |
 | `/admin/khu-pho/{id}/ban-do` | Client | Trình quản lý bản đồ & pin |
 | `/admin/leads` | Client | Quản lý leads |
 | `/admin/gian-lan` | Client | Chống gian lận |
@@ -151,8 +149,9 @@ Component dùng chung: `Card` (tiêu đề + khối trắng bo tròn), `Btn` (4 
 
 | Màn | Điểm nhấn |
 |---|---|
-| `/admin/cau-nhac` | 4 checkbox 4N kèm **gợi ý tiêu chí ngay trên UI**; nút "Duyệt hiển thị" **disabled** đến khi đủ 4 ô (server vẫn kiểm lại) |
-| `/admin/bien` | Nhóm câu theo từng góc xóm, xếp theo số thương; câu đầu bấm chọn thẳng, câu khác bắt buộc nhập lý do |
+| `/admin/loi-nhac` | 4 checkbox 4N kèm **gợi ý tiêu chí ngay trên UI**; nút "Duyệt hiển thị" **disabled** đến khi đủ 4 ô (server vẫn kiểm lại) |
+| `/admin/loi-nhac?tab=bien` | Nhóm câu theo từng góc xóm, xếp theo số thương; câu đầu bấm chọn thẳng, câu khác bắt buộc nhập lý do |
+| Mọi màn admin | Bộ lọc / tìm kiếm / phân trang nằm trên query string (`?tab=…&status=…&q=…&page=…&per=…`) — chia sẻ link là ra đúng màn đang xem |
 | `/admin/khu-pho/{id}/ban-do` | Bấm "Đặt pin" → con trỏ crosshair, click lên ảnh tính toạ độ % (1 chữ số thập phân); có link xem ảnh gốc (chỉ admin) |
 | `/admin/leads` | SĐT hiển thị dạng `090***567`, bấm mới hiện (kèm cảnh báo có log) |
 | `/admin/import` | 3 bước rõ ràng, nút Commit bị khoá khi preview còn lỗi |

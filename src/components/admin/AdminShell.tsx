@@ -7,10 +7,12 @@ import { apiGet, apiSend } from "../client-api";
 
 // Mục "Khu phố" tách riêng (yêu cầu 3/8) — bảng quản lý thông tin, ảnh, trạng thái
 // hiển thị/tiêu biểu/chứng nhận 4N + vị trí block tiêu biểu (bỏ quản lý bản đồ/pin).
+// 4/8: gộp màn cũ vào 2 mục này — duyệt đề xuất nằm trong tab của "Khu phố", vòng đời
+// biển nằm trong tab của "Lời nhắc" (route /admin/cau-nhac đổi thành /admin/loi-nhac).
 const NAV = [
   { href: "/admin", icon: "📊", label: "Dashboard" },
   { href: "/admin/khu-pho", icon: "🏘️", label: "Khu phố" },
-  { href: "/admin/cau-nhac", icon: "✍️", label: "Lời nhắc" },
+  { href: "/admin/loi-nhac", icon: "✍️", label: "Lời nhắc" },
   { href: "/admin/voting", icon: "💛", label: "Theo dõi thương" },
   { href: "/admin/leads", icon: "🧧", label: "Leads" },
   { href: "/admin/noi-dung", icon: "📝", label: "Nội dung" },
