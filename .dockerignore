@@ -1,6 +1,7 @@
 node_modules
 .next
 .git
+.github
 .env
 .env.local
 # pattern không có ** chỉ khớp ở gốc context — chặn cả .env nằm sâu bên trong
@@ -11,3 +12,17 @@ data
 coverage
 *.md
 !README.md
+
+# Backup sinh ngay trong /opt/khu_pho khi vận hành (docs/18 §9) — file vài trăm MB,
+# lọt vào build context là mỗi lần deploy phải gửi lại toàn bộ cho daemon.
+backup-*.sql.gz
+minio-*.tar.gz
+*.bak
+*.log
+*.tsbuildinfo
+
+# Công cụ local
+.claude
+.vscode
+.idea
+.DS_Store

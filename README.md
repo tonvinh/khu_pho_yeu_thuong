@@ -7,6 +7,8 @@ Toàn bộ đặc tả nằm trong `docs/` (đọc `docs/CLAUDE.md` để biết
 - **Production**: https://khupho.ailab.city · Admin: https://khupho.ailab.city/admin
 - **Repo**: gốc git chính là thư mục app. Trên VM, repo clone tại `/opt/khu_pho` và mọi lệnh
   deploy chạy ngay tại đó.
+- **Hướng dẫn deploy production đầy đủ, từng bước**: [`docs/18-TRIEN-KHAI-VAN-HANH.md`](docs/18-TRIEN-KHAI-VAN-HANH.md)
+  — file README này chỉ là bản tóm tắt để copy-paste nhanh.
 
 ---
 
@@ -40,28 +42,30 @@ src/lib/             crypto, phone, session, csrf, score-service, storage, styli
 src/app/api/v1/      API public + cư dân (docs/03 §4)
 src/app/api/admin/   API admin (duyệt, biển, leads, import, fraud)
 src/app/             trang chủ, share (/dai-su /bien /khu-pho + OG động), admin UI
-deploy/Caddyfile     proxy + TLS + security headers (dùng cho compose 4-service)
-docker-compose.yml        compose "chuẩn" 4 service — máy/VM riêng
-docker-compose.prod.yml   compose production thực tế — VM dùng chung, không có proxy (xem §6)
-Dockerfile           multi-stage node:22-alpine, pnpm@9 ghim cứng
-.github/workflows/deploy.yml      CI/CD — self-hosted runner trên VM
+deploy/Caddyfile             proxy + TLS cho mode 4-service
+deploy/khupho-headers.caddy  security header — NGUỒN DUY NHẤT, cả 2 mode đều import
+docker-compose.yml           compose "chuẩn" 4 service — máy/VM riêng (mode A)
+docker-compose.prod.yml      compose production thực tế — VM dùng chung, không có proxy (mode B)
+Dockerfile                   multi-stage node:22-alpine, pnpm@9 ghim cứng
+.github/workflows/deploy.yml CI/CD — self-hosted runner trên VM
 ```
 
 ## 3. Biến môi trường
 
 Tạo từ template: `cp .env.example .env`. **Không bao giờ commit `.env` thật.**
+Bảng đầy đủ + cách sinh/backup secrets: [docs/18 §2](docs/18-TRIEN-KHAI-VAN-HANH.md#2-biến-môi-trường--secrets).
 
 | Biến | Bắt buộc | Ý nghĩa |
 |---|---|---|
-| `PHONE_PEPPER` | ✅ | Pepper cho HMAC SĐT — `openssl rand -hex 32`. **KHÔNG xoay được giữa chừng** (đổi là mất toàn bộ định danh cư dân) — chọn kỹ ngay từ đầu và backup an toàn. |
+| `PHONE_PEPPER` | ✅ | Pepper cho HMAC SĐT — `openssl rand -hex 32`. **KHÔNG xoay được giữa chừng** (đổi là mất toàn bộ định danh cư dân). |
 | `PHONE_AES_KEY` | ✅ | Khoá AES-256-GCM mã hoá SĐT lead — `openssl rand -base64 32`. Tách biệt hoàn toàn với PEPPER. |
 | `POSTGRES_PASSWORD` | ✅ | Mật khẩu Postgres (user/db mặc định `khupho`). |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | ✅ | Credentials MinIO. |
-| `DATABASE_URL` | dev | Chỉ cần khi chạy ngoài Docker: `postgres://khupho:...@localhost:5432/khupho`. Trong compose bị override thành `@db:5432`. |
-| `BASE_PATH` | | `""` cho domain riêng; `/khu-pho-de-thuong` nếu chạy dưới path. Là **build arg** — đổi phải rebuild image. |
-| `SITE_ORIGIN` | | Origin tuyệt đối cho OG tag / share link (`src/lib/url.ts`). KHÔNG dính CSRF/auth. Production: `https://khupho.ailab.city`. |
-| `SITE_ADDRESS` | | Chỉ dùng cho compose 4-service: `:80` local, hoặc `khupho.example.com` để Caddy tự cấp TLS. |
-| `MINIO_BUCKET` | | Mặc định `khupho`. |
+| `DATABASE_URL` | dev | Chỉ cần khi chạy ngoài Docker. Trong compose bị override thành `@db:5432`. |
+| `BASE_PATH` | | `""` cho domain riêng; `/khu-pho-de-thuong` nếu chạy dưới path. Là **build arg** — đổi phải rebuild. |
+| `SITE_ORIGIN` | | Origin tuyệt đối cho OG tag / share link. Production: `https://khupho.ailab.city`. |
+| `SITE_ADDRESS` | | Chỉ dùng cho mode 4-service: `:80` local, hoặc domain để Caddy tự cấp TLS. |
+| `MINIO_BUCKET` | | Mặc định `khupho` (bucket tự tạo ở lần upload đầu). |
 | `SEED_ADMIN_PASSWORD` | | Tuỳ chọn, cho `pnpm seed`. |
 
 ## 4. Chạy dev local
@@ -85,185 +89,89 @@ pnpm create-admin <email@fpt.com> <mật_khẩu_≥12_ký_tự> [--totp]
 pnpm seed:admin-demo             # dữ liệu demo cho màn admin
 ```
 
-## 5. Chạy production kiểu "chuẩn" (máy/VM riêng — compose 4 service)
+Mượn Postgres/MinIO từ compose cho nhanh: `docker compose up -d db storage`
+(hai service này không publish port — thêm `ports` trong file compose override local nếu cần).
 
-Dùng khi có một máy trống, muốn cả proxy + TLS trong Docker. Chỉ `proxy` mở port 80/443.
+## 5. Deploy production — tóm tắt
+
+> Chi tiết từng bước, kèm kết quả mong đợi và cách xử lý khi sai:
+> **[`docs/18-TRIEN-KHAI-VAN-HANH.md`](docs/18-TRIEN-KHAI-VAN-HANH.md)**.
+> Lần deploy đầu tiên **hãy đọc docs/18**, đừng chỉ copy khối lệnh dưới đây.
+
+Hai mode:
+
+| | Mode A — compose 4 service | Mode B — VM dùng chung *(đang chạy thật)* |
+|---|---|---|
+| File | `docker-compose.yml` | `docker-compose.prod.yml` |
+| Proxy/TLS | service `proxy` trong Docker | Caddy systemd **trên host** |
+| `web` | không publish port | publish `127.0.0.1:3001` |
+| Dùng khi | máy/VM riêng cho dự án | VM dùng chung với app khác |
+
+**Mode A** ([docs/18 §4](docs/18-TRIEN-KHAI-VAN-HANH.md#4-mode-a--compose-4-service-máyvm-riêng)):
 
 ```bash
 cp .env.example .env             # điền secrets thật; SITE_ADDRESS=<domain> để tự động TLS
 docker compose up -d --build
-docker compose run --rm web node scripts/migrate.mjs   # migration là lệnh riêng, không tự chạy khi start
-docker compose run --rm web node scripts/seed.mjs      # (tuỳ chọn) seed demo
+docker compose run --rm web node scripts/migrate.mjs    # migration là lệnh RIÊNG, không tự chạy
 docker compose run --rm web node scripts/create-admin.mjs admin@fpt.com 'MatKhauManh!123'
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1/api/v1/counters    # → 200
 ```
 
-Kiểm tra: `curl -s http://127.0.0.1/api/v1/counters` (hoặc qua domain) trả HTTP 200 JSON.
-
-## 6. Deploy production thực tế (VM dùng chung + Caddy trên host)
-
-Production hiện chạy trên **VM GCP dùng chung** (`ai-law`, Singapore, e2-standard-2 8GB + 4GB swap)
-— VM này đồng thời chạy app khác, nên khu-pho dùng `docker-compose.prod.yml` với khác biệt:
-
-- **Không có service proxy** — Caddy chạy trên **host** (systemd) lo TLS/reverse-proxy cho nhiều app.
-- `web` publish **chỉ nội bộ** `127.0.0.1:3001` (port 3000/8000 đã bị app khác dùng).
-- `db` + `storage` **không publish port nào** (tránh đụng Postgres 5432 / MinIO 9000 của app khác).
-- Compose project name cố định `khupho` → container `khupho-web|db|storage`, tách hoàn toàn khỏi app kia.
-
-### 6.1. Chuẩn bị VM (làm một lần)
+**Mode B** ([docs/18 §3](docs/18-TRIEN-KHAI-VAN-HANH.md#3-mode-b--deploy-production-thực-tế-từng-bước)) — sau khi đã cài Docker, clone `/opt/khu_pho`, tạo `.env`, trỏ DNS và nối Caddy host:
 
 ```bash
-# 1. Cài Docker + compose plugin (Ubuntu/Debian)
-curl -fsSL https://get.docker.com | sudo sh
-sudo usermod -aG docker $USER    # logout/login lại để nhận nhóm
-
-# 2. Clone repo — gốc repo chính là thư mục app
-sudo mkdir -p /opt/khu_pho && sudo chown $USER /opt/khu_pho
-git clone https://github.com/tonvinh/khu_pho_yeu_thuong.git /opt/khu_pho
 cd /opt/khu_pho
+docker compose -f docker-compose.prod.yml build web
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml exec -T web node scripts/migrate.mjs
+docker compose -f docker-compose.prod.yml exec -T web node scripts/create-admin.mjs admin@fpt.com 'MatKhauManh!123'
 
-# 3. Tạo .env production (KHÔNG có trong repo — gitignored)
-cp .env.example .env
-# Điền: PHONE_PEPPER (openssl rand -hex 32), PHONE_AES_KEY (openssl rand -base64 32),
-#       POSTGRES_PASSWORD, MINIO_ACCESS_KEY/SECRET_KEY mạnh,
-#       SITE_ORIGIN=https://khupho.ailab.city, BASE_PATH="" (SITE_ADDRESS không dùng ở mode này)
-# → Backup PHONE_PEPPER + PHONE_AES_KEY vào nơi an toàn NGAY — mất là mất dữ liệu.
-```
-
-### 6.2. DNS + Caddy trên host (làm một lần)
-
-```bash
-# 1. DNS: trỏ A record khupho.ailab.city → IP tĩnh của VM (IP đã reserve static trên GCP,
-#    nhớ release nếu ngừng dự án). Firewall GCP mở 80/443.
-
-# 2. Cài Caddy trên host (nếu chưa có): https://caddyserver.com/docs/install
-# 3. Cài snippet security header — KHÔNG viết header thẳng vào file host:
-sudo mkdir -p /etc/caddy/conf.d
-sudo install -m 0644 /opt/khu_pho/deploy/khupho-headers.caddy /etc/caddy/conf.d/khupho-headers.caddy
-
-# 4. Sửa /etc/caddy/Caddyfile — cần ĐỦ CẢ HAI dòng import bên dưới:
-```
-
-```caddyfile
-# đầu file, trước site block
-import /etc/caddy/conf.d/khupho-headers.caddy
-
-khupho.ailab.city {
-    encode zstd gzip
-    import khupho_headers            # ← thay cho khối header{...} viết tay
-    reverse_proxy 127.0.0.1:3001
-}
-```
-
-```bash
-sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy
-# Let's Encrypt tự cấp cert trong ~30s
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3001/api/v1/counters   # → 200
+curl -s -o /dev/null -w '%{http_code}\n' https://khupho.ailab.city               # → 200
+curl -sI https://khupho.ailab.city | grep -i content-security-policy             # phải có frame-src YouTube
 ```
 
 > Security header là **một nguồn duy nhất**: [`deploy/khupho-headers.caddy`](deploy/khupho-headers.caddy)
-> — cả mode 4-service lẫn Caddy host đều `import` đúng file đó, và CI tự đồng bộ nó mỗi lần
-> deploy (job `sync-headers`). Đừng chép khối `header{...}` ra file host: sửa CSP trong repo
-> sẽ không có tác dụng trên production, đúng lỗi đã làm iframe TVC bị chặn suốt một thời gian.
-> Thiếu `import khupho_headers` trong site block là trạng thái nửa vời — CI sẽ báo fail.
-> Chi tiết + xử lý sự cố: [docs/18 §5.2 và §6](docs/18-TRIEN-KHAI-VAN-HANH.md).
+> — cả hai mode đều `import` đúng file đó, và CI tự đồng bộ nó sang host mỗi lần deploy (job
+> `sync-headers`). Đừng chép khối `header{...}` ra file host: sửa CSP trong repo sẽ không có tác
+> dụng trên production — đúng lỗi đã làm iframe TVC bị chặn suốt một thời gian.
+> Wiring cần **đủ cả hai** dòng import (xem [docs/18 §3 B5.3](docs/18-TRIEN-KHAI-VAN-HANH.md#b5-caddy-trên-host--security-header-một-lần)); thiếu một vế là trạng thái nửa vời và CI sẽ fail.
 
-### 6.3. Build + chạy lần đầu
+Deploy các lần sau: **push lên `main`** → CI tự pull + rebuild + migrate + healthcheck (~1 phút).
+Làm tay hoặc rollback: [docs/18 §5](docs/18-TRIEN-KHAI-VAN-HANH.md#5-deploy-các-lần-sau) và [§7](docs/18-TRIEN-KHAI-VAN-HANH.md#7-rollback).
 
-```bash
-cd /opt/khu_pho
+## 6. Vận hành nhanh
 
-docker compose -f docker-compose.prod.yml build web
-docker compose -f docker-compose.prod.yml up -d
-docker compose -f docker-compose.prod.yml exec -T web node scripts/migrate.mjs
-
-# Tạo admin thật (hoặc seed demo nếu là môi trường thử)
-docker compose -f docker-compose.prod.yml exec -T web node scripts/create-admin.mjs admin@fpt.com 'MatKhauManh!123'
-
-# Kiểm tra
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3001/api/v1/counters   # → 200
-curl -s -o /dev/null -w '%{http_code}\n' https://khupho.ailab.city               # → 200
-```
-
-### 6.4. Deploy thủ công các lần sau
+Đầy đủ (log, cron backup, restore, theo dõi sức khoẻ): [docs/18 §8–§9](docs/18-TRIEN-KHAI-VAN-HANH.md#8-vận-hành-hằng-ngày).
 
 ```bash
-cd /opt/khu_pho
-git fetch origin main && git reset --hard origin/main
+F=docker-compose.prod.yml   # (bỏ "-f $F" nếu dùng mode 4-service)
 
-docker compose -f docker-compose.prod.yml build web
-docker compose -f docker-compose.prod.yml up -d
-docker compose -f docker-compose.prod.yml exec -T web node scripts/migrate.mjs
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3001/api/v1/counters
-```
-
-Lưu ý: chỉ đổi `.env` (ví dụ `SITE_ORIGIN`) thì không cần build, nhưng phải
-`docker compose -f docker-compose.prod.yml up -d web` để container đọc lại.
-Riêng `BASE_PATH` là build arg → bắt buộc build lại.
-
-## 7. CI/CD tự động (GitHub Actions + self-hosted runner)
-
-Push lên `main` → runner **trên chính VM** tự pull + rebuild + migrate + healthcheck (~1 phút).
-Runner kết nối **outbound-only** — VM không cần mở port SSH. Workflow:
-`.github/workflows/deploy.yml`, cũng chạy tay được qua tab Actions → "Run workflow".
-
-Flow của workflow:
-
-1. `git fetch` + `reset --hard FETCH_HEAD` tại `/opt/khu_pho`
-2. Kiểm tra `.env` tồn tại và `PHONE_PEPPER` không rỗng — thiếu thì **dừng ngay**, không để
-   container khởi động với secret mới (sinh pepper mới = mất toàn bộ định danh cư dân)
-3. `docker compose -f docker-compose.prod.yml build web` + `up -d`
-4. `exec -T web node scripts/migrate.mjs`
-5. Poll `http://127.0.0.1:3001/api/v1/counters` tối đa 45s, khác 200 → fail.
-
-Mọi push đều deploy, kể cả sửa mỗi tài liệu. Nếu muốn bỏ qua thay đổi tài liệu, thêm
-`paths-ignore: ["**.md", "docs/**"]` vào khối `on.push`.
-
-### Cài runner trên VM (làm một lần)
-
-```bash
-# GitHub → repo → Settings → Actions → Runners → New self-hosted runner (Linux x64)
-# Làm theo lệnh tải + config được sinh sẵn, với 2 điểm riêng của dự án:
-sudo mkdir -p /opt/actions-runner && sudo chown $USER /opt/actions-runner
-cd /opt/actions-runner
-# ... tải + giải nén theo hướng dẫn GitHub ...
-./config.sh --url https://github.com/tonvinh/khu_pho_yeu_thuong --token <TOKEN> \
-            --labels khupho                 # workflow chọn runner bằng label này
-sudo ./svc.sh install $USER && sudo ./svc.sh start    # chạy như systemd service
-# User chạy runner phải thuộc nhóm docker: sudo usermod -aG docker $USER
-```
-
-## 8. Vận hành
-
-```bash
-F=docker-compose.prod.yml   # (bỏ -f nếu dùng compose 4-service)
-
-docker compose -f $F ps                          # trạng thái + healthcheck
-docker compose -f $F logs -f --tail=200 web      # log app
+docker compose -f $F ps                               # trạng thái + healthcheck
+docker compose -f $F logs -f --tail=200 web           # log app
 docker compose -f $F exec db psql -U khupho khupho    # vào Postgres
 
 # Backup DB (db không publish port — backup qua exec)
 docker compose -f $F exec -T db pg_dump -U khupho khupho | gzip > backup-$(date +%F).sql.gz
 # Restore
 gunzip -c backup-YYYY-MM-DD.sql.gz | docker compose -f $F exec -T db psql -U khupho khupho
-
-# Backup ảnh MinIO (volume minio_data)
-docker run --rm --volumes-from khupho-storage-1 -v "$PWD":/backup alpine \
-  tar czf /backup/minio-$(date +%F).tar.gz /data
 ```
 
-## 9. Troubleshooting
+⚠️ Backup DB **vô dụng nếu mất `PHONE_PEPPER`** — cất 2 khoá trong `.env` ở nơi khác, tách khỏi dump DB.
 
-| Triệu chứng | Nguyên nhân / cách xử lý |
+## 7. Troubleshooting
+
+Bảng đầy đủ: [docs/18 §10](docs/18-TRIEN-KHAI-VAN-HANH.md#10-sự-cố-thường-gặp). Vài lỗi hay gặp nhất:
+
+| Triệu chứng | Xử lý |
 |---|---|
-| Build fail ở bước native deps (sharp/argon2/esbuild) | Dockerfile ghim `node:22-alpine` + `pnpm@9` có chủ đích — corepack mặc định kéo pnpm 11 (đòi Node ≥22.13, hard-fail "ignored builds"). Đừng nâng pnpm trong Dockerfile nếu chưa nâng lockfile. |
-| Workflow không chạy khi push | Workflow phải ở `.github/workflows/` tại gốc repo (= thư mục app). Kiểm tra runner còn online: Settings → Actions → Runners. |
-| Deploy fail ở bước "Ensure .env" | `/opt/khu_pho/.env` không tồn tại hoặc `PHONE_PEPPER` rỗng. Đây là chốt chặn cố ý — tạo lại `.env` từ bản backup secrets, **đừng** sinh pepper mới. |
-| Healthcheck fail / web unhealthy | `docker compose -f $F logs web`. Thường do thiếu `PHONE_PEPPER`/`PHONE_AES_KEY` hoặc db chưa healthy. Endpoint check: `/api/v1/counters`. |
-| 502 từ Caddy host | `web` chưa lên hoặc port lệch — xác nhận `curl 127.0.0.1:3001/api/v1/counters` trên VM, và Caddyfile trỏ đúng `127.0.0.1:3001`. |
-| Đổi domain | Đổi A record + site block Caddy + `SITE_ORIGIN` trong `.env` → `up -d web`. Nếu chuyển sang chạy dưới path thì đổi `BASE_PATH` và **rebuild**. |
-| Ảnh không hiện | Kiểm tra `storage` healthy và `MINIO_*` khớp; ảnh public đi qua `/api/img/[...key]`, không truy cập MinIO trực tiếp. |
-| Migration lỗi giữa chừng | `scripts/migrate.mjs` idempotent — sửa nguyên nhân rồi chạy lại lệnh migrate là đủ. |
+| Build fail ở native deps (sharp/argon2/esbuild) | Dockerfile ghim `pnpm@9` có chủ đích — đừng nâng pnpm nếu chưa nâng lockfile |
+| Deploy fail ở bước "Ensure .env" | `/opt/khu_pho/.env` thiếu hoặc `PHONE_PEPPER` rỗng — chốt chặn cố ý, khôi phục từ backup, **đừng sinh pepper mới** |
+| 502 từ Caddy host | `web` chưa lên hoặc lệch port — kiểm `curl 127.0.0.1:3001/api/v1/counters` |
+| Video TVC ra ô xám "This content is blocked" | CSP host thiếu `frame-src youtube-nocookie` — host nối Caddy nửa vời |
+| Người dùng mất hết tài khoản sau deploy | `PHONE_PEPPER` đã bị thay — khôi phục pepper cũ là dữ liệu trở lại |
 
-## 10. Quy tắc khi sửa code (tóm tắt — chi tiết ở `CLAUDE.md` + `docs/CLAUDE.md`)
+## 8. Quy tắc khi sửa code (tóm tắt — chi tiết ở `CLAUDE.md` + `docs/CLAUDE.md`)
 
 - Mọi ghi điểm qua `src/lib/score-service.ts`; side-effects "treo biển" ở `applyInstalledSideEffects` (trong transaction PATCH `/api/admin/suggestions/[id]`).
 - Copy tiếng Việt NGUYÊN VĂN ở `src/lib/copy.ts` (từ docs/06 §2) — không tự sửa lời.

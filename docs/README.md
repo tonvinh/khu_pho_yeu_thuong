@@ -42,7 +42,7 @@ Nếu A và B mâu thuẫn → hệ thống đang lệch đặc tả: sửa code
 | [`15-DIEM-XEP-HANG-CHONG-GIAN-LAN.md`](15-DIEM-XEP-HANG-CHONG-GIAN-LAN.md) | Sổ cái điểm, trần tuần, bảng xếp hạng, heuristics gian lận & xử lý im lặng | Khi sửa logic điểm/bình chọn |
 | [`16-FRONTEND-UI.md`](16-FRONTEND-UI.md) | Bản đồ route, cây component, design token, luồng tương tác, trang share + OG image | Khi làm giao diện |
 | [`17-VAN-HANH-ADMIN.md`](17-VAN-HANH-ADMIN.md) | Cẩm nang vận hành admin: SOP duyệt 4N, chọn câu, treo biển, leads, import, chứng nhận | Đội vận hành chiến dịch |
-| [`18-TRIEN-KHAI-VAN-HANH.md`](18-TRIEN-KHAI-VAN-HANH.md) | Env, dev local, 2 mode production, CI/CD, backup/restore, sự cố thường gặp | Khi deploy/vận hành hạ tầng |
+| [`18-TRIEN-KHAI-VAN-HANH.md`](18-TRIEN-KHAI-VAN-HANH.md) | **Runbook deploy production từng bước** (mode A/B), env & secrets, CI/CD, rollback, backup/restore, sự cố | Khi deploy/vận hành hạ tầng |
 | [`19-KIEM-THU-VA-NGHIEM-THU.md`](19-KIEM-THU-VA-NGHIEM-THU.md) | Test tự động, kịch bản E2E thủ công, checklist nghiệm thu theo 11 quy tắc cứng | Trước mỗi lần release |
 | [`20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md`](20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md) | Nhật ký quyết định kiến trúc, ASSUMPTION trong code, giới hạn đã biết, backlog kỹ thuật | Khi lên kế hoạch giai đoạn sau |
 
@@ -58,6 +58,6 @@ Ngoài `docs/`: [`../README.md`](../README.md) là hướng dẫn cài đặt/de
 | SĐT được lưu ở đâu, dạng gì? | [14](14-BAO-MAT-VA-QUYEN-RIENG-TU.md) §2 |
 | Vì sao câu nhắc chưa hiện công khai? | [12](12-DATA-DICTIONARY.md) §4 (state machine) |
 | API nào cần CSRF? | [13](13-API-REFERENCE.md) §1 |
-| Deploy production ra sao? | [18](18-TRIEN-KHAI-VAN-HANH.md) §4–§6 |
+| Deploy production ra sao? | [18](18-TRIEN-KHAI-VAN-HANH.md) §3 (mode B — đang chạy thật) · §4 (mode A) |
 | Duyệt 4N thế nào cho đúng? | [17](17-VAN-HANH-ADMIN.md) §3 |
 | Mất `PHONE_PEPPER` thì sao? | [14](14-BAO-MAT-VA-QUYEN-RIENG-TU.md) §7 (**không khôi phục được**) |

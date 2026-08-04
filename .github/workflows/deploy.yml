@@ -44,11 +44,11 @@ jobs:
 
           # Mọi thao tác ĐỌC dùng quyền thường (cả 2 file đều 0644, /etc/caddy 0755).
           # KHÔNG dùng `sudo -n test/cmp/grep`: sudoers chỉ mở NOPASSWD cho
-          # cp/install/caddy/systemctl (docs/18 §6), nên `sudo -n test` bị từ chối sẽ
+          # install/caddy/systemctl (docs/18 §6.3), nên `sudo -n test` bị từ chối sẽ
           # trả non-zero y hệt "file không tồn tại" → sync im lặng không chạy suốt đời.
           if [ ! -f "$DST" ]; then
             echo "::warning::Host chưa nối snippet — bỏ qua (job deploy app vẫn chạy độc lập)."
-            echo "Chạy MỘT LẦN trên VM, xem docs/18 §5.2:"
+            echo "Chạy MỘT LẦN trên VM, xem docs/18 §3 bước B5:"
             echo "  sudo mkdir -p /etc/caddy/conf.d"
             echo "  sudo install -m 0644 $SRC $DST"
             echo "  # đầu /etc/caddy/Caddyfile thêm: import $DST"
@@ -78,7 +78,7 @@ jobs:
           if [ -n "$MISS" ]; then
             echo "::error::Host nối NỬA VỜI — snippet đã có nhưng $HOST_CF không import:"
             printf '%b' "$MISS"
-            echo "CSP trong repo KHÔNG có tác dụng trên production cho tới khi sửa. Xem docs/18 §5.2."
+            echo "CSP trong repo KHÔNG có tác dụng trên production cho tới khi sửa. Xem docs/18 §3 bước B5.3."
             exit 1
           fi
 
