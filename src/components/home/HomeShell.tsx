@@ -7,18 +7,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { HomeData, IssueCard, Me, NotificationItem } from "./types";
 import { apiGet, apiSend, BASE } from "../client-api";
 import { COPY } from "@/lib/copy";
-import { EXAMPLE_SIGNS } from "@/lib/examples";
 import Counters from "./Counters";
 import NeighborhoodSlider from "./NeighborhoodSlider";
 import CampaignMedia from "./CampaignMedia";
 import IssueList from "./IssueList";
+import SignGallery from "./SignGallery";
 import Leaderboard from "./Leaderboard";
 import LeadSection from "./LeadSection";
 import IdentifyModal from "./IdentifyModal";
 import ProposeModal from "./ProposeModal";
 import LeadPromptModal from "./LeadPromptModal";
 import IssueDrawer from "./IssueDrawer";
-import { Eyebrow, HangSign, SectionHead } from "./ui";
+import { Eyebrow, SectionHead } from "./ui";
 
 export default function HomeShell({ initial }: { initial: HomeData }) {
   const [data, setData] = useState<HomeData>(initial);
@@ -52,9 +52,11 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         apiGet<HomeData["counters"]>("/api/v1/counters"),
         apiGet<{ issues: HomeData["issues"] }>("/api/v1/issues"),
         apiGet<HomeData["map"]>("/api/v1/map"),
-        apiGet<{ ambassadors: HomeData["ambassadors"]; neighborhood_of_month: HomeData["neighborhoodOfMonth"] }>(
-          "/api/v1/leaderboard"
-        ),
+        apiGet<{
+          ambassadors: HomeData["ambassadors"];
+          neighborhood_of_month: HomeData["neighborhoodOfMonth"];
+          viewer_rank: HomeData["viewerRank"];
+        }>("/api/v1/leaderboard"),
       ]);
       // content + lời nhắc đã duyệt chỉ SSR lúc đầu — polling giữ nguyên bản đang có
       setData((prev) => ({
@@ -63,6 +65,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         map: mapRes,
         ambassadors: lb.ambassadors,
         neighborhoodOfMonth: lb.neighborhood_of_month,
+        viewerRank: lb.viewer_rank,
         approvedSigns: prev.approvedSigns,
         content: prev.content,
       }));
@@ -167,20 +170,11 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
-  // Câu đang được thương nhất trong các góc xóm đang mở — ví dụ "sống" đầu dãy biển mẫu
+  // Câu đang được thương nhất trong các góc xóm đang mở — card ghim đầu tab
+  // "Được yêu thích nhất" của block lời nhắc (SignGallery)
   const featured = data.issues
     .filter((it) => it.top_quote && it.status !== "signed")
     .sort((a, b) => b.top_votes - a.top_votes)[0];
-
-  // Lời nhắc đã duyệt (kèm hình) — bỏ câu trùng card "được thương nhất",
-  // thiếu chỗ (dưới 6 card) thì bù bằng ví dụ minh hoạ tĩnh
-  const approvedSigns = data.approvedSigns.filter((s) => s.content !== featured?.top_quote);
-  const signSlots = 6 - (featured ? 1 : 0) - approvedSigns.length;
-  const fillerSigns = signSlots > 0
-    ? EXAMPLE_SIGNS.filter(
-        (e) => e.quote !== featured?.top_quote && !approvedSigns.some((s) => s.content === e.quote)
-      ).slice(0, signSlots)
-    : [];
 
   return (
     <div>
@@ -303,34 +297,14 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       {/* ===== TVC / KV CHIẾN DỊCH (#19) — nội dung sửa ở /admin/noi-dung ===== */}
       <CampaignMedia content={data.content} />
 
-      {/* ===== VÍ DỤ MINH HOẠ: biển treo mẫu ===== */}
+      {/* ===== VÍ DỤ MINH HOẠ: biển treo mẫu — 3 tab như danh sách góc phố ===== */}
       <section className="mx-auto max-w-[1120px] px-5 py-7">
         <SectionHead title="Lời nhắc khi lên biển trông như thế nào?" />
-        <div className="grid grid-cols-1 items-start gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featured && (
-            <HangSign
-              quote={`“${featured.top_quote}”`}
-              by="Được “Thương” nhiều nhất tuần này 🧡"
-              spot={featured.location_text}
-              tilt={1.5}
-            />
-          )}
-          {approvedSigns.map((s, i) => (
-            <HangSign
-              key={s.id}
-              quote={`“${s.content}”`}
-              by={s.author_name}
-              spot={s.location_text}
-              imageUrl={s.image_url}
-              tilt={i % 2 ? 1.5 : -1.5}
-              voted={s.voted}
-              onVote={() => voteSign(s.id)}
-            />
-          ))}
-          {fillerSigns.map((s, i) => (
-            <HangSign key={s.quote} quote={`“${s.quote}”`} by={s.by} spot={s.spot} tilt={i % 2 ? -1.5 : 1.5} />
-          ))}
-        </div>
+        <SignGallery
+          signs={data.approvedSigns}
+          featured={featured?.top_quote ? { quote: featured.top_quote, spot: featured.location_text } : null}
+          onVote={voteSign}
+        />
       </section>
 
       {/* ===== ĐANG CHỜ BẠN SÁNG TẠO: danh sách + bảng xếp hạng (prototype .two) ===== */}
@@ -358,6 +332,8 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
             ambassadors={data.ambassadors}
             neighborhoodOfMonth={data.neighborhoodOfMonth}
             neighborhoods={data.map.neighborhoods}
+            viewerRank={data.viewerRank}
+            identified={me != null}
           />
         </div>
       </section>

@@ -6,6 +6,7 @@
 import { useState } from "react";
 import type { IssueCard } from "./types";
 import { categoryIcon, categoryLabel } from "@/lib/taxonomy";
+import { FilterTabs } from "./ui";
 
 const PAGE = 6;
 
@@ -54,28 +55,11 @@ export default function IssueList({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-1.5">
-        {TABS.map((t) => {
-          const n = tabItems(issues, t.key).length;
-          const active = tab === t.key;
-          return (
-            <button
-              key={t.key}
-              onClick={() => { setTab(t.key); setExpanded(false); }}
-              className={`tap cursor-pointer rounded-full border px-3.5 py-1.5 text-[12.5px] font-semibold transition ${
-                active
-                  ? "border-brick bg-brick text-white shadow-kp-s"
-                  : "border-cream-dark bg-white text-ink-soft hover:border-brick/35 hover:text-brick-dark"
-              }`}
-            >
-              {t.label}
-              <span className={`ml-1.5 text-[11px] ${active ? "text-white/80" : "text-ink-soft/70"}`}>
-                {n}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      <FilterTabs
+        tabs={TABS.map((t) => ({ ...t, count: tabItems(issues, t.key).length }))}
+        active={tab}
+        onChange={(k) => { setTab(k); setExpanded(false); }}
+      />
 
       {shown.map((it) => (
         <button

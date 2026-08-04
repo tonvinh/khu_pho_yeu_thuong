@@ -68,6 +68,20 @@ export interface Ambassador {
   score: number;
   signs_installed: number;
   votes_received: number;
+  /** Điểm 7 ngày gần nhất — tab "Tuần này" + mũi tên đổi hạng */
+  week_points: number;
+  /** Câu được thương nhất của cây bút — hiện dưới tên */
+  top_quote: string | null;
+  top_quote_spot: string | null;
+  top_quote_installed: boolean;
+}
+
+/** Hạng của người xem trên bảng cây bút (null = chưa có điểm / chưa định danh) */
+export interface ViewerRank {
+  rank: number;
+  score: number;
+  above_name: string | null;
+  above_score: number | null;
 }
 
 export interface NeighborhoodOfMonth {
@@ -129,6 +143,9 @@ export interface ApprovedSign {
   author_name: string;
   location_text: string;
   image_url: string | null;
+  votes: number;
+  /** Ngày duyệt câu (fallback ngày gửi) — tab "Mới nhất" của block lời nhắc */
+  approved_at: string;
   voted: boolean;
 }
 
@@ -138,6 +155,7 @@ export interface HomeData {
   map: MapData;
   ambassadors: Ambassador[];
   neighborhoodOfMonth: NeighborhoodOfMonth | null;
+  viewerRank: ViewerRank | null;
   approvedSigns: ApprovedSign[];
   content: SiteContentData;
 }

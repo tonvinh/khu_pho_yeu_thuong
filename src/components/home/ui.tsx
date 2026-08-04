@@ -16,6 +16,42 @@ export function SectionHead({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
+/** Dãy pill lọc danh sách (Mới nhất · Chờ bạn bình chọn · …) — dùng chung cho
+ *  danh sách góc phố và block lời nhắc, kèm số lượng từng mục */
+export function FilterTabs<K extends string>({
+  tabs,
+  active,
+  onChange,
+}: {
+  tabs: { key: K; label: string; count: number }[];
+  active: K;
+  onChange: (key: K) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {tabs.map((t) => {
+        const isActive = active === t.key;
+        return (
+          <button
+            key={t.key}
+            onClick={() => onChange(t.key)}
+            className={`tap cursor-pointer rounded-full border px-3.5 py-1.5 text-[12.5px] font-semibold transition ${
+              isActive
+                ? "border-brick bg-brick text-white shadow-kp-s"
+                : "border-cream-dark bg-white text-ink-soft hover:border-brick/35 hover:text-brick-dark"
+            }`}
+          >
+            {t.label}
+            <span className={`ml-1.5 text-[11px] ${isActive ? "text-white/80" : "text-ink-soft/70"}`}>
+              {t.count}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Field({
   label,
   children,
