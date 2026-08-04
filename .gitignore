@@ -1,16 +1,35 @@
+# --- Dependency & build ---
 node_modules/
 .next/
 out/
 build/
-.DS_Store
-*.pem
-npm-debug.log*
-.env
-.env.local
-.env.production
-!.env.example
+coverage/
 *.tsbuildinfo
 next-env.d.ts
-coverage/
+
+# --- Secrets: KHÔNG BAO GIỜ commit .env thật (chỉ .env.example được track) ---
+.env
+.env.*
+!.env.example
+*.pem
+
+# --- Dữ liệu runtime & backup sinh ngay trong thư mục repo trên VM ---
+# (docs/18 §9 chạy pg_dump / tar MinIO tại /opt/khu_pho — không được lọt vào git
+#  lẫn vào build context của Docker; xem .dockerignore)
 data/
+backup-*.sql.gz
+minio-*.tar.gz
+*.bak
+
+# --- Log ---
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# --- OS / editor / công cụ local (không liên quan tới app) ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
 .claude/

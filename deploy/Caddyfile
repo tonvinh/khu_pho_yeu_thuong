@@ -10,7 +10,7 @@
 import /etc/caddy/conf.d/khupho-headers.caddy
 
 {$SITE_ADDRESS} {
-	# giữ khớp với site block trên Caddy host (docs/18 §5.2)
+	# giữ khớp với site block trên Caddy host (docs/18 §3 bước B5)
 	encode zstd gzip
 
 	import khupho_headers
