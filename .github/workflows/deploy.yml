@@ -60,3 +60,52 @@ jobs:
             echo "waiting for web... ($i) got=$code"; sleep 3
           done
           echo "web did not become healthy"; exit 1
+
+      # Đồng bộ security header sang Caddy TRÊN HOST (mode B). Trước đây repo và
+      # /etc/caddy/Caddyfile là hai file rời, sửa CSP trong repo không có tác dụng gì
+      # trên production — đó là lý do lỗi iframe TVC tồn tại lâu.
+      #
+      # CHỈ ghi /etc/caddy/conf.d/khupho-headers.caddy. TUYỆT ĐỐI KHÔNG ghi đè
+      # /etc/caddy/Caddyfile: file đó còn site block của law.ailab.city và
+      # fb.ailab.city (CSP khác hẳn) — đè lên là sập 2 app kia.
+      - name: Sync security header sang Caddy host
+        run: |
+          cd "$APP_DIR"
+          SRC="$APP_DIR/deploy/khupho-headers.caddy"
+          DST=/etc/caddy/conf.d/khupho-headers.caddy
+
+          if ! sudo -n test -f "$DST"; then
+            echo "::warning::Host chưa nối snippet — bỏ qua (app vẫn deploy bình thường)."
+            echo "Chạy MỘT LẦN trên VM, xem docs/18 §5.2:"
+            echo "  sudo mkdir -p /etc/caddy/conf.d && sudo cp $SRC $DST"
+            echo "  # đầu /etc/caddy/Caddyfile thêm: import $DST"
+            echo "  # trong 2 site block khupho, thay khối header{...} bằng: import khupho_headers"
+            echo "  sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy"
+            exit 0
+          fi
+
+          if sudo -n cmp -s "$SRC" "$DST"; then
+            echo "header không đổi — không reload caddy"
+            exit 0
+          fi
+
+          BAK="$DST.bak-$(date +%Y%m%d-%H%M%S)"
+          sudo -n cp -a "$DST" "$BAK"
+          sudo -n install -m 0644 -o root -g root "$SRC" "$DST"
+
+          # validate CẢ file host (đã import snippet) — bắt lỗi cú pháp trước khi reload
+          if ! sudo -n caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile; then
+            echo "::error::Caddyfile không hợp lệ — khôi phục bản cũ, không reload"
+            sudo -n cp -a "$BAK" "$DST"
+            exit 1
+          fi
+
+          sudo -n systemctl reload caddy
+          sleep 2
+          if ! systemctl is-active --quiet caddy; then
+            echo "::error::caddy không active sau reload — khôi phục và reload lại"
+            sudo -n cp -a "$BAK" "$DST"
+            sudo -n systemctl reload caddy || sudo -n systemctl restart caddy
+            exit 1
+          fi
+          echo "đã cập nhật $DST + reload caddy (backup: $BAK)"

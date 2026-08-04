@@ -133,30 +133,41 @@ cp .env.example .env                   # điền secrets thật, SITE_ORIGIN=htt
 
 A record `khupho.ailab.city` → IP tĩnh của VM (đã reserve static trên GCP — **nhớ release nếu ngừng dự án**, IP tĩnh không dùng vẫn tính phí). Firewall GCP mở 80/443.
 
+Security header **không viết thẳng vào file host**. `/etc/caddy/Caddyfile` trên VM còn site
+block của `law.ailab.city` + `fb.ailab.city` (CSP khác hẳn — có `fonts.googleapis.com`, CDN
+Facebook), nên repo chỉ sở hữu một *snippet* của riêng mình:
+[`deploy/khupho-headers.caddy`](../deploy/khupho-headers.caddy). Cả mode 4 service lẫn Caddy
+host đều `import` cùng file đó → không còn chuyện sửa CSP trong repo mà production không đổi.
+
+```bash
+sudo mkdir -p /etc/caddy/conf.d
+sudo install -m 0644 /opt/khu_pho/deploy/khupho-headers.caddy /etc/caddy/conf.d/khupho-headers.caddy
+```
+
 ```caddyfile
+# ĐẦU /etc/caddy/Caddyfile (trước mọi site block)
+import /etc/caddy/conf.d/khupho-headers.caddy
+
 khupho.ailab.city {
-    encode gzip
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        X-Frame-Options "DENY"
-        X-Content-Type-Options "nosniff"
-        Referrer-Policy "no-referrer"
-        Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-src https://www.youtube-nocookie.com https://www.youtube.com"
-        -Server
-    }
+    encode zstd gzip
+    import khupho_headers      # ← thay cho khối header{...} viết tay
     reverse_proxy 127.0.0.1:3001
 }
 ```
 
+```bash
+sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy
+# Let's Encrypt tự cấp cert trong ~30s
+```
+
+Sau bước một lần này, mỗi lần deploy CI tự đồng bộ snippet (§6). Nếu host **chưa** nối,
+bước đó chỉ in cảnh báo rồi bỏ qua — app vẫn deploy bình thường, nhưng CSP sẽ đứng yên
+ở bản cũ, nên đừng để trạng thái đó kéo dài.
+
 > **`frame-src` không được bỏ.** Thiếu directive này thì iframe TVC rơi về `default-src 'self'`
 > và Chrome chặn — trang chủ lẫn ô "Xem trước video" ở `/admin/noi-dung` chỉ còn ô xám
 > *"This content is blocked. Contact the site owner to fix the issue."* Đây là lỗi cấu hình
-> proxy, không phải lỗi ID video. Giữ block header này **khớp từng chữ** với
-> [`deploy/Caddyfile`](../deploy/Caddyfile) (mode 4 service) để hai môi trường không lệch nhau.
-
-```bash
-sudo systemctl reload caddy      # Let's Encrypt tự cấp cert trong ~30s
-```
+> proxy, không phải lỗi ID video.
 
 ### 5.3 Chạy lần đầu
 
@@ -197,6 +208,16 @@ Các bước:
 3. `docker compose -f docker-compose.prod.yml build web` + `up -d`.
 4. `exec -T web node scripts/migrate.mjs`.
 5. Poll `http://127.0.0.1:3001/api/v1/counters` tối đa ~45s; khác 200 → fail.
+6. **Đồng bộ security header** sang Caddy host: so `deploy/khupho-headers.caddy` với
+   `/etc/caddy/conf.d/khupho-headers.caddy`, giống nhau thì thôi; khác thì backup → ghi đè →
+   `caddy validate` **cả file host** → `systemctl reload caddy`, validate fail hoặc caddy
+   không `active` sau reload thì tự khôi phục bản backup. Chưa nối snippet (§5.2) thì chỉ
+   in cảnh báo rồi bỏ qua.
+
+> Bước 6 **chỉ** ghi đúng file `/etc/caddy/conf.d/khupho-headers.caddy`, không bao giờ ghi
+> `/etc/caddy/Caddyfile`. VM dùng chung với `law.ailab.city` và `fb.ailab.city` — nếu ai đó
+> sửa thành copy đè cả Caddyfile thì mỗi lần deploy khupho sẽ đánh sập 2 app kia.
+> Runner chạy bằng user `nct`, cần `sudo` NOPASSWD cho `cp/install/caddy/systemctl`.
 
 `concurrency: deploy-vm` đảm bảo không có 2 lần deploy chồng nhau.
 
