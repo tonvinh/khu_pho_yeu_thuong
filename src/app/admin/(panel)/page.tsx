@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiGet } from "@/components/client-api";
 import { Card } from "@/components/admin/AdminShell";
+import { useUrlState } from "@/components/admin/table-tools";
 import { CATEGORY_CODES, categoryIcon, categoryLabel } from "@/lib/taxonomy";
 import {
   FunnelChart, GroupedBarsH, LineChart, Sparkline, StackedBarsH, bucket, fmtN,
@@ -23,7 +24,7 @@ interface Analytics {
   funnel_suggestions: { submitted: number; approved: number; selected: number; produced: number; installed: number };
   categories: Array<{ category: string; issues: number; suggestions: number }>;
   leads_break: Array<{ source: string; new: number; contacted: number; converted: number; closed: number }>;
-  rank: Array<{ id: string; name: string; ward: string | null; certified_4n: boolean; points: number; installed: number; issues: number; votes: number }>;
+  rank: Array<{ id: string; name: string; ward: string | null; city: string | null; certified_4n: boolean; points: number; installed: number; issues: number; votes: number }>;
   ops: {
     issues_pending: number; issues_pending_over_24h: number; issues_oldest_hours: number;
     suggestions_pending: number; suggestions_oldest_days: number;
@@ -54,14 +55,16 @@ const SEV_STYLE: Record<Severity, { border: string; text: string; icon: string; 
 };
 
 export default function AdminDashboard() {
-  const [days, setDays] = useState(30);
-  const [nb, setNb] = useState("");
-  const [cat, setCat] = useState("");
+  // Bộ lọc nằm trên URL → chia sẻ link là ra đúng kỳ / khu phố / chủ đề đang xem
+  const [ui, setUi, uiReady] = useUrlState({ days: "30", nb: "", cat: "" });
+  const days = Number(ui.days) || 30;
+  const { nb, cat } = ui;
   const [d, setD] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    if (!uiReady) return;
     let alive = true;
     setLoading(true);
     const qs = new URLSearchParams({ days: String(days) });
@@ -72,7 +75,7 @@ export default function AdminDashboard() {
       .catch(() => { if (alive) setError(true); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [days, nb, cat]);
+  }, [uiReady, days, nb, cat]);
 
   if (!d && loading) return <p className="text-ink-soft">Đang tải…</p>;
   if (!d) return <p className="text-status-waiting">Không tải được dữ liệu — thử tải lại trang.</p>;
@@ -103,7 +106,7 @@ export default function AdminDashboard() {
           {[7, 30, 90].map((n) => (
             <button
               key={n}
-              onClick={() => setDays(n)}
+              onClick={() => setUi({ days: String(n) })}
               className={`px-3 py-1.5 text-sm ${days === n ? "bg-cream font-bold text-ink" : "text-ink-soft hover:bg-cream-panel"}`}
               aria-pressed={days === n}
             >
@@ -111,12 +114,12 @@ export default function AdminDashboard() {
             </button>
           ))}
         </div>
-        <select value={nb} onChange={(e) => setNb(e.target.value)}
+        <select value={nb} onChange={(e) => setUi({ nb: e.target.value })}
           className="rounded-xl border border-cream-dark bg-white px-2.5 py-1.5 text-sm">
           <option value="">Tất cả khu phố</option>
           {d.neighborhoods.map((n) => <option key={n.id} value={n.id}>{n.name}</option>)}
         </select>
-        <select value={cat} onChange={(e) => setCat(e.target.value)}
+        <select value={cat} onChange={(e) => setUi({ cat: e.target.value })}
           className="rounded-xl border border-cream-dark bg-white px-2.5 py-1.5 text-sm">
           <option value="">Tất cả 6 chủ đề</option>
           {CATEGORY_CODES.map((c) => <option key={c} value={c}>{categoryIcon(c)} {categoryLabel(c)}</option>)}
@@ -229,7 +232,7 @@ export default function AdminDashboard() {
                 <thead>
                   <tr className="border-b border-cream-dark text-left text-xs text-ink-soft">
                     <th className="px-2 py-2">#</th>
-                    <th className="px-2 py-2">Khu phố</th>
+                    <th className="px-2 py-2">Khu phố (Phường/Xã · Tỉnh/TP)</th>
                     <th className="px-2 py-2 text-right">Điểm kỳ này</th>
                     <th className="px-2 py-2 text-right">Biển lắp</th>
                     <th className="px-2 py-2 text-right">Đề xuất</th>
@@ -241,8 +244,11 @@ export default function AdminDashboard() {
                   {d.rank.map((r, i) => (
                     <tr key={r.id} className="border-b border-cream hover:bg-cream-panel">
                       <td className="px-2 py-2 text-ink-soft">{i + 1}</td>
-                      <td className="px-2 py-2 font-semibold">
-                        {r.name}{r.ward && <span className="ml-1 font-normal text-ink-soft">— {r.ward}</span>}
+                      <td className="px-2 py-2">
+                        <div className="font-semibold">
+                          {r.name}{r.ward && <span className="ml-1 font-normal text-ink-soft">— {r.ward}</span>}
+                        </div>
+                        <div className="text-[11px] text-ink-soft">{r.city || "Chưa có tỉnh/thành"}</div>
                       </td>
                       <td className="px-2 py-2 text-right font-bold">{fmtN.format(r.points)}</td>
                       <td className="px-2 py-2 text-right">{fmtN.format(r.installed)}</td>
@@ -310,7 +316,7 @@ function buildAlerts(d: Analytics) {
       sev: "crit",
       msg: `${fmtN.format(ops.issues_pending_over_24h)} đề xuất chờ duyệt quá 24 giờ`,
       sla: `Cam kết duyệt trong 24h — cũ nhất đã chờ ${ops.issues_oldest_hours} giờ`,
-      act: "Mở hàng duyệt đề xuất", href: "/admin/de-xuat",
+      act: "Mở hàng duyệt đề xuất", href: "/admin/khu-pho?tab=de-xuat&status=pending_review",
     });
   }
   if (fraud.ip_clusters > 0) {
@@ -333,7 +339,7 @@ function buildAlerts(d: Analytics) {
       sev: "warn",
       msg: `${fmtN.format(ops.suggestions_pending)} câu nhắc chờ duyệt 4N`,
       sla: ops.suggestions_oldest_days > 0 ? `Cũ nhất đã chờ ${ops.suggestions_oldest_days} ngày` : undefined,
-      act: "Mở hàng duyệt câu", href: "/admin/cau-nhac",
+      act: "Mở hàng duyệt câu", href: "/admin/loi-nhac?status=submitted",
     });
   }
   if (ops.leads_new_over_48h > 0) {
@@ -347,7 +353,7 @@ function buildAlerts(d: Analytics) {
     out.push({
       sev: "warn",
       msg: `${fmtN.format(ops.selected_over_14d)} biển đã chọn quá 14 ngày chưa sản xuất`,
-      act: "Mở vòng đời biển", href: "/admin/bien",
+      act: "Mở vòng đời biển", href: "/admin/loi-nhac?tab=bien",
     });
   }
   if (fraud.fast_voters > 0) {

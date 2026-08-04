@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiGet, apiSend } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
+import { Pager, SearchBox, clampPage, useUrlState } from "@/components/admin/table-tools";
 
 interface SuggestionRow {
   id: string; content: string; status: string; created_at: string;
@@ -80,10 +81,13 @@ function VoteEditor({
 }
 
 export default function VotingPage() {
-  const [tab, setTab] = useState<"suggestions" | "users">("suggestions");
+  // Tab / tìm kiếm / trang giữ trên URL để chia sẻ link giữ nguyên trạng thái
+  const [ui, setUi] = useUrlState({ tab: "suggestions", q: "", page: "1", per: "20" });
+  const tab = ui.tab === "users" ? "users" : "suggestions";
+  const search = ui.q;
+  const per = Number(ui.per) || 20;
   const [suggestions, setSuggestions] = useState<SuggestionRow[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
-  const [search, setSearch] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -121,6 +125,22 @@ export default function VotingPage() {
     [users, kw]
   );
 
+  // Phân trang client (dữ liệu đã tải sẵn cả danh sách để đếm tổng theo tab)
+  const totalRows = tab === "suggestions" ? filteredSuggestions.length : filteredUsers.length;
+  const page = clampPage(ui.page, totalRows, per);
+  const cut = <T,>(arr: T[]) => arr.slice((page - 1) * per, page * per);
+  const pageSuggestions = cut(filteredSuggestions);
+  const pageUsers = cut(filteredUsers);
+  const pager = (
+    <Pager
+      page={page}
+      per={per}
+      total={totalRows}
+      onPage={(p) => setUi({ page: String(p) })}
+      onPer={(n) => setUi({ per: String(n), page: "1" })}
+    />
+  );
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-extrabold">Theo dõi thương (voting)</h1>
@@ -134,7 +154,7 @@ export default function VotingPage() {
            ["users", `Người được thương (${users.length})`]] as const).map(([key, label]) => (
           <button
             key={key}
-            onClick={() => setTab(key)}
+            onClick={() => setUi({ tab: key, page: "1" })}
             className={`rounded-full px-4 py-1.5 text-sm font-bold ${
               tab === key ? "bg-brick text-white" : "bg-white text-ink hover:bg-cream-dark"
             }`}
@@ -142,11 +162,11 @@ export default function VotingPage() {
             {label}
           </button>
         ))}
-        <input
+        <SearchBox
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(v) => setUi({ q: v, page: "1" })}
           placeholder="Tìm câu, tên, khu phố…"
-          className="ml-auto w-56 rounded-full border border-cream-dark bg-white px-3.5 py-1.5 text-sm"
+          className="ml-auto w-56 !rounded-full !bg-white"
         />
       </div>
 
@@ -158,7 +178,7 @@ export default function VotingPage() {
             <p className="text-sm text-ink-soft">Chưa có câu nào được duyệt.</p>
           )}
           <div className="space-y-1.5">
-            {filteredSuggestions.map((s) => (
+            {pageSuggestions.map((s) => (
               <div key={s.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-cream px-3 py-2 text-sm">
                 <div className="min-w-0 flex-1 basis-64">
                   <p className="font-semibold">“{s.content}”</p>
@@ -177,6 +197,7 @@ export default function VotingPage() {
               </div>
             ))}
           </div>
+          <div className="mt-3">{pager}</div>
         </Card>
       )}
 
@@ -186,9 +207,9 @@ export default function VotingPage() {
             <p className="text-sm text-ink-soft">Chưa có ai có câu được duyệt.</p>
           )}
           <div className="space-y-1.5">
-            {filteredUsers.map((u, i) => (
+            {pageUsers.map((u, i) => (
               <div key={u.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl bg-cream px-3 py-2 text-sm">
-                <span className="w-6 text-xs font-bold text-ink-soft">{i + 1}</span>
+                <span className="w-6 text-xs font-bold text-ink-soft">{(page - 1) * per + i + 1}</span>
                 <div className="min-w-0 flex-1 basis-48">
                   <p className="font-semibold">
                     {u.display_name}
@@ -210,6 +231,7 @@ export default function VotingPage() {
               </div>
             ))}
           </div>
+          <div className="mt-3">{pager}</div>
           <p className="mt-3 text-[11px] text-ink-soft">
             Tăng số thương của một người → phiếu admin dồn vào câu cao phiếu nhất của họ;
             giảm → gỡ dần từ phiếu mới nhất trên toàn bộ câu.

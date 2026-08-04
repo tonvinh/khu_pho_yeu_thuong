@@ -4,10 +4,14 @@
 // website / block "Khu phố tiêu biểu" / đạt chuẩn 4N) và vị trí trong block tiêu biểu.
 // Sửa thông tin + ảnh tổng quan + ảnh chứng nhận qua DRAWER trượt từ phải (không popup);
 // ảnh chứng nhận upload được bất kỳ lúc nào (không phụ thuộc 4N). KHÔNG còn bản đồ/pin.
-import { useCallback, useEffect, useRef, useState } from "react";
+// 4/8: gộp luôn màn duyệt đề xuất góc phố (/admin/de-xuat cũ) thành tab thứ hai; mọi bộ
+// lọc / tìm kiếm / trang đều nằm trên URL để chia sẻ link giữ nguyên trạng thái.
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiGet, apiSend, apiUpload } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import ImportModal from "@/components/admin/ImportModal";
+import IssuesPanel from "@/components/admin/IssuesPanel";
+import { Pager, SearchBox, Tabs, Th, clampPage, useUrlState } from "@/components/admin/table-tools";
 
 interface GeoUnit { code: string; name: string }
 interface NbPhoto { position: number; url: string }
@@ -22,7 +26,21 @@ interface FormState { name: string; city: string; ward: string }
 
 const EMPTY_FORM: FormState = { name: "", city: "", ward: "" };
 
+// Bộ lọc trạng thái của bảng khu phố (lọc phía client — danh sách khu phố nhỏ)
+const NB_STATUS: Array<{ key: string; label: string; match: (n: Nb) => boolean }> = [
+  { key: "", label: "Tất cả", match: () => true },
+  { key: "visible", label: "Đang hiển thị", match: (n) => n.visible },
+  { key: "hidden", label: "Đang ẩn", match: (n) => !n.visible },
+  { key: "featured", label: "Khu phố tiêu biểu", match: (n) => n.is_featured },
+  { key: "certified", label: "Đạt chuẩn 4N", match: (n) => n.certified_4n },
+  { key: "no_photo", label: "Chưa có ảnh tổng quan", match: (n) => n.photos.length === 0 },
+];
+
+// Tham số URL dùng chung cho 2 tab (đổi tab thì reset về mặc định của tab đó)
+const URL_DEFAULTS = { tab: "khu-pho", status: "", category: "", nb: "", q: "", page: "1", per: "20" };
+
 export default function NeighborhoodsPage() {
+  const [ui, setUi, uiReady] = useUrlState(URL_DEFAULTS);
   const [rows, setRows] = useState<Nb[]>([]);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [creating, setCreating] = useState(false);
@@ -41,6 +59,28 @@ export default function NeighborhoodsPage() {
   useEffect(() => {
     setEditing((cur) => (cur ? rows.find((n) => n.id === cur.id) || null : cur));
   }, [rows]);
+
+  // ===== Lọc / tìm kiếm / phân trang bảng khu phố (client-side) =====
+  const cities = useMemo(
+    () => [...new Set(rows.map((n) => n.city).filter((c): c is string => !!c))]
+      .sort((a, b) => a.localeCompare(b, "vi")),
+    [rows]
+  );
+  const kw = ui.q.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    const match = NB_STATUS.find((s) => s.key === ui.status)?.match ?? (() => true);
+    return rows.filter((n) => {
+      if (!match(n)) return false;
+      if (ui.nb.startsWith("city:") && n.city !== ui.nb.slice(5)) return false;
+      if (ui.nb && !ui.nb.startsWith("city:") && n.id !== ui.nb) return false;
+      if (!kw) return true;
+      return [n.name, n.city, n.ward, n.slug].some((v) => (v || "").toLowerCase().includes(kw));
+    });
+  }, [rows, ui.status, ui.nb, kw]);
+
+  const per = Number(ui.per) || 20;
+  const page = clampPage(ui.page, filtered.length, per);
+  const pageRows = filtered.slice((page - 1) * per, page * per);
 
   const notify = (text: string, ok = true) => {
     setMsg({ text, ok });
@@ -121,15 +161,35 @@ export default function NeighborhoodsPage() {
     } catch (e) { fail(e); }
   };
 
+  const issuesTab = ui.tab === "de-xuat";
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-extrabold">🏘️ Khu phố</h1>
-        <div className="flex gap-2">
-          <Btn variant="outline" onClick={() => setImporting(true)}>📥 Import file</Btn>
-          <Btn onClick={openCreate}>➕ Thêm khu phố</Btn>
-        </div>
+        {!issuesTab && (
+          <div className="flex gap-2">
+            <Btn variant="outline" onClick={() => setImporting(true)}>📥 Import file</Btn>
+            <Btn onClick={openCreate}>➕ Thêm khu phố</Btn>
+          </div>
+        )}
       </div>
+
+      {/* Tab 2 gộp từ trang duyệt đề xuất cũ — đổi tab thì reset bộ lọc về mặc định tab đó */}
+      <Tabs
+        value={ui.tab}
+        onChange={(tab) =>
+          setUi({
+            tab,
+            status: tab === "de-xuat" ? "pending_review" : "",
+            category: "", nb: "", q: "", page: "1",
+          })
+        }
+        items={[
+          { key: "khu-pho", label: "🏘️ Danh sách khu phố" },
+          { key: "de-xuat", label: "📍 Đề xuất góc phố" },
+        ]}
+      />
 
       {msg && (
         <p className={`rounded-xl px-3 py-2 text-sm font-semibold shadow-sm ${
@@ -139,7 +199,22 @@ export default function NeighborhoodsPage() {
         </p>
       )}
 
-      {creating && (
+      {issuesTab && uiReady && (
+        <IssuesPanel
+          status={ui.status || "pending_review"}
+          category={ui.category}
+          nbId={ui.nb}
+          search={ui.q}
+          page={Number(ui.page) || 1}
+          per={per}
+          onChange={setUi}
+          nbs={rows}
+          cities={cities}
+          onChanged={load}
+        />
+      )}
+
+      {!issuesTab && creating && (
         <NbFormFields
           title="Thêm khu phố mới"
           form={form} setForm={setForm} busy={busy}
@@ -147,13 +222,43 @@ export default function NeighborhoodsPage() {
         />
       )}
 
-      {rows.length === 0 ? (
+      {!issuesTab && (rows.length === 0 ? (
         <Card>
           <p className="text-sm text-ink-soft">
             Chưa có khu phố nào. Bấm <strong>➕ Thêm khu phố</strong> để tạo khu phố đầu tiên.
           </p>
         </Card>
       ) : (
+        <>
+        {/* Lọc trạng thái + tìm kiếm + chọn tỉnh/khu phố — tất cả giữ trên URL */}
+        <Tabs
+          value={ui.status}
+          onChange={(v) => setUi({ status: v, page: "1" })}
+          items={NB_STATUS.map((s) => ({
+            key: s.key,
+            label: s.label,
+            badge: s.key ? rows.filter(s.match).length : undefined,
+          }))}
+        />
+        <Card>
+          <div className="grid gap-2 md:grid-cols-3">
+            <SearchBox
+              value={ui.q}
+              onChange={(v) => setUi({ q: v, page: "1" })}
+              placeholder="🔍 Tìm tên khu phố, tỉnh/thành, phường/xã…"
+              className="md:col-span-2"
+            />
+            <select
+              value={ui.nb}
+              onChange={(e) => setUi({ nb: e.target.value, page: "1" })}
+              className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
+            >
+              <option value="">Tỉnh/Thành phố: tất cả</option>
+              {cities.map((c) => <option key={c} value={`city:${c}`}>{c}</option>)}
+            </select>
+          </div>
+        </Card>
+
         <div className="max-h-[70vh] overflow-auto rounded-2xl bg-white shadow-sm">
           <table className="w-full min-w-[860px] text-sm">
             <thead>
@@ -170,7 +275,14 @@ export default function NeighborhoodsPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((n) => (
+              {pageRows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-3 py-6 text-center text-sm text-ink-soft">
+                    Không có khu phố nào khớp bộ lọc.
+                  </td>
+                </tr>
+              )}
+              {pageRows.map((n) => (
                 <tr key={n.id} className="border-b border-cream-dark/60 align-top last:border-0 hover:bg-cream/40">
                   <td className="px-3 py-3">
                     <div className="font-bold">{n.name}</div>
@@ -264,7 +376,16 @@ export default function NeighborhoodsPage() {
             </tbody>
           </table>
         </div>
-      )}
+
+        <Pager
+          page={page}
+          per={per}
+          total={filtered.length}
+          onPage={(p) => setUi({ page: String(p) })}
+          onPer={(n) => setUi({ per: String(n), page: "1" })}
+        />
+        </>
+      ))}
 
       {importing && (
         <ImportModal
@@ -293,21 +414,6 @@ export default function NeighborhoodsPage() {
         />
       )}
     </div>
-  );
-}
-
-function Th({ children, className = "", title }: {
-  children?: React.ReactNode; className?: string; title?: string;
-}) {
-  return (
-    <th
-      title={title}
-      // Header đông cứng khi cuộn: dính đỉnh vùng cuộn; kẻ dưới bằng shadow vì
-      // border của ô sticky không trôi theo (border-collapse)
-      className={`sticky top-0 z-10 whitespace-nowrap bg-white px-3 py-2.5 font-bold shadow-[0_1px_0_0_var(--color-cream-dark)] ${className}`}
-    >
-      {children}
-    </th>
   );
 }
 

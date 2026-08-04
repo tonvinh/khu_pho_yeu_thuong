@@ -1,5 +1,6 @@
 "use client";
-// Chọn câu & vòng đời biển (04 §4): approved (xếp theo thương) → selected → produced → installed
+// Vòng đời biển (04 §4) — gộp từ trang /admin/bien cũ vào màn Lời nhắc (4/8):
+// approved (xếp theo thương) → selected → produced → installed.
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend, apiUpload } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
@@ -10,7 +11,7 @@ interface Sugg {
   issue_id: string; category: string; location_text: string; neighborhood_name: string;
 }
 
-export default function SignsPage() {
+export default function SignsPanel({ onChanged }: { onChanged?: () => void }) {
   const [approved, setApproved] = useState<Sugg[]>([]);
   const [selected, setSelected] = useState<Sugg[]>([]);
   const [produced, setProduced] = useState<Sugg[]>([]);
@@ -41,6 +42,7 @@ export default function SignsPage() {
           : "Đã cập nhật"
       );
       load();
+      onChanged?.();
     } catch (e) { setMsg(e instanceof Error ? e.message : "Có lỗi"); }
   };
 
@@ -50,6 +52,7 @@ export default function SignsPage() {
     try {
       await apiUpload(`/api/admin/suggestions/${id}/photo`, form);
       setMsg("Đã lưu ảnh biển");
+      onChanged?.();
     } catch (e) { setMsg(e instanceof Error ? e.message : "Lỗi upload"); }
   };
 
@@ -61,7 +64,6 @@ export default function SignsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-extrabold">Chọn câu & quản lý vòng đời biển</h1>
       {msg && <p className="rounded-xl bg-white px-3 py-2 text-sm shadow-sm">{msg}</p>}
 
       <Card title="Đang bình chọn — chọn câu lên biển (gợi ý: câu cao phiếu nhất)">

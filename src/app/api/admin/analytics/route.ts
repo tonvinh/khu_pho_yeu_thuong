@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
         [days]
       ),
       q(
-        `SELECT n.id, n.name, n.ward, n.certified_4n,
+        `SELECT n.id, n.name, n.ward, n.city, n.certified_4n,
            pt.points, ins.c AS installed, iss.c AS issues, vt.c AS votes
          FROM neighborhoods n
          LEFT JOIN LATERAL (

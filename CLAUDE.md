@@ -34,6 +34,17 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
   validate server dùng `geoError()` async trong `src/lib/geo.ts` (vn-geo.ts tĩnh đã xoá).
   `neighborhoods.city/ward` vẫn lưu TÊN — không có phường trùng tên trong cùng tỉnh.
 
+- Gộp màn admin (4/8): `/admin/de-xuat` → tab "Đề xuất góc phố" trong `/admin/khu-pho`
+  (`components/admin/IssuesPanel.tsx`, xem được mọi trạng thái chứ không chỉ hàng chờ);
+  `/admin/cau-nhac` đổi tên thành `/admin/loi-nhac` và nuốt luôn `/admin/bien` thành tab
+  "Chọn câu & vòng đời biển" (`components/admin/SignsPanel.tsx`). 3 route cũ đã xoá.
+  Mọi bộ lọc/tìm kiếm/phân trang của admin giữ trên query string qua `useUrlState`
+  (`components/admin/table-tools.tsx` — kèm `SearchBox`, `Tabs`, `Th`, `Pager`): đọc URL
+  sau khi mount rồi ghi bằng `history.replaceState` (KHÔNG dùng `useSearchParams` để
+  không phải bọc Suspense). `/api/admin/issues` có filter + `q` + phân trang + `counts`
+  theo trạng thái; `/api/admin/suggestions` phân trang khi truyền `per` (không truyền →
+  trả hết, tab vòng đời biển cần vậy), luôn kèm `total`.
+
 - Trang admin "Nội dung" (`/admin/noi-dung`): sửa text trang chủ (hero, khu "Câu chuyện
   chiến dịch" + video YouTube + ảnh KV, khối ưu đãi lead). Bảng `site_content` (migration
   008) CHỈ lưu ghi đè key–value — key vắng/xoá → fallback mặc định trong
