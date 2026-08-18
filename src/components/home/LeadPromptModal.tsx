@@ -6,8 +6,7 @@ import { useState } from "react";
 import type { Me, SiteContentData } from "./types";
 import { apiSend } from "../client-api";
 import { COPY } from "@/lib/copy";
-import { Modal } from "./IdentifyModal";
-import { Field } from "./ui";
+import { Field, Modal } from "./ui";
 
 export default function LeadPromptModal({
   me,
@@ -50,9 +49,8 @@ export default function LeadPromptModal({
   };
 
   return (
-    <Modal onClose={onClose}>
-      <h3 className="m-0 font-display text-xl font-extrabold">{COPY.leadPromptTitle}</h3>
-      <p className="m-0 mt-1 text-sm text-ink-soft">{COPY.leadPromptBody}</p>
+    <Modal title={COPY.leadPromptTitle} onClose={onClose}>
+      <p className="m-0 mb-4 text-sm text-ink-soft">{COPY.leadPromptBody}</p>
       <Field label="Số điện thoại" className="mt-4">
         <input
           type="tel"
@@ -79,12 +77,12 @@ export default function LeadPromptModal({
         <div className="mt-3 rounded-xl border border-status-voting bg-status-voting-bg p-3 text-sm">
           Số này khác với số bạn đã dùng để định danh. Bạn muốn tiếp tục với số mới?
           <div className="mt-2 flex gap-2">
-            <button onClick={() => submit(true)} className="kp-btn kp-btn-primary tap px-4 py-1.5 text-xs">
+            <button onClick={() => submit(true)} className="kp-btn kp-btn-solid tap px-4 py-1.5 text-xs">
               Tiếp tục với số mới
             </button>
             <button
               onClick={() => setNeedSwitch(false)}
-              className="tap cursor-pointer rounded-[10px] border border-cream-dark bg-white px-4 py-1.5 text-xs font-semibold"
+              className="kp-btn kp-btn-outline tap px-4 py-1.5 text-xs"
             >
               Để mình kiểm tra lại
             </button>

@@ -1,129 +1,86 @@
 "use client";
-// Block "Lời nhắc khi lên biển trông như thế nào?" — chia 3 tab như danh sách góc phố:
-// Mới nhất (ngày duyệt mới → cũ) · Chờ bạn bình chọn (mình chưa thương) · Được yêu thích nhất
-// (nhiều lượt thương, kèm card "Được 'Thương' nhiều nhất tuần này" ghim đầu).
-// Mỗi tab hiện tối đa 6 biển + "Xem thêm"; tab Mới nhất thiếu chỗ thì bù ví dụ minh hoạ tĩnh.
-import { useState } from "react";
-import type { ApprovedSign } from "./types";
+// Khối "Biển mới của khu phố" (tên cũ: "Lời nhắc khi lên biển trông như thế nào?").
+// Theo email review 18/8 + design docs/lp:
+//  · BỎ 3 tab, BỎ nút bình chọn trên từng biển, BỎ "Xem thêm", BỎ card ghim "được thương nhất"
+//  · Cố định lưới 3 × 2 = 6 biển MỚI NHẤT theo ngày duyệt (server đã LIMIT 6)
+//  · Mỗi biển render bằng template thương hiệu (SignCard) thay cho ảnh upload;
+//    dưới biển là dòng meta: chủ đề · phường · người viết.
+// Chưa đủ 6 biển thật thì bù ví dụ minh hoạ để khối không trống trải.
+import type { ApprovedSign, SiteContentData } from "./types";
 import { EXAMPLE_SIGNS } from "@/lib/examples";
-import { FilterTabs, HangSign } from "./ui";
+import { categoryLabel } from "@/lib/taxonomy";
+import SignCard from "./SignCard";
+import { IconPin, IconUser, SectionHead } from "./ui";
 
-const PAGE = 6;
-
-type TabKey = "newest" | "unvoted" | "loved";
-
-const EMPTY_HINT: Record<TabKey, string> = {
-  newest: "Chưa có lời nhắc nào được duyệt — bạn viết câu đầu tiên nhé!",
-  unvoted: "Bạn đã bình chọn hết các lời nhắc rồi — cảm ơn bạn 🧡",
-  loved: "Chưa có lời nhắc nào được thương — bạn bình chọn mở hàng nhé!",
-};
+const SLOTS = 6;
 
 export default function SignGallery({
   signs,
-  featured,
-  onVote,
+  content,
 }: {
   signs: ApprovedSign[];
-  /** Câu đang được thương nhất trong các góc xóm đang mở (HomeShell tính) */
-  featured: { quote: string; spot: string } | null;
-  onVote: (id: string) => void;
+  content: SiteContentData;
 }) {
-  const [tab, setTab] = useState<TabKey>("newest");
-  const [expanded, setExpanded] = useState(false);
-
-  // Bỏ câu trùng card "được thương nhất" (như logic cũ)
-  const real = signs.filter((s) => s.content !== featured?.quote);
-  const byTab = (t: TabKey): ApprovedSign[] => {
-    if (t === "unvoted") return real.filter((s) => !s.voted);
-    if (t === "loved") return [...real].sort((a, b) => b.votes - a.votes);
-    return [...real].sort(
-      (a, b) => new Date(b.approved_at).getTime() - new Date(a.approved_at).getTime()
-    );
+  const promo = {
+    line1: content.sign_promo_line1,
+    line2: content.sign_promo_line2,
+    sale_phone: content.sign_sale_phone,
+    hotline: content.sign_hotline,
   };
 
-  const list = byTab(tab);
-  // Card featured ghim đầu tab "Được yêu thích nhất" — chiếm 1 chỗ trong trang đầu
-  const showFeatured = tab === "loved" && featured != null;
-  const cap = PAGE - (showFeatured ? 1 : 0);
-  const shown = expanded ? list : list.slice(0, cap);
-  const hidden = list.length - shown.length;
-
-  // Thiếu chỗ ở tab Mới nhất → bù ví dụ minh hoạ tĩnh cho block không trống trải
-  const fillers =
-    tab === "newest" && shown.length < PAGE
-      ? EXAMPLE_SIGNS.filter(
-          (e) => e.quote !== featured?.quote && !real.some((s) => s.content === e.quote)
-        ).slice(0, PAGE - shown.length)
-      : [];
+  const real = signs.slice(0, SLOTS);
+  const fillers = EXAMPLE_SIGNS.filter(
+    (e) => !real.some((s) => s.content === e.quote)
+  ).slice(0, SLOTS - real.length);
 
   return (
-    <div>
-      <div className="mb-4">
-        <FilterTabs
-          tabs={[
-            { key: "newest" as TabKey, label: "Mới nhất", count: real.length },
-            { key: "unvoted" as TabKey, label: "Chờ bạn bình chọn", short: "Chờ bạn", count: byTab("unvoted").length },
-            {
-              key: "loved" as TabKey,
-              label: "Được yêu thích nhất",
-              short: "Yêu thích",
-              count: byTab("loved").length + (featured ? 1 : 0),
-            },
-          ]}
-          active={tab}
-          onChange={(k) => { setTab(k); setExpanded(false); }}
-        />
-      </div>
+    <section className="mx-auto max-w-[1312px] px-4 py-8 sm:px-5 sm:pb-12 sm:pt-[40px]">
+      <SectionHead title={content.signs_title} />
 
-      <div className="grid grid-cols-1 items-start gap-x-5 gap-y-5 sm:grid-cols-2 sm:gap-y-6 lg:grid-cols-3">
-        {showFeatured && featured && (
-          <HangSign
-            quote={`“${featured.quote}”`}
-            by="Được “Thương” nhiều nhất tuần này 🧡"
-            spot={featured.spot}
-            tilt={1.5}
-          />
-        )}
-        {shown.map((s, i) => (
-          <HangSign
-            key={s.id}
-            quote={`“${s.content}”`}
-            by={s.author_name}
-            spot={s.location_text}
-            imageUrl={s.image_url}
-            tilt={i % 2 ? 1.5 : -1.5}
-            voted={s.voted}
-            onVote={() => onVote(s.id)}
-          />
+      {/* .fig Frame 232 gap=40 giữa tiêu đề và lưới; lưới cách nhau 32px */}
+      <div className="grid grid-cols-1 gap-8 sm:mt-10 sm:grid-cols-2 lg:grid-cols-3">
+        {real.map((s) => (
+          <figure key={s.id} className="kp-sign m-0">
+            <SignCard content={s.content} promo={promo} />
+            {/* .fig Frame 225: dòng chủ đề 16px cao 21px, cách 8px tới hàng meta 14px cao 17px */}
+            <figcaption className="mt-4 font-light text-[13px] leading-relaxed text-ink sm:text-[14px] sm:leading-[17px]">
+              <span className="block text-ink sm:text-[16px] sm:leading-[21px]">
+                Chủ đề: <b>{categoryLabel(s.category)}</b>
+              </span>
+              <span className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
+                <span className="inline-flex items-center gap-1.5">
+                  <IconPin className="text-brick" />
+                  {s.neighborhood_name || s.location_text}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <IconUser className="text-brick" />
+                  {s.author_name}
+                </span>
+              </span>
+            </figcaption>
+          </figure>
         ))}
-        {fillers.map((s, i) => (
-          <HangSign key={s.quote} quote={`“${s.quote}”`} by={s.by} spot={s.spot} tilt={i % 2 ? -1.5 : 1.5} />
+
+        {fillers.map((e) => (
+          <figure key={e.quote} className="kp-sign m-0 opacity-90">
+            <SignCard content={e.quote} promo={promo} />
+            {/* .fig Frame 225: dòng chủ đề 16px cao 21px, cách 8px tới hàng meta 14px cao 17px */}
+            <figcaption className="mt-4 font-light text-[13px] leading-relaxed text-ink sm:text-[14px] sm:leading-[17px]">
+              <span className="block text-ink sm:text-[16px] sm:leading-[21px]">Biển minh hoạ</span>
+              <span className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
+                <span className="inline-flex items-center gap-1.5">
+                  <IconPin className="text-brick" />
+                  {e.spot}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <IconUser className="text-brick" />
+                  {e.by}
+                </span>
+              </span>
+            </figcaption>
+          </figure>
         ))}
       </div>
-
-      {(hidden > 0 || (expanded && list.length > cap)) && (
-        <div className="mt-5 flex justify-center">
-          {hidden > 0 ? (
-            <button
-              onClick={() => setExpanded(true)}
-              className="kp-btn kp-btn-outline tap px-5 py-2 text-sm"
-            >
-              Xem thêm {hidden} lời nhắc
-            </button>
-          ) : (
-            <button
-              onClick={() => setExpanded(false)}
-              className="tap cursor-pointer px-3 py-1 text-[12.5px] font-semibold text-ink-soft hover:text-brick-dark"
-            >
-              Thu gọn
-            </button>
-          )}
-        </div>
-      )}
-
-      {list.length === 0 && fillers.length === 0 && !showFeatured && (
-        <div className="kp-card p-6 text-center text-sm text-ink-soft">{EMPTY_HINT[tab]}</div>
-      )}
-    </div>
+    </section>
   );
 }

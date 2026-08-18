@@ -1,229 +1,150 @@
 "use client";
-// Thay bản đồ khu phố bằng slide ảnh khu phố tiêu biểu (dieuchinh.1.8 #1, ORDER #2):
-// chọn phường → pack [ảnh + tag trạng thái + tên + địa chỉ]. Chỉ hiện khu phố admin
-// bật "tiêu biểu", xếp theo featured_position (server ORDER BY, NULL đứng cuối);
-// ảnh tổng quan tối đa 4 (neighborhood_photos, kích thước đồng nhất, admin upload);
-// chưa có ảnh → bản đồ cách điệu / nền placeholder. Mũi tên & auto-slide 4s chạy hết
-// ảnh khu đang xem rồi mới lăn sang khu kế — chip khu phố phía trên nhảy theo.
-import { useEffect, useMemo, useRef, useState } from "react";
+// Khối "Khu phố tiêu biểu" trong hero — skin mới (docs/lp/lp1.png) + email review 18/8:
+//  · CHỈ hiện khu phố đã đạt chuẩn 4N ("đây chỉ là chỗ vinh danh")
+//  · BỎ hàng chip chọn phường, BỎ bộ đếm ảnh "2/5", BỎ nút đề xuất góc phố
+//  · Địa chỉ dồn 1 dòng, đưa lên thành pill nổi góc phải trên ảnh
+// Mỗi khu phố hiển thị ĐÚNG MỘT ảnh — ảnh vị trí #1 trong neighborhood_photos (quyết định
+// F14: vẫn giữ nguyên dữ liệu 4 ảnh/khu ở admin, trang chủ chỉ lấy ảnh đầu). Mũi tên &
+// auto-slide 4s do đó chuyển thẳng sang KHU KẾ, không lật ảnh trong cùng một khu.
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MapData, MapNeighborhood } from "./types";
-import { formatAddress } from "@/lib/address";
+import { shortAddress } from "@/lib/address";
+import { IconPin } from "./ui";
 
-// 3 trạng thái khu phố theo ORDER #2 (màu xanh lá / xanh dương / cam)
-const NB_STATUS = {
-  certified: {
-    label: "🥳 Đạt chuẩn Khu phố biết thương 4N",
-    cls: "bg-status-signed-bg text-status-signed",
-  },
-  has_suggestions: {
-    label: "🤩 Đang có rất nhiều câu nhắc 4N chờ được treo",
-    cls: "bg-[#E3EDF7] text-accent-blue",
-  },
-  empty: {
-    label: "🤗 Ở đây chưa có câu nhắc 4N. Cùng đề xuất nhé",
-    cls: "bg-status-voting-bg text-status-voting",
-  },
-} as const;
-
-export default function NeighborhoodSlider({
-  map,
-  onPropose,
-}: {
-  map: MapData;
-  onPropose: () => void;
-}) {
+export default function NeighborhoodSlider({ map }: { map: MapData }) {
   const [index, setIndex] = useState(0);
-  const [photoIdx, setPhotoIdx] = useState(0);
-  // Block "Khu phố tiêu biểu": chỉ khu admin bật tiêu biểu (đã kèm điều kiện đang
-  // hiển thị — server tự tắt tiêu biểu khi ẩn). Chưa chọn khu nào → hiện tất cả
-  // để trang chủ không trống.
-  const list = useMemo(() => {
-    const featured = map.neighborhoods.filter((n) => n.is_featured);
-    return featured.length > 0 ? featured : map.neighborhoods;
-  }, [map.neighborhoods]);
-  const nb = list[Math.min(index, list.length - 1)];
-  const chipRowRef = useRef<HTMLDivElement>(null);
 
-  // 20 khu phố tiêu chuẩn → hàng chip dài quá khung: giữ chip đang xem trong tầm nhìn
-  // khi chuyển slide bằng mũi tên (không dùng scrollIntoView để khỏi cuộn cả trang)
+  // Chỉ khu ĐÃ ĐẠT CHUẨN 4N; is_featured chỉ còn dùng để ưu tiên thứ tự
+  // (server đã ORDER BY featured_position, name).
+  const list = useMemo(
+    () => map.neighborhoods.filter((n) => n.certified_4n),
+    [map.neighborhoods]
+  );
+  const nb: MapNeighborhood | undefined = list[Math.min(index, list.length - 1)];
+
+  /** Ảnh chính của khu = ảnh #1; chưa upload ảnh nào thì dùng bản đồ cách điệu */
+  const mainPhoto = (n: MapNeighborhood) => n.photo_urls[0] ?? n.map_url ?? null;
+  const photo = nb ? mainPhoto(nb) : null;
+
+  const prev = useCallback(
+    () => setIndex((i) => (i - 1 + list.length) % list.length),
+    [list.length]
+  );
+  const next = useCallback(() => setIndex((i) => (i + 1) % list.length), [list.length]);
+
+  // Tự trượt 4s; người dùng bấm tay thì index đổi → hẹn giờ tính lại từ đầu
   useEffect(() => {
-    const row = chipRowRef.current;
-    const chip = row?.children[index] as HTMLElement | undefined;
-    if (!row || !chip) return;
-    const left = chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2;
-    row.scrollTo({ left, behavior: "smooth" });
-  }, [index]);
-
-  const status = useMemo(() => {
-    if (!nb) return NB_STATUS.empty;
-    if (nb.certified_4n) return NB_STATUS.certified;
-    const active = map.pins.some(
-      (p) => p.neighborhood_id === nb.id && p.status !== "signed"
-    );
-    return active ? NB_STATUS.has_suggestions : NB_STATUS.empty;
-  }, [map.pins, nb]);
-
-  // Tối đa 4 ảnh tổng quan (kích thước đồng nhất) — chưa có thì dùng bản đồ cách điệu
-  const photosOf = (n: MapNeighborhood) =>
-    n.photo_urls.length > 0 ? n.photo_urls : n.map_url ? [n.map_url] : [];
-  const photos = nb ? photosOf(nb) : [];
-  const photo = photos[Math.min(photoIdx, photos.length - 1)] ?? null;
-  const goto = (i: number) => { setIndex(i); setPhotoIdx(0); };
-  // Mũi tên trượt TRONG ảnh của khu đang xem trước; hết ảnh mới lăn sang khu kế
-  // (chip phía trên tự nhảy theo vì index đổi). Lùi từ ảnh đầu → ảnh CUỐI khu trước.
-  const prev = () => {
-    if (photoIdx > 0) return setPhotoIdx(photoIdx - 1);
-    const i = (index - 1 + list.length) % list.length;
-    setIndex(i);
-    setPhotoIdx(Math.max(0, photosOf(list[i]).length - 1));
-  };
-  const next = () => {
-    if (photoIdx < photos.length - 1) return setPhotoIdx(photoIdx + 1);
-    goto((index + 1) % list.length);
-  };
-
-  // Tự động trượt: mỗi 4s sang ảnh kế (hết ảnh → khu kế). Người dùng bấm tay thì
-  // photoIdx/index đổi → effect chạy lại, hẹn giờ tính lại từ đầu.
-  useEffect(() => {
-    if (list.length <= 1 && photos.length <= 1) return;
+    if (list.length <= 1) return;
     const t = setInterval(() => {
-      if (document.visibilityState !== "visible") return;
-      next();
+      if (document.visibilityState === "visible") next();
     }, 4000);
     return () => clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, photoIdx, list]);
+  }, [next, index, list.length]);
 
-  if (!nb) return null;
+  const multiple = list.length > 1;
 
   return (
-    <div className="kp-card kp-card-3 relative overflow-hidden border border-cream-dark bg-gradient-to-br from-[#FBF7EF] to-[#EFE6D6] p-2.5 sm:p-3.5">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1.5 pb-2 pt-1 sm:px-2 sm:pt-1.5">
-        <span className="font-display text-[15px] font-bold">Khu phố tiêu biểu</span>
-        <span className="text-[11.5px] text-ink-soft">{index + 1}/{list.length}</span>
-      </div>
+    <div className="relative mx-auto mt-8 w-full max-w-[920px] px-10 sm:mt-8 sm:px-10">
+      {/* Badge xanh dương nhô ra góc trái trên — Frame 142: 213×55, r hết cỡ, #2323FF,
+          viền #DBE9FF 3.3px, chữ Bold 18px, NGHIÊNG -2° (đo trên lp1.png: mép trên đi
+          từ y=289 ở x=300 xuống y=281 ở x=470). Hộp chưa xoay đặt ở (284.7, 281.7)
+          khổ 1440 → cách mép trái khối slider 24px, cách mép trên khung ảnh 11px. */}
+      <span className="absolute -top-[10px] left-2 z-10 grid h-[44px] -rotate-2 place-items-center rounded-full border-[3.3px] border-accent-blue-light bg-accent-blue px-5 font-display text-[13px] font-bold uppercase tracking-[-0.02em] text-white shadow-kp sm:-top-[11px] sm:left-[24.7px] sm:h-[55px] sm:w-[213px] sm:px-0 sm:text-[18px] sm:shadow-none">
+        Khu phố tiêu biểu
+      </span>
 
-      {/* Chọn phường đang xem (ORDER #2: "Ấn chọn Phường sẽ xuất hiện pack") */}
-      {list.length > 1 && (
-        <div ref={chipRowRef} className="kp-scroll-x flex gap-1.5 px-1.5 pb-2.5 sm:px-2">
-          {list.map((n, i) => (
-            <button
-              key={n.id}
-              type="button"
-              onClick={() => goto(i)}
-              className={`flex-none cursor-pointer whitespace-nowrap rounded-full border px-3 py-2 text-[12.5px] font-semibold transition sm:py-1 ${
-                i === index
-                  ? "border-brick bg-brick text-white"
-                  : "border-cream-dark bg-white text-ink-soft hover:border-brick hover:text-brick-dark"
-              }`}
-            >
-              {n.name}
-              {n.certified_4n && " 🏅"}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Frame 136 (khung r=40, nền TRẮNG 50% + viền trắng 1.5px — không phải trắng đặc,
+          đo trên lp1.png: #FFDCBD trên nền #FFB97C) bọc Frame 137 (ảnh r=28), chèn 14px */}
+      <div className="relative aspect-[840/430] overflow-hidden rounded-[28px] border-[1.5px] border-white bg-white/50 p-2 sm:rounded-[40px] sm:p-[12.5px]">
+        <div className="relative h-full w-full overflow-hidden rounded-[20px] sm:rounded-[28px]">
+          {photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photo}
+              alt={nb ? `Khu phố ${nb.name}` : "Khu phố tiêu biểu"}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <PhotoPlaceholder />
+          )}
 
-      <div className="relative aspect-video overflow-hidden rounded-[14px]">
-        {photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={photo}
-            alt={`Khu phố ${nb.name}`}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : (
-          <PhotoPlaceholder />
-        )}
-        {/* Tag trạng thái nổi trên ảnh — mobile chừa chỗ cho mũi tên hai bên */}
-        <span
-          className={`absolute left-2.5 right-12 top-2.5 inline-block rounded-2xl px-2.5 py-1.5 text-[11px] font-semibold leading-snug shadow-kp-s sm:left-3 sm:right-auto sm:top-3 sm:max-w-[85%] sm:rounded-full sm:px-3 sm:text-[12px] ${status.cls}`}
-        >
-          {status.label}
-        </span>
-
-        {/* Chấm chuyển giữa tối đa 4 ảnh tổng quan của khu phố đang xem */}
-        {photos.length > 1 && (
-          <div className="absolute bottom-2.5 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {photos.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Ảnh ${i + 1}/${photos.length}`}
-                onClick={() => setPhotoIdx(i)}
-                className={`h-2 w-2 cursor-pointer rounded-full shadow-kp-s transition ${
-                  i === Math.min(photoIdx, photos.length - 1) ? "bg-white" : "bg-white/50"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Điều hướng slide */}
-        {list.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={prev}
-              aria-label="Khu phố trước"
-              className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-cream-dark bg-white/90 text-ink shadow-kp-s hover:text-brick"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              aria-label="Khu phố sau"
-              className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-cream-dark bg-white/90 text-ink shadow-kp-s hover:text-brick"
-            >
-              ›
-            </button>
-          </>
-        )}
-      </div>
-
-      {/* Dòng thông tin: tên + địa chỉ [Phường – Tỉnh] */}
-      <div className="flex flex-col gap-2 px-1.5 pb-1 pt-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-2">
-        <div className="min-w-0">
-          <div className="font-display text-[15px] font-bold">{nb.name}</div>
-          {(nb.ward || nb.city) && (
-            <div className="text-[12px] text-ink-soft">📍 {formatAddress(nb.ward, nb.city)}</div>
+          {/* Địa chỉ dồn 1 dòng — pill nổi góc phải trên (thay dòng địa chỉ dưới ảnh) */}
+          {nb && (
+            <span className="absolute right-2.5 top-2.5 flex max-w-[75%] items-center gap-2 rounded-full border-[2.7px] border-white bg-brick px-3 py-1.5 text-white shadow-kp-s sm:right-3 sm:top-2.5 sm:h-[45px] sm:px-4 sm:py-0">
+              <span aria-hidden className="grid h-6 w-6 flex-none place-items-center rounded-full bg-white/25">
+                <IconPin />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-[13px] font-bold leading-tight sm:text-[14.4px]">
+                  {nb.name}
+                </span>
+                {shortAddress(nb.ward, nb.city, nb.name) && (
+                  <span className="block truncate text-[10.5px] leading-tight opacity-90 sm:text-[12px]">
+                    {shortAddress(nb.ward, nb.city, nb.name)}
+                  </span>
+                )}
+              </span>
+            </span>
           )}
         </div>
-        {!nb.certified_4n && (
+      </div>
+
+      {/* Mũi tên nằm NGOÀI ảnh: Button 40×40 ở (280…320, 502…542) và (1160…1200, …)
+          khổ 1440 → tâm đúng mép khối slider, nền trắng 50%, chevron cam #FF8206 */}
+      {multiple && (
+        <>
           <button
             type="button"
-            onClick={onPropose}
-            className="kp-btn kp-btn-outline tap w-full px-3.5 py-1.5 text-[13px] sm:w-auto"
+            onClick={prev}
+            aria-label="Khu phố trước"
+            className="absolute left-0 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:top-[53.2%]"
           >
-            + Đề xuất góc phố mới
+            <IconChevron className="rotate-180" />
           </button>
-        )}
+          <button
+            type="button"
+            onClick={next}
+            aria-label="Khu phố sau"
+            className="absolute right-0 top-1/2 grid h-10 w-10 translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:top-[53.2%]"
+          >
+            <IconChevron />
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Chưa có khu phố nào đạt chuẩn 4N (đầu chiến dịch) → giữ khung, báo "sắp có" */
+function PhotoPlaceholder() {
+  return (
+    <div className="absolute inset-0 grid place-items-center bg-gradient-to-br from-[#FFE9D2] to-[#FFD3A6] px-6 text-center">
+      <div>
+        <div className="font-display text-[19px] font-bold text-brick-dark sm:text-[23px]">
+          Khu phố đạt chuẩn 4N đầu tiên sắp lộ diện
+        </div>
+        <p className="m-0 mt-1.5 text-[13px] text-ink-soft sm:text-[14px]">
+          Cùng góp lời nhắc để xóm mình được vinh danh ở đây nhé!
+        </p>
       </div>
     </div>
   );
 }
 
-/** Nền cách điệu khi khu phố chưa có ảnh (chờ trade cung cấp — ORDER #2) */
-function PhotoPlaceholder() {
+/** Chevron cam của nút chuyển khu (vuesax/linear/arrow-right trong .fig) */
+function IconChevron({ className = "" }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 560 315"
-      preserveAspectRatio="xMidYMid slice"
-      className="absolute inset-0 h-full w-full"
+      viewBox="0 0 14 22"
       aria-hidden
+      className={`h-[21px] w-[13px] ${className}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <rect width="560" height="315" fill="#F1E9DA" />
-      <g opacity="0.85">
-        <rect x="40" y="90" width="110" height="140" rx="10" fill="#EADFCB" />
-        <rect x="170" y="60" width="130" height="170" rx="10" fill="#E5DAC4" />
-        <rect x="320" y="100" width="100" height="130" rx="10" fill="#EADFCB" />
-        <rect x="440" y="75" width="90" height="155" rx="10" fill="#E5DAC4" />
-      </g>
-      <path d="M0,250 H560" stroke="#D8C9AE" strokeWidth="18" opacity="0.7" />
-      <text x="280" y="292" textAnchor="middle" fill="#6e665a" fontSize="15" fontFamily="sans-serif">
-        Ảnh khu phố đang được cập nhật…
-      </text>
+      <path d="M2.5 1.5 11.5 11l-9 9.5" />
     </svg>
   );
 }

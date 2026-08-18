@@ -1,18 +1,27 @@
 "use client";
-// Modal "Cho xóm biết bạn là ai" (02 §8.1) — KHÔNG OTP; SĐT gửi server 1 lần qua HTTPS,
-// không bao giờ lưu ở client. Style field theo prototype.
-import { useState } from "react";
+// Modal "Để FPT gửi ưu đãi đến bạn" (docs/lp/lp6.png) — KHÔNG OTP; SĐT gửi server 1 lần
+// qua HTTPS, không bao giờ lưu ở client (quy tắc cứng 3/3b).
+// 18/8: thêm select TỈNH/THÀNH PHỐ và BẮT BUỘC chọn khi tự nhập tên khu phố
+// (email review: "bắt buộc phải điền tỉnh thành") — trước đây khu phố tự nhập lưu city NULL.
+import { useEffect, useState } from "react";
 import type { MapNeighborhood, Me } from "./types";
-import { apiSend } from "../client-api";
+import { apiGet, apiSend } from "../client-api";
 import NeighborhoodPicker from "./NeighborhoodPicker";
-import { Field } from "./ui";
+import { Field, Modal } from "./ui";
+
+interface GeoUnit { code: string; name: string }
 
 export default function IdentifyModal({
   neighborhoods,
+  title = "Để FPT gửi ưu đãi đến bạn",
+  intro = "Chỉ cần để lại một vài thông tin. FPT sẽ liên hệ khi bạn đồng ý; số điện thoại được bảo mật và không hiển thị công khai.",
   onClose,
   onDone,
 }: {
   neighborhoods: MapNeighborhood[];
+  /** Đổi theo ngữ cảnh mở modal (đề xuất / viết câu / nhận ưu đãi) */
+  title?: string;
+  intro?: string;
   onClose: () => void;
   onDone: (me: Me) => void;
 }) {
@@ -20,10 +29,26 @@ export default function IdentifyModal({
   const [name, setName] = useState("");
   const [nbId, setNbId] = useState<string | null>(null);
   const [nbText, setNbText] = useState("");
+  const [provinces, setProvinces] = useState<GeoUnit[]>([]);
+  const [cityCode, setCityCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    apiGet<{ provinces: GeoUnit[] }>("/api/v1/geo")
+      .then((r) => setProvinces(r.provinces))
+      .catch(() => {});
+  }, []);
+
+  const picked = neighborhoods.find((n) => n.id === nbId) ?? null;
+  const city = picked ? picked.city ?? "" : provinces.find((p) => p.code === cityCode)?.name ?? "";
+
   const submit = async () => {
+    // Tự nhập tên khu phố thì PHẢI có tỉnh/thành (server cũng chặn lại lần nữa)
+    if (!picked && nbText.trim() && !city) {
+      setError("Chọn tỉnh/thành của khu phố bạn nhé");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -32,6 +57,7 @@ export default function IdentifyModal({
         display_name: name,
         neighborhood_id: nbId,
         neighborhood_text: nbId ? null : nbText || null,
+        neighborhood_city: nbId ? null : city || null,
       });
       onDone(res.me);
     } catch (e) {
@@ -42,63 +68,64 @@ export default function IdentifyModal({
   };
 
   return (
-    <Modal onClose={onClose}>
-      <h3 className="m-0 font-display text-xl font-extrabold">Để FPT gửi ưu đãi đến bạn 💛</h3>
-      <p className="m-0 mt-1 text-sm text-ink-soft">
-        Chỉ cần để lại một vài thông tin. FPT sẽ liên hệ khi bạn đồng ý; số điện thoại được bảo mật
-        và không hiển thị công khai.
-      </p>
-      <Field label="Số điện thoại" className="mt-4">
+    <Modal title={title} onClose={onClose} topmost>
+      <p className="m-0 mb-4 text-[13.5px] leading-relaxed text-ink-soft">{intro}</p>
+
+      <Field label="Số điện thoại">
         <input
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="VD: 090xxxxxxx"
+          placeholder="VD: 0988 123 xxx"
           className="kp-input tap"
         />
       </Field>
-      <Field label="Tên hiển thị (tên cả xóm hay gọi)" className="mt-3.5">
+      <Field label="Tên người dùng" className="mt-3.5">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="VD: Cô Tám tạp hoá, anh Dũng, nhà số 7…"
+          placeholder="Nhập tên hiển thị cho khu phố"
           className="kp-input tap"
         />
       </Field>
-      <Field label="Khu phố của bạn" className="mt-3.5">
-        {/* #11: search + thanh trượt + cho phép tự nhập tên phường */}
-        <NeighborhoodPicker
-          neighborhoods={neighborhoods}
-          valueId={nbId}
-          valueText={nbText}
-          onChange={(id, text) => { setNbId(id); setNbText(text); }}
-        />
-      </Field>
-      {error && <p className="m-0 mt-2 text-sm font-medium text-status-waiting">{error}</p>}
-      <button
-        onClick={submit}
-        disabled={busy}
-        className="kp-btn kp-btn-primary tap mt-4 w-full px-5 py-3 disabled:opacity-60"
-      >
-        {busy ? "Đang xử lý…" : "Bắt đầu thôi"}
-      </button>
-    </Modal>
-  );
-}
-
-export function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  return (
-    // z-50: PHẢI cao hơn Drawer (z-40) — modal định danh mở từ nút "thương" trong drawer
-    // từng bị drawer che mất trên mobile (dieuchinh.1.8 #16)
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-[2px] sm:items-center" onClick={onClose}>
-      <div
-        className="kp-safe-b slide-up max-h-[88vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-cream px-5 pt-5 shadow-kp sm:rounded-3xl sm:px-6 sm:pt-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Tay nắm kéo — gợi ý đây là bottom sheet trên mobile */}
-        <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-cream-dark sm:hidden" />
-        {children}
+      <div className="mt-3.5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+        <Field label="Địa chỉ khu phố">
+          <NeighborhoodPicker
+            neighborhoods={neighborhoods}
+            valueId={nbId}
+            valueText={nbText}
+            placeholder="Tìm kiếm hoặc tự nhập tên phường"
+            onChange={(id, text) => { setNbId(id); setNbText(text); }}
+          />
+        </Field>
+        <Field label="Tỉnh/thành phố">
+          {picked ? (
+            <input value={picked.city ?? ""} disabled className="kp-input bg-cream text-ink-soft" />
+          ) : (
+            <select
+              value={cityCode}
+              onChange={(e) => setCityCode(e.target.value)}
+              className="kp-input tap"
+            >
+              <option value="">Lựa chọn</option>
+              {provinces.map((p) => (
+                <option key={p.code} value={p.code}>{p.name}</option>
+              ))}
+            </select>
+          )}
+        </Field>
       </div>
-    </div>
+
+      {error && <p className="m-0 mt-3 text-sm font-medium text-status-waiting">{error}</p>}
+      <div className="py-5">
+        <button
+          onClick={submit}
+          disabled={busy}
+          className="kp-btn kp-btn-primary tap w-full px-5 py-3 disabled:opacity-60"
+        >
+          {busy ? "Đang xử lý…" : "Bắt đầu thôi"}
+        </button>
+      </div>
+    </Modal>
   );
 }

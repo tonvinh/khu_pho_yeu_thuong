@@ -86,38 +86,3 @@ export async function getViewerRank(userId: string): Promise<ViewerRank | null> 
     [userId]
   );
 }
-
-export interface NeighborhoodOfMonth {
-  name: string;
-  slug: string;
-  new_signs: number;
-  votes: number;
-}
-
-/** Khu phố tử tế nhất tháng = tổng điểm cư dân trong tháng + số biển mới treo trong khu */
-export async function getNeighborhoodOfMonth(): Promise<NeighborhoodOfMonth | null> {
-  return one<NeighborhoodOfMonth>(
-    `SELECT n.name, n.slug,
-       COALESCE(ns.n, 0)::int AS new_signs,
-       COALESCE(vm.n, 0)::int AS votes,
-       COALESCE(pm.p, 0)::int + COALESCE(ns.n, 0)::int AS month_score
-     FROM neighborhoods n
-     LEFT JOIN LATERAL (
-       SELECT count(*) AS n FROM suggestions s JOIN issues i ON i.id = s.issue_id
-       WHERE i.neighborhood_id = n.id AND s.status = 'installed'
-         AND date_trunc('month', s.installed_at) = date_trunc('month', now())) ns ON true
-     LEFT JOIN LATERAL (
-       SELECT count(*) AS n FROM votes v
-       JOIN suggestions s ON s.id = v.suggestion_id
-       JOIN issues i ON i.id = s.issue_id
-       WHERE i.neighborhood_id = n.id AND v.is_valid
-         AND date_trunc('month', v.created_at) = date_trunc('month', now())) vm ON true
-     LEFT JOIN LATERAL (
-       SELECT sum(e.points) AS p FROM score_events e
-       JOIN users u ON u.id = e.user_id
-       WHERE u.neighborhood_id = n.id AND e.is_valid
-         AND date_trunc('month', e.created_at) = date_trunc('month', now())) pm ON true
-     ORDER BY month_score DESC, new_signs DESC
-     LIMIT 1`
-  );
-}

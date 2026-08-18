@@ -11,10 +11,16 @@ export async function GET(req: NextRequest) {
   if ("error" in auth) return auth.error;
 
   const format = req.nextUrl.searchParams.get("format");
+  // 18/8: form ưu đãi có tỉnh thành + địa chỉ riêng → hiện & xuất thêm 2 cột,
+  // kèm lọc theo tỉnh (sale chia vùng).
+  const province = (req.nextUrl.searchParams.get("province") || "").trim();
   const rows = await q(
     `SELECT l.id, l.name, l.phone_masked, l.phone_encrypted, l.neighborhood_text,
-       l.interests, l.source, l.status, l.note, l.created_at
-     FROM leads l WHERE l.opted_in ORDER BY l.created_at DESC`
+       l.province, l.address, l.interests, l.source, l.status, l.note, l.created_at
+     FROM leads l
+     WHERE l.opted_in AND ($1 = '' OR l.province = $1)
+     ORDER BY l.created_at DESC`,
+    [province]
   );
 
   if (format === "csv") {
@@ -22,15 +28,15 @@ export async function GET(req: NextRequest) {
     await q(
       `INSERT INTO audit_logs (admin_user_id, action, detail)
        VALUES ($1, 'leads_export_csv', $2)`,
-      [auth.admin.id, JSON.stringify({ count: rows.length })]
+      [auth.admin.id, JSON.stringify({ count: rows.length, province: province || null })]
     );
-    const header = "thoi_gian,ten,sdt,khu_pho,quan_tam,nguon,trang_thai";
+    const header = "thoi_gian,ten,sdt,tinh_thanh,dia_chi,khu_pho,quan_tam,nguon,trang_thai";
     const lines = rows.map((l) => {
       const phone = decryptPhone(l.phone_encrypted as Buffer);
       const esc = (s: unknown) => `"${String(s ?? "").replace(/"/g, '""')}"`;
       return [
         esc(new Date(l.created_at as string).toISOString()),
-        esc(l.name), esc(phone), esc(l.neighborhood_text),
+        esc(l.name), esc(phone), esc(l.province), esc(l.address), esc(l.neighborhood_text),
         esc((l.interests as string[]).join("; ")), esc(l.source), esc(l.status),
       ].join(",");
     });

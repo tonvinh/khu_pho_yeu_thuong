@@ -8,6 +8,7 @@ import { normalizePhone, looksFake, maskPhone } from "@/lib/phone";
 import { phoneHash, encryptPhone, randomSlug } from "@/lib/crypto";
 import { createSession, sessionCookieOptions, SESSION_COOKIE } from "@/lib/session";
 import { INTERESTS } from "@/lib/taxonomy";
+import { geoError } from "@/lib/geo";
 
 export async function POST(req: NextRequest) {
   const auth = await requireUserWrite(req);
@@ -17,12 +18,19 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   if (!body) return jsonError(400, "Dữ liệu không hợp lệ");
 
-  const { name, phone, neighborhood_text, interests, opted_in, confirm_switch } = body;
+  // 18/8: form ưu đãi đổi ô free text khu phố → tỉnh thành (chọn) + địa chỉ.
+  // neighborhood_text vẫn nhận để popup ưu đãi nhanh (LeadPromptModal) không phải đổi.
+  const { name, phone, province, address, neighborhood_text, interests, opted_in,
+          confirm_switch } = body;
 
   // Lead chỉ ghi khi opt-in (quy tắc cứng 5) — checkbox mặc định KHÔNG tick
   if (opted_in !== true) {
     return jsonError(400, "Cần tick đồng ý nhận ưu đãi thì tụi mình mới lưu số nhé");
   }
+
+  // Tỉnh/thành phải nằm trong danh mục chính quy 34 tỉnh (địa giới từ 1/7/2025)
+  const geoMsg = await geoError(province, null);
+  if (geoMsg) return jsonError(400, geoMsg);
 
   const normalized = normalizePhone(String(phone || ""));
   if (!normalized || looksFake(normalized)) {
@@ -63,10 +71,12 @@ export async function POST(req: NextRequest) {
 
   await q(
     `INSERT INTO leads (name, phone_encrypted, phone_masked, phone_hash, neighborhood_text,
-       interests, source, opted_in, user_id)
-     VALUES ($1,$2,$3,$4,$5,$6,'active_section', true, $7)`,
+       province, address, interests, source, opted_in, user_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'active_section', true, $9)`,
     [String(name || "").trim().slice(0, 200) || null, encryptPhone(normalized),
      maskPhone(normalized), hash, String(neighborhood_text || "").trim().slice(0, 300) || null,
+     String(province || "").trim().slice(0, 120) || null,
+     String(address || "").trim().slice(0, 300) || null,
      validInterests, leadUserId]
   );
   await q(

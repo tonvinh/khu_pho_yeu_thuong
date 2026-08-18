@@ -68,3 +68,80 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
 - TVC/KV demo ở `CampaignMedia.tsx` (YOUTUBE_ID placeholder, chờ final design).
 - Còn CHỜ ASSET từ team Design/trade: ảnh 20 khu phố (#1), biển bảng 6 chủ đề (#3),
   bảng chứng nhận chính thức (#9, #10) — flow upload theo sheet ORDER chưa dựng.
+
+## Điều chỉnh 18/8 — SKIN MỚI (docs/lp/*.png) + email review (docs/admin/admin_v1.pdf)
+
+Kế hoạch đầy đủ + 14 quyết định đã chốt: `docs/21-KE-HOACH-DIEU-CHINH-18-8.md`.
+
+- **Da mới cam FPT**: đổi GIÁ TRỊ token trong `globals.css` (giữ nguyên tên `brick/cream/…`)
+  nên admin đổi màu theo luôn. Nút CTA chính giờ là **viền cam nền trắng** (`.kp-btn-primary`);
+  `.kp-btn-solid` mới dành cho khối cam đặc; `.kp-btn-vote` xanh dương cho nút "Bình chọn".
+  Asset thương hiệu nén sẵn ở `public/brand/*.webp`.
+- **Trang chủ đổi bố cục**: hero cam (slider CHỈ khu đạt chuẩn 4N + KV + ô tra cứu 4N chuyển
+  từ cột phải lên) → 3 con số (`biển · khu phố · câu đóng góp`) → `IssueBoard` → 6 biển mới →
+  khối ưu đãi → footer. Bỏ khối TVC, khối chứng nhận cột phải, bản đồ.
+- **`IssueBoard` nuốt cả bảng xếp hạng**: 1 card sọc cam, 3 tab (chờ viết lời nhắc / chờ bình
+  chọn / cây bút), 5 dòng/trang. `IssueList.tsx` + `Leaderboard.tsx` đã XOÁ.
+- **Drawer góc xóm tách đôi**: `SuggestModal` (viết câu, có ô SĐT khi tick nhận ưu đãi) và
+  `VoteModal` (danh sách câu để bình chọn — giữ nguyên luật 1 phiếu/câu, cấm tự thương).
+  `IssueDrawer.tsx` đã XOÁ; `ui.tsx` bỏ `Drawer`/`HangSign`/`Eyebrow`, thêm `Modal`/`Stripe`.
+- **Biển render bằng HTML/CSS** (`components/home/SignCard.tsx`) thay vì ảnh upload — dùng
+  chung với preview lúc admin duyệt câu. Text banner khuyến mãi + hotline sửa ở `/admin/noi-dung`.
+- **Bắt buộc tỉnh/thành**: modal định danh và khối ưu đãi đều phải có tỉnh (validate `geoError()`
+  ở server). Sửa luôn bug `/api/v1/auth/identify` gọi `resolveNeighborhoodId` thiếu tham số geo
+  nên khu phố tự nhập luôn lưu `city = NULL`.
+- **`leads` thêm `province` + `address`** (migration 010) → `/admin/leads` có 2 cột mới, lọc theo
+  tỉnh, CSV xuất thêm 2 cột.
+- **Nút "Đề xuất góc phố mới" mở THẲNG form** (trước gọi `requireIdentity` nên bung modal
+  "Để FPT gửi ưu đãi…" — team review tưởng ra nhầm popup ưu đãi); định danh hỏi ở bước Gửi.
+- **site_content đổi bộ key** theo khối của design (`hero_title`, `board_*`, `signs_title`,
+  `sign_promo_*`, `footer_*`); video TVC thành DANH SÁCH `campaign_youtube_ids` (phát lần lượt),
+  key cũ `campaign_youtube_id` vẫn đọc được làm fallback.
+
+## Nguồn design CHUẨN: docs/lp/LandingpageFCM.fig (18/8)
+
+Từ nay đối chiếu giao diện trang chủ với FILE FIGMA, không đo bằng mắt trên PNG nữa.
+
+- `.fig` là ZIP: `canvas.fig` (Kiwi + **Zstandard**) + `images/` (767 ảnh gốc) + `meta.json`.
+- Bộ giải mã tự viết ở `scripts/figma/` — chạy `python3 scripts/figma/dump.py 7217:1990`
+  in ra cây node kèm x/y/w/h, màu, bo góc, viền, font. Bản dump đã lưu sẵn:
+  `docs/lp/figma-frame-7217-1990.txt` (frame "Landing page" 1440×4450).
+- BẪY khi tự đọc Kiwi: `uint64` KHÔNG phải LEB128 thuần — 8 nhóm 7 bit rồi byte thứ 9
+  lấy trọn 8 bit. Đọc sai là lệch cả stream (xem `scripts/figma/kiwi.py`).
+- Số chuẩn: khối nội dung rộng **1276** (lề 82) · hero cao **900**, gradient
+  `#FF7B00 → #FFEFE6` · thanh nav trắng **10%** viền `#FFEBB8` · chữ `#3D3D3D`,
+  chữ mờ `#969696`, kẻ `#DEDEDE`, cam `#FF8206`, xanh `#2323FF`.
+- Asset đã nén sẵn vào `public/brand/`: `skyline` · `plaza` · `kv-khu-pho(-sm)` ·
+  `signpost` · `hero-arc` · `sign-logos` · `sign-fptplay` (2 cái cuối cắt từ layer
+  "INT - EPL-01 1" 4096×2731 để `SignCard` dùng logo FPT + artwork FPT Play thật).
+- Font **FPT SongVui** (nguồn `docs/lp/font_FPT_songvui.zip`) đã chuyển sang woff2 ở
+  `public/fonts/` — 6 face, Light 300 / Regular 400 / Bold 700 (+ nghiêng).
+  KHÔNG dùng `font-extrabold`/`font-semibold` ở trang chủ: SongVui không có 600/800 nên
+  trình duyệt giả đậm, nét bệt và sai mặt chữ. Body/hint/meta trong design là **Light**.
+- **Đối chiếu lại 18/8 (review ảnh chú thích của team)** — số đo đã sửa vào code:
+  · Thanh nav là HAI mảnh Subtract (gộp 1276×60 từ x=82), bị **khoét cung r=60** quanh pill
+    logo (tâm ±48px so với tâm thanh, cách đỉnh thanh 26px = viền pill nới ra 12px). Khoét
+    bằng `mask` (`.kp-nav-cut`), nét cung vẽ bù bằng 2 vòng tròn 120×120 bị `overflow-hidden`
+    cắt. Viền `#FFEBB8` **mờ dần** về hai đầu bo tròn (`.kp-nav-line`, đo alpha trên lp1.png:
+    0 ở x=169 → 1.0 ở x=610, 1.0 ở x=838 → 0 ở x=1270). Chữ trái bắt đầu x=189 (lề 107px),
+    lề phải 14px.
+  · Badge "KHU PHỐ TIÊU BIỂU" **nghiêng -2°** (hộp 213×55, gốc xoay ở góc trên trái đặt tại
+    (283.8, 285.4)). Khung ảnh slider là **trắng 50% + viền trắng 1.5px** (không phải trắng
+    đặc, không bóng). Mũi tên 40×40 nền trắng 50%, chevron cam, tâm (260/1180, 522).
+  · Hero còn 3 hình rời trước đây bị thiếu, nay lấy từ `.fig` → `public/brand/`:
+    `signpost.webp` ("06 2" 1135.2/646/176.8×308.6), `sweepers.webp` ("02 2" 1238.2/708/
+    160.5×187.5), `cart.webp` ("01 1" 10/739/236×171) — đều nằm DƯỚI lớp KV.
+  · Line-height trong .fig là số ĐO ĐƯỢC, không phải "auto" của trình duyệt: tiêu đề hero
+    56px, tiêu đề section 52px, tiêu đề khối ưu đãi 60px, số đếm 60px→lh 78. `.kp-h2` khai
+    báo ngoài @layer nên utility `leading-*` KHÔNG đè được → dùng `.kp-hero-title`,
+    `.kp-sec-title`, `.kp-lead-title`.
+  · Nhịp dọc chuẩn (khổ 1440): ô tra cứu y=1140 · 3 con số y=1209 · tiêu đề "Đóng góp"
+    y=1357 · tab y=1474 · card y=1556 h=550 · tiêu đề "Lời nhắc" y=2186 · lưới biển y=2278 ·
+    panel ưu đãi y=3054 (full-bleed, bo 40px hai góc trên) · tiêu đề ưu đãi y=3101.
+- **Logo lockup** "Khu phố biết thương": Design đã export `docs/lp/logo.svg` (pill trắng
+  192×96 + hình logo). Đã tách RIÊNG phần hình (2 path: nền trắng + `#FF8206`) ra
+  `public/brand/logo-khu-pho.svg` — viewBox `29.5 11.7 133 71.2`, toạ độ làm tròn 2 số lẻ
+  (97KB → 75KB). Pill vẫn dựng bằng CSS trong `HomeShell` nên 1 file dùng cho cả 2 chỗ:
+  top bar (133×71 trong pill) và footer (rộng 23% khối KV, `margin-top: -9.16%` để đè lên
+  đáy KV đúng tỷ lệ .fig: logo 286.5×153.2 thò xuống 39.2px).
+  `public/brand/sign-logos.webp` vẫn dùng bản cắt từ artwork nên không cần đổi.

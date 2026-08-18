@@ -1,12 +1,16 @@
 # 16 — Giao diện & frontend
 
-> Design tham chiếu: `KhuPhoCuaToi-prototype-v4.html`. Copy tiếng Việt: `src/lib/copy.ts` (nguyên văn từ `06-CONTENT-COPY.md` §2, wording bản duyệt 28/7).
+> **Design tham chiếu (từ 18/8/2026): `docs/lp/lp1.png` → `lp6.png` — skin cam FPT.**
+> Bản prototype kem `KhuPhoCuaToi-prototype-v4.html` chỉ còn giá trị lịch sử.
+> Danh sách việc đã làm theo skin mới + email review: `docs/21-KE-HOACH-DIEU-CHINH-18-8.md`.
+> Copy tiếng Việt: `src/lib/copy.ts` (nguyên văn từ `06-CONTENT-COPY.md` §2); text hiển thị
+> trang chủ sửa được ở `/admin/noi-dung` (mặc định trong `src/lib/site-content.ts`).
 
 ## 1. Bản đồ route
 
 | Route | Kiểu | Mô tả |
 |---|---|---|
-| `/` | Server + client island | Trang chủ một trang: hero + bản đồ, biển mẫu, danh sách góc xóm, bảng xếp hạng, khối ưu đãi, footer |
+| `/` | Server + client island | Trang chủ một trang: hero cam (slider khu phố tiêu biểu + KV + ô tra cứu 4N), 3 con số, khối đóng góp 3 tab, 6 biển mới, khối ưu đãi, footer |
 | `/bien/{suggestionId}` | Server | Trang share "biển đã treo" + OG image động |
 | `/dai-su/{share_slug}` | Server | Trang share thành tích Đại sứ + OG image động |
 | `/khu-pho/{slug}` | Server | Trang share chứng nhận / tiến độ khu phố + OG image động |
@@ -26,29 +30,43 @@ Mọi link nội bộ trong client dùng hằng `BASE` (từ `client-api.ts`); t
 ## 2. Cây component trang chủ
 
 ```
-app/page.tsx  (Server — 6 truy vấn song song, force-dynamic)
+app/page.tsx  (Server — 7 truy vấn song song, force-dynamic)
 └── HomeShell  "use client"   ← orchestrator: state, polling 20s, modal, toast
-    ├── Top bar sticky (logo, 2 anchor link, lời chào "Chào {tên} 👋")
+    ├── Top bar cam (2 anchor link · logo tròn ở giữa · nút Đề xuất + avatar)
     ├── Banner báo tin vui in-web  ← /api/v1/me/notifications (thay SMS)
-    ├── <header> hero
-    │   ├── Eyebrow + h1 + mô tả + 3 CTA
-    │   ├── Counters          4 ô số liệu
-    │   └── MapSection        bản đồ cách điệu + pin biển treo đung đưa
-    ├── Section "Lời nhắc khi lên biển trông như thế nào?"
-    │   └── HangSign × 6      câu được thương nhiều nhất tuần + EXAMPLE_SIGNS
-    ├── Section "Cùng đóng góp một câu…"
-    │   ├── IssueList         card từng góc xóm
-    │   └── Leaderboard       bảng Cây bút + biển chứng nhận 4N + ô tra cứu
+    ├── <header> hero nền cam
+    │   ├── h1 IN HOA + mô tả
+    │   ├── NeighborhoodSlider   CHỈ khu đạt chuẩn 4N (badge + pill địa chỉ, mũi tên ngoài ảnh)
+    │   ├── KV khu phố 3D trên nền sàn gạch (public/brand/*.webp)
+    │   └── HeroLookup           ô tra cứu "Xóm mình đã đạt chuẩn 4N chưa?"
+    ├── Counters                 3 con số: biển · khu phố · câu đóng góp
+    ├── IssueBoard  #goc-xom     1 card sọc cam, 3 tab, 5 dòng/trang
+    │   ├── tab "Khu phố chờ bạn viết lời nhắc"   (góc chưa có câu → nút Gửi lời nhắc)
+    │   ├── tab "Khu phố chờ bạn bình chọn"       (góc có câu → nút Bình chọn)
+    │   └── tab "Cây bút của khu phố"             (bảng xếp hạng, badge TOP 1/2/3)
+    ├── SignGallery              6 biển mới nhất — SignCard (template thương hiệu)
     ├── Section "Ưu đãi cư dân"
-    │   └── LeadSection       form lead tầng 2 (opt-in mặc định KHÔNG tick)
-    ├── <footer>
-    ├── IdentifyModal         khi cần định danh
-    ├── ProposeModal          drawer đề xuất góc xóm
-    ├── IssueDrawer           drawer xem/viết/bình chọn câu nhắc
+    │   └── LeadSection          họ tên · SĐT · TỈNH THÀNH (bắt buộc) · địa chỉ · 4 chip · opt-in
+    ├── <footer>                 KV + logo + 4 dòng (có hotline 1900 6600)
+    ├── IdentifyModal            định danh (có select Tỉnh/thành)
+    ├── ProposeModal             wizard 2 bước (chủ đề → thông tin khu phố)
+    ├── SuggestModal             viết câu nhắc (có ô SĐT khi tick nhận ưu đãi)
+    ├── VoteModal                danh sách câu của góc phố để bình chọn
+    ├── LeadPromptModal
     └── Toast
+
+CampaignMedia (TVC + KV) — TẠM ẨN khỏi trang chủ theo email 18/8, giữ nguyên component;
+danh sách video quản lý ở /admin/noi-dung, phát lần lượt bằng tham số playlist.
 ```
 
-Component dùng chung ở `components/home/ui.tsx`: `Eyebrow`, `SectionHead`, `Field`, `Drawer` (trượt phải, đóng bằng Esc, `role="dialog"`), `HangSign` (biển treo nghiêng có móc).
+Component dùng chung ở `components/home/ui.tsx`: `SectionHead` (IN HOA, căn giữa, tuỳ chọn
+cột biển bên trái), `FilterTabs` (pill, tab đang chọn là khối cam), `Field`, `Modal` (giữa màn
+hình, Esc để đóng, `role="dialog"`, bottom-sheet trên mobile), `Stripe` (dải sọc chéo cam).
+`SignCard` (`components/home/SignCard.tsx`) render biển thương hiệu — dùng chung cho trang chủ
+và preview khi admin duyệt câu.
+
+> Drawer trượt phải, `HangSign`, `IssueList`, `Leaderboard`, `IssueDrawer`, `Eyebrow` đã bị gỡ
+> ngày 18/8 khi đổi skin (drawer tách thành `SuggestModal` + `VoteModal`).
 
 ## 3. Luồng tương tác then chốt
 
@@ -89,14 +107,17 @@ Drawer đổi hoàn toàn: khung `donebox` xanh lá hiển thị câu đã treo,
 - SĐT nhập lệch với định danh phiên → server trả 409 kèm cờ; UI hiện hộp xác nhận "Tiếp tục với số mới" / "Để mình kiểm tra lại".
 - Gửi thành công: form thay bằng thẻ cảm ơn 🧧 + toast.
 
-## 4. Bản đồ (`MapSection`)
+## 4. Khối "Khu phố tiêu biểu" (`NeighborhoodSlider`)
 
-- Chuyển khu phố bằng dãy chip (khu đã chứng nhận có 🏅).
-- Nền = **ảnh cách điệu** (`map_url`); chưa có ảnh thì dùng SVG placeholder cụm nhà + ngõ hẻm.
-- Pin = biển treo nhỏ có móc, `left/top` theo **%**, `translate(-50%, -100%)`, animation `kp-sway`; hover thì lắc nhanh hơn.
-- Màu pin theo trạng thái: đỏ gạch `waiting` · cam FPT `voting` · xanh lá `signed`. Chú giải 3 màu ngay đầu card.
-- Bấm pin → mở `IssueDrawer` của góc xóm đó.
-- Khu phố chưa có pin → dòng mời "bạn đề xuất điểm đầu tiên nhé!".
+- Bản đồ khu phố đã bị bỏ từ 1/8; từ 18/8 khối này **chỉ hiện khu đã đạt chuẩn 4N**
+  (`certified_4n`) — "đây chỉ là chỗ vinh danh". `is_featured` chỉ còn dùng xếp thứ tự.
+- Không còn hàng chip chọn phường, không còn bộ đếm ảnh, không còn nút đề xuất trong khối.
+- Badge "KHU PHỐ TIÊU BIỂU" (xanh dương) nhô góc trái trên; pill địa chỉ 1 dòng
+  (tên khu phố + `Phường – Tỉnh`) nổi góc phải trên ảnh; mũi tên ‹ › nằm **ngoài** ảnh.
+- Mỗi khu hiện **đúng 1 ảnh** — `neighborhood_photos` vị trí #1 (admin vẫn upload được 4 ảnh,
+  trang chủ chỉ lấy ảnh đầu); chưa có ảnh nào thì dùng `map_stylized_key`.
+- Chưa có khu nào đạt chuẩn → giữ khung, hiện lời mời "Khu phố đạt chuẩn 4N đầu tiên sắp lộ diện".
+- Mũi tên và auto-slide 4s chuyển thẳng sang **khu kế**; dừng khi tab ẩn.
 
 ## 5. Hệ thống thiết kế
 
@@ -104,15 +125,23 @@ Token khai báo bằng `@theme` trong `src/app/globals.css` (Tailwind 4) — s�
 
 | Nhóm | Token | Giá trị |
 |---|---|---|
-| Nền | `--color-cream` / `-panel` / `-dark` | `#F4EEE3` / `#FBF7EF` / `#E4D9C7` |
-| Chủ đạo | `--color-brick` / `-dark` / `-light` | `#C0573B` / `#A8482F` / `#FBEAE3` |
-| Chữ | `--color-ink` / `-soft` | `#2B2620` / `#6E665A` |
-| Phụ | `--color-olive`, `--color-fpt`, `--color-teal`, `--color-accent-blue` | `#7C8A5A`, `#EF7B27`, `#2F6B4F`, `#2D6CB5` |
+| Nền | `--color-cream` / `-panel` / `-dark` | `#FFF6F0` / `#FFFBF8` / `#F0E2D8` |
+| Chủ đạo | `--color-brick` / `-dark` / `-light` | `#F58220` / `#D96A12` / `#FFF0E2` |
+| Hero | `--kp-hero-from` / `--kp-hero-to` | `#F07E12` / `#F79A3C` |
+| Chữ | `--color-ink` / `-soft` | `#231F20` / `#7A7370` |
+| Phụ | `--color-olive`, `--color-fpt`, `--color-teal`, `--color-accent-blue` (+`-light`) | `#7C8A5A`, `#F58220`, `#2F6B4F`, `#2B3FD9` (`#ECEEFC`) |
 | Trạng thái | `--color-status-waiting/voting/signed` (+ `-bg`) | đỏ gạch / cam / xanh lá |
 | Bóng | `--shadow-kp`, `--shadow-kp-s` | bóng mềm nâu |
-| Font | `--font-sans` Be Vietnam Pro · `--font-display` Baloo 2 · `--font-mono` IBM Plex Mono | self-host qua `@fontsource` |
+| Font | `--font-sans` Be Vietnam Pro · `--font-display` Baloo 2 · `--font-mono` IBM Plex Mono | self-host qua `@fontsource` — **chờ Design cấp font chính thức của skin mới** |
 
-Lớp tiện ích tự định nghĩa: `.kp-card`, `.kp-card-3`, `.kp-kicker`, `.kp-btn` (+`-primary`/`-outline`), `.kp-input`, `.kp-quote`, `.kp-n4chip`, `.kp-pin`, `.kp-pin-sign`, `.tap` (chiều cao chạm ≥44px).
+Lớp tiện ích tự định nghĩa: `.kp-card`, `.kp-card-3`, `.kp-h2` (tiêu đề IN HOA),
+`.kp-btn` + biến thể **`-primary` (viền cam nền trắng — CTA chính của skin mới)**,
+`-solid` (khối cam đặc), `-vote` (viền xanh dương), `-ghost`, `-outline`;
+`.kp-input` (bo pill, textarea bo 18px), `.kp-stripe` (dải sọc chéo cam),
+`.kp-quote`, `.kp-n4chip`, `.kp-pin`, `.kp-pin-sign`, `.tap` (chiều cao chạm ≥44px).
+
+Asset thương hiệu: `public/brand/kv-khu-pho.webp` (+ bản `-sm` cho footer/mobile),
+`signpost.webp`, `plaza.webp` — nén từ `docs/lp/*.png` bằng sharp (KV 15MB → 400KB).
 
 Animation: `kp-sway` (biển đung đưa), `kp-drawer-in`, `kp-fade-in`, `kp-floaty`, `kp-pop` (tim), `kp-slide-up`.
 **Toàn bộ animation tắt trong `@media (prefers-reduced-motion: reduce)`.**

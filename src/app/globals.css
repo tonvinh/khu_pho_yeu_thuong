@@ -10,41 +10,96 @@
 @import "@fontsource/ibm-plex-mono/500.css";
 @import "@fontsource/ibm-plex-mono/600.css";
 
-/* Bảng màu theo design "docs/KhuPhoCuaToi-prototype-v4.html":
-   nền giấy kem (paper #F4EEE3), đất nung (terra #C0573B), ô liu (#7C8A5A),
-   cam FPT (#EF7B27), xanh lá (#2F6B4F), viền #E4D9C7, bóng mềm.
-   Giữ nguyên TÊN token cũ (brick/teal/cream…) để các trang admin & share dùng chung. */
+/* Bảng màu theo SKIN MỚI (docs/lp/*.png, 18/8): cam FPT làm chủ đạo, nền kem hồng
+   rất nhạt, nút chính kiểu VIỀN cam nền trắng bo tròn hết cỡ, accent xanh dương cho
+   nút bình chọn / badge TOP1 / biển tên đường.
+   Giữ nguyên TÊN token cũ (brick/cream/olive…) để trang admin + trang share dùng
+   chung không phải sửa: đổi GIÁ TRỊ là cả hệ đổi da theo (quyết định F7). */
 @theme {
-  --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Baloo 2", "Be Vietnam Pro", cursive;
+  /* Figma dùng DUY NHẤT "FPT SongVui" cho cả trang — Light 300 / Regular 400 / Bold 700
+     (+ 3 bản nghiêng). File woff2 ở public/fonts/, khai báo @font-face ngay dưới; giữ
+     Be Vietnam Pro / Baloo 2 làm fallback cho trang admin và lúc font chưa tải xong. */
+  --font-sans: "FPT SongVui", "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "FPT SongVui", "Baloo 2", "Be Vietnam Pro", cursive;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  --color-cream: #f4eee3; /* --paper */
-  --color-cream-panel: #fbf7ef; /* --paper2 */
-  --color-cream-dark: #e4d9c7; /* --line */
-  --color-brick: #c0573b; /* --terra */
-  --color-brick-dark: #a8482f; /* --terra-d */
-  --color-brick-light: #fbeae3;
-  --color-ink: #2b2620;
-  --color-ink-soft: #6e665a; /* --mute */
+  --color-cream: #fff7f2; /* nền trang — Landing page fill */
+  --color-cream-panel: #fffbf8; /* nền panel nhạt hơn */
+  --color-cream-dark: #dedede; /* kẻ ngang giữa các dòng (Line 2..6) */
+  --color-brick: #ff8206; /* primary — cam FPT (tab active, số đếm, viền card) */
+  --color-brick-dark: #e86305; /* viền tab đang chọn */
+  --color-brick-light: #fff0e2;
+  --color-ink: #3d3d3d;
+  --color-ink-soft: #969696;
   --color-olive: #7c8a5a;
   --color-olive-dark: #5f6c44;
   --color-olive-light: #eff1e5;
-  --color-fpt: #ef7b27;
+  --color-fpt: #ff8206;
   --color-teal: #2f6b4f; /* --green — giữ tên teal cho trang cũ */
   --color-teal-dark: #24513c;
   --color-teal-light: #e4efe7;
-  --color-status-waiting: #a8482f;
+  --color-status-waiting: #c0573b;
   --color-status-waiting-bg: #fbeae3;
   --color-status-voting: #9a5410;
   --color-status-voting-bg: #fceedd;
-  --color-status-voting-dot: #ef7b27;
+  --color-status-voting-dot: #f58220;
   --color-status-signed: #2f6b4f;
   --color-status-signed-bg: #e4efe7;
-  --color-accent-blue: #2d6cb5;
+  --color-accent-blue: #2323ff; /* nút "Bình chọn", badge "Khu phố tiêu biểu" */
+  --color-accent-blue-light: #dbe9ff;
 
-  --shadow-kp: 0 10px 30px rgba(60, 40, 20, 0.1);
-  --shadow-kp-s: 0 4px 14px rgba(60, 40, 20, 0.08);
+  /* Hero cam: gradient dọc + hình mờ toà nhà hai bên */
+  --kp-hero-from: #ff7b00;
+  --kp-hero-to: #ffefe6;
+
+  /* viền thanh điều hướng (Subtract stroke) */
+  --kp-nav-border: #ffebb8;
+
+  --shadow-kp: 0 10px 30px rgba(120, 60, 20, 0.1);
+  --shadow-kp-s: 0 4px 14px rgba(120, 60, 20, 0.08);
+}
+
+@font-face {
+  font-family: "FPT SongVui";
+  src: url("/fonts/FPTSongVui-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "FPT SongVui";
+  src: url("/fonts/FPTSongVui-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "FPT SongVui";
+  src: url("/fonts/FPTSongVui-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "FPT SongVui";
+  src: url("/fonts/FPTSongVui-LightItalic.woff2") format("woff2");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "FPT SongVui";
+  src: url("/fonts/FPTSongVui-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "FPT SongVui";
+  src: url("/fonts/FPTSongVui-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
 }
 
 html {
@@ -63,10 +118,50 @@ body {
   overflow-x: clip;
 }
 
-img,
-video,
-iframe {
-  max-width: 100%;
+/* Reset ảnh/video PHẢI nằm trong @layer base: rule không-layer thắng mọi utility của
+   Tailwind v4, nên để trần thì `max-w-[...]` đặt trên <img> bị đè thành 100% (KV hero
+   từng phình lên 1505px thay vì 1000px). */
+@layer base {
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+  }
+}
+
+/* ===== Thanh nav hero — Subtract trong .fig là HAI mảnh, bị khoét một cung tròn
+   quanh pill logo (tâm cách tâm thanh ±48px, cách đỉnh thanh 26px, bán kính 60px =
+   viền ngoài pill logo nới ra 12px). Khoét bằng mask để thanh vẫn co giãn theo
+   chiều rộng; nét cung do 2 vòng tròn ở .kp-nav-arc vẽ. ===== */
+/* Chỉ áp dụng từ sm trở lên — mobile pill logo nhỏ hơn, đặt khác nên không khoét. */
+@media (min-width: 640px) {
+  .kp-nav-cut {
+    --kp-cut: radial-gradient(circle 60px at calc(50% - 48px) 26px, #0000 99%, #000 100%),
+      radial-gradient(circle 60px at calc(50% + 48px) 26px, #0000 99%, #000 100%);
+    -webkit-mask-image: var(--kp-cut);
+    mask-image: var(--kp-cut);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  /* Viền #FFEBB8 KHÔNG đều: trong .fig là stroke gradient — trong suốt ở hai đầu bo
+     tròn, đậm dần vào sát logo (đo trên lp1.png: alpha 0 ở x=169, 1.0 ở x=610 /
+     1.0 ở x=838, 0 ở x=1270 trên khổ 1440, thanh rộng 1276 từ x=82). */
+  .kp-nav-line {
+    --kp-cut: radial-gradient(circle 60px at calc(50% - 48px) 26px, #0000 99%, #000 100%),
+      radial-gradient(circle 60px at calc(50% + 48px) 26px, #0000 99%, #000 100%);
+    --kp-fade: linear-gradient(
+      90deg,
+      #0000 6.9%,
+      #000 41.4%,
+      #000 59.2%,
+      #0000 93.1%
+    );
+    -webkit-mask-image: var(--kp-cut), var(--kp-fade);
+    mask-image: var(--kp-cut), var(--kp-fade);
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
 }
 
 /* Nút chạm tối thiểu 44px (07 §1) */
@@ -122,18 +217,20 @@ iframe {
   border-radius: 999px;
 }
 
-/* Nút theo prototype .btn: bo 12px, không viền dày, bóng mềm */
+/* Nút skin mới: pill bo tròn hết cỡ. Nút CHÍNH là kiểu VIỀN cam nền trắng
+   (design dùng kiểu này cho mọi CTA lớn); .kp-btn-solid dành cho tab đang chọn
+   và các chỗ cần khối đặc. */
 .kp-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-family: var(--font-sans);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 15px;
   line-height: 1.25;
   text-align: center;
-  border-radius: 12px;
+  border-radius: 999px;
   cursor: pointer;
   border: none;
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease,
@@ -143,11 +240,21 @@ iframe {
   transform: translateY(1px);
 }
 .kp-btn-primary {
+  background: #fff;
+  color: var(--color-brick);
+  border: 1.5px solid var(--color-brick);
+}
+.kp-btn-primary:hover {
+  background: var(--color-brick-light);
+  color: var(--color-brick-dark);
+  border-color: var(--color-brick-dark);
+}
+.kp-btn-solid {
   background: var(--color-brick);
   color: #fff;
   box-shadow: var(--shadow-kp-s);
 }
-.kp-btn-primary:hover {
+.kp-btn-solid:hover {
   background: var(--color-brick-dark);
   box-shadow: var(--shadow-kp);
 }
@@ -159,6 +266,71 @@ iframe {
 .kp-btn-outline:hover {
   border-color: var(--color-brick);
   color: var(--color-brick-dark);
+}
+/* Nút "Bình chọn" — viền xanh dương theo design */
+.kp-btn-vote {
+  background: #fff;
+  color: var(--color-accent-blue);
+  border: 1px solid var(--color-accent-blue);
+}
+.kp-btn-vote:hover {
+  background: var(--color-accent-blue-light);
+}
+/* Nút phụ mờ — "Gửi lời nhắc" ở góc phố chưa có câu nào */
+.kp-btn-ghost {
+  background: #fff;
+  color: var(--color-ink-soft);
+  border: 1px solid var(--color-ink-soft);
+}
+.kp-btn-ghost:hover {
+  border-color: var(--color-brick);
+  color: var(--color-brick-dark);
+}
+
+/* Dải sọc chéo cam viền trên/dưới card danh sách (asset docs/lp/Frame 151.png
+   dựng lại bằng CSS cho nhẹ + co giãn). */
+/* Cỡ lấy từ Frame 154/155 trong .fig: dải cao 8px, các vạch trắng cách nhau ~85.5px
+   theo phương ngang (quy về trục gradient 115deg: chu kỳ 77.5px). */
+/* Biển render theo bề ngang CARD (clamp dùng cqw) — xem components/home/SignCard.tsx */
+.kp-sign {
+  container-type: inline-size;
+}
+
+.kp-stripe {
+  height: 8px;
+  background-image: repeating-linear-gradient(
+    115deg,
+    var(--color-brick) 0 50px,
+    transparent 50px 77.5px
+  );
+}
+
+/* Tiêu đề section skin mới: IN HOA, display, chữ sát nhau */
+/* FPT SongVui chỉ có 300/400/700 — đặt 800 sẽ bị trình duyệt giả đậm (faux bold),
+   nét dày bệt và sai hẳn mặt chữ. Tiêu đề trong .fig là Bold = 700. */
+.kp-h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+/* Tiêu đề hero: trong .fig khối chữ là 929×56 (line-height 56px cho cỡ 40px).
+   .kp-h2 nằm NGOÀI @layer nên utility `leading-*` của Tailwind không đè được —
+   phải đặt bằng class riêng, khai báo sau .kp-h2. */
+@media (min-width: 640px) {
+  .kp-hero-title {
+    line-height: 56px;
+  }
+  /* Tiêu đề các section: .fig để khối chữ cao 52px cho cỡ 40px */
+  .kp-sec-title {
+    line-height: 52px;
+  }
+  /* Tiêu đề khối ưu đãi: .fig để 60px */
+  .kp-lead-title {
+    line-height: 60px;
+  }
 }
 
 /* Ghim giọt nước — còn dùng ở trang admin đặt pin */
@@ -181,16 +353,42 @@ iframe {
 
 /* Input theo prototype .field: viền mảnh, focus terra.
    Mobile để 16px: Safari iOS tự phóng to trang khi focus ô chữ < 16px. */
+/* Frame 189/193 trong .fig: cao 40, bo tròn hết cỡ, viền #3D3D3D 1.5px,
+   placeholder Light 14px #969696. */
 .kp-input {
   font-family: var(--font-sans);
+  /* 16px trên mobile để iOS không tự phóng to khi focus (07 §1); từ sm mới xuống 14px
+     đúng như design. */
   font-size: 16px;
-  padding: 11px 12px;
-  border: 1px solid var(--color-cream-dark);
-  border-radius: 11px;
+  letter-spacing: -0.02em;
+  padding: 9px 16px;
+  border: 1.5px solid var(--color-ink);
+  border-radius: 999px;
   background: #fff;
   color: var(--color-ink);
   width: 100%;
   resize: vertical;
+}
+.kp-input::placeholder {
+  color: var(--color-ink-soft);
+}
+@media (min-width: 640px) {
+  .kp-input {
+    font-size: 14px;
+  }
+}
+
+/* .tap giữ vùng chạm 44px cho mobile; từ sm trở lên nhường chỗ cho chiều cao thật của
+   design (nút trong dòng 35px, tab 39px) — nếu không min-height sẽ đè lên h-[35px]. */
+@media (min-width: 640px) {
+  .tap-sm-auto {
+    min-height: 0;
+  }
+}
+/* Ô nhiều dòng & select nhiều lựa chọn không bo pill được — bo 18px */
+textarea.kp-input,
+select.kp-input[multiple] {
+  border-radius: 18px;
 }
 .kp-input:focus {
   outline: none;

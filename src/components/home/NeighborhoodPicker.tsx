@@ -68,7 +68,7 @@ export default function NeighborhoodPicker({
         </span>
       )}
       {open && (
-        <div className="absolute inset-x-0 top-full z-10 mt-1 max-h-52 overflow-y-auto rounded-[11px] border border-cream-dark bg-white shadow-kp">
+        <div className="absolute inset-x-0 top-full z-20 mt-1.5 max-h-52 overflow-y-auto rounded-2xl border border-cream-dark bg-white py-1 shadow-kp">
           {matches.map((n) => (
             <button
               key={n.id}
@@ -79,7 +79,7 @@ export default function NeighborhoodPicker({
                 onChange(n.id, n.name);
                 setOpen(false);
               }}
-              className={`block w-full cursor-pointer px-3 py-2.5 text-left text-[13.5px] hover:bg-cream ${
+              className={`block w-full cursor-pointer px-4 py-2.5 text-left text-[13.5px] hover:bg-cream ${
                 n.id === valueId ? "bg-cream font-semibold" : ""
               }`}
             >
@@ -93,7 +93,7 @@ export default function NeighborhoodPicker({
             </button>
           ))}
           {matches.length === 0 && (
-            <p className="m-0 px-3 py-2.5 text-[12.5px] text-ink-soft">
+            <p className="m-0 px-4 py-2.5 text-[12.5px] text-ink-soft">
               {allowFreeText
                 ? `Chưa có trong danh sách — dùng tên bạn vừa nhập: “${valueText.trim()}”`
                 : "Không tìm thấy khu phố nào."}
@@ -102,7 +102,7 @@ export default function NeighborhoodPicker({
         </div>
       )}
       {freeTextActive && !open && (
-        <p className="m-0 mt-1 text-[11.5px] text-ink-soft">
+        <p className="m-0 mt-1 pl-1 text-[11.5px] text-ink-soft">
           Sẽ dùng tên phường bạn tự nhập: “{valueText.trim()}”
         </p>
       )}

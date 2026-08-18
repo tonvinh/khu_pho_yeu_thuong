@@ -323,16 +323,28 @@ export default function NeighborhoodsPage() {
                               : "Khu phố đã hiển thị trên website ✓")}
                         label="Hiển thị website"
                       />
+                      {/* 18/8: block "Khu phố tiêu biểu" ở hero CHỈ hiện khu ĐÃ ĐẠT CHUẨN 4N
+                          (email review: "đây chỉ là chỗ vinh danh") — bật tiêu biểu cho khu
+                          chưa đạt chuẩn thì cờ vẫn lưu nhưng KHÔNG ra trang chủ, nên phải
+                          cảnh báo tại chỗ cho admin khỏi tưởng hỏng. */}
                       <Toggle
                         checked={n.is_featured}
                         disabled={!n.visible}
-                        title={n.visible ? undefined : "Bật 'Hiển thị website' trước"}
+                        title={
+                          !n.visible
+                            ? "Bật 'Hiển thị website' trước"
+                            : n.certified_4n
+                              ? undefined
+                              : "Khu này CHƯA đạt chuẩn 4N — bật tiêu biểu sẽ chưa hiện ở hero trang chủ"
+                        }
                         onChange={() =>
                           patch(n.id, { is_featured: !n.is_featured },
                             n.is_featured
                               ? "Đã bỏ khỏi block Khu phố tiêu biểu."
-                              : "Đã đưa vào block Khu phố tiêu biểu đầu trang chủ ✓")}
-                        label="Khu phố tiêu biểu"
+                              : n.certified_4n
+                                ? "Đã đưa vào block Khu phố tiêu biểu đầu trang chủ ✓"
+                                : "Đã bật tiêu biểu — nhưng khu này chưa đạt chuẩn 4N nên chưa hiện ở hero trang chủ.")}
+                        label={`Khu phố tiêu biểu${n.is_featured && !n.certified_4n ? " ⚠️" : ""}`}
                       />
                       <Toggle
                         checked={n.certified_4n}
