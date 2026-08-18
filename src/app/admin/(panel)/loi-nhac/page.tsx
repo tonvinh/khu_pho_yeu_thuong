@@ -16,7 +16,7 @@ import { NbSelect } from "@/components/admin/IssuesPanel";
 import { Pager, SearchBox, Tabs, Th, useUrlState } from "@/components/admin/table-tools";
 import { CATEGORIES, CATEGORY_CODES, categoryIcon, categoryLabel } from "@/lib/taxonomy";
 import SignCard, { type SignPromo } from "@/components/home/SignCard";
-import { SITE_CONTENT_DEFAULTS } from "@/lib/site-content";
+import { SITE_CONTENT_DEFAULTS } from "@/lib/site-content-defaults";
 
 interface Sugg {
   id: string; content: string; status: string; category: string;
