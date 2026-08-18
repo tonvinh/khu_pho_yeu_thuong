@@ -94,6 +94,12 @@ Kế hoạch đầy đủ + 14 quyết định đã chốt: `docs/21-KE-HOACH-DI
   tỉnh, CSV xuất thêm 2 cột.
 - **Nút "Đề xuất góc phố mới" mở THẲNG form** (trước gọi `requireIdentity` nên bung modal
   "Để FPT gửi ưu đãi…" — team review tưởng ra nhầm popup ưu đãi); định danh hỏi ở bước Gửi.
+- **Hồ sơ khu phố là POPUP** (`components/home/NeighborhoodModal.tsx`): ô tra cứu 4N
+  (nút "Xem khu phố"), pill địa chỉ trên slider hero và deep-link `/?khu-pho=<slug>` đều mở
+  popup chứ không rời trang. Ruột popup là `NeighborhoodView.tsx` — DÙNG CHUNG với trang
+  share `/khu-pho/[slug]` (link chia sẻ ra ngoài vẫn cần URL thật cho OG). Dữ liệu một
+  loader duy nhất `src/lib/neighborhood.ts` (ảnh + tiến độ 4N + 4 biển mới nhất), phục vụ
+  cả `GET /api/v1/neighborhoods/{idOrSlug}` lẫn trang share.
 - **site_content đổi bộ key** theo khối của design (`hero_title`, `board_*`, `signs_title`,
   `sign_promo_*`, `footer_*`); video TVC thành DANH SÁCH `campaign_youtube_ids` (phát lần lượt),
   key cũ `campaign_youtube_id` vẫn đọc được làm fallback.

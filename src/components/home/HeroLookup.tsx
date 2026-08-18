@@ -6,7 +6,6 @@ import { useMemo, useRef, useState } from "react";
 import type { MapNeighborhood } from "./types";
 import { formatAddress } from "@/lib/address";
 import { IconSearch } from "./ui";
-import { BASE } from "../client-api";
 
 /** Bỏ dấu để gõ "banco" vẫn ra "Bàn Cờ" */
 function fold(s: string): string {
@@ -21,11 +20,14 @@ export default function HeroLookup({
   neighborhoods,
   placeholder,
   onPropose,
+  onOpenNeighborhood,
 }: {
   neighborhoods: MapNeighborhood[];
   placeholder: string;
   /** Không tìm thấy khu phố → mời đề xuất luôn */
   onPropose: () => void;
+  /** Mở hồ sơ khu phố dạng POPUP (18/8) — trước đây rời trang sang /khu-pho/[slug] */
+  onOpenNeighborhood: (slug: string) => void;
 }) {
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<MapNeighborhood | null>(null);
@@ -95,26 +97,32 @@ export default function HeroLookup({
 
       {picked && (
         <div
-          className={`mt-3 rounded-2xl px-5 py-3.5 text-[14px] font-semibold ${
+          className={`mt-3 flex flex-col items-center gap-2.5 rounded-2xl px-5 py-3.5 text-[14px] font-semibold sm:flex-row sm:justify-between sm:text-left ${
             picked.certified_4n
               ? "bg-status-signed-bg text-status-signed"
               : "bg-white text-brick-dark shadow-kp-s"
           }`}
         >
-          {picked.certified_4n ? (
-            <>
-              {picked.name} đã chính thức trở thành “Khu phố biết thương” chuẩn 4N
-              {picked.certified_at
-                ? ` từ ngày ${new Date(picked.certified_at).toLocaleDateString("vi-VN")}`
-                : ""}
-              .{" "}
-              <a href={`${BASE}/khu-pho/${picked.slug}`} className="underline">
-                Xem trang khu phố ↗
-              </a>
-            </>
-          ) : (
-            <>{picked.name} còn thiếu biển để đạt chuẩn 4N. Hãy cùng góp thêm câu nhắc cho xóm mình!</>
-          )}
+          <span className="text-center sm:text-left">
+            {picked.certified_4n ? (
+              <>
+                {picked.name} đã chính thức trở thành “Khu phố biết thương” chuẩn 4N
+                {picked.certified_at
+                  ? ` từ ngày ${new Date(picked.certified_at).toLocaleDateString("vi-VN")}`
+                  : ""}
+                .
+              </>
+            ) : (
+              <>{picked.name} còn thiếu biển để đạt chuẩn 4N. Hãy cùng góp thêm câu nhắc cho xóm mình!</>
+            )}
+          </span>
+          {/* Hồ sơ khu phố mở POPUP ngay tại trang chủ, không rời trang nữa */}
+          <button
+            onClick={() => onOpenNeighborhood(picked.slug)}
+            className="kp-btn kp-btn-primary tap flex-none px-5 py-2 text-sm"
+          >
+            Xem khu phố
+          </button>
         </div>
       )}
 

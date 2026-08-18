@@ -21,7 +21,14 @@ import { IconPin } from "./ui";
 /** Thời lượng một cú trượt (ms) — dùng chung cho transition và hẹn giờ nhảy qua clone */
 const SLIDE_MS = 450;
 
-export default function NeighborhoodSlider({ map }: { map: MapData }) {
+export default function NeighborhoodSlider({
+  map,
+  onOpen,
+}: {
+  map: MapData;
+  /** Bấm pill địa chỉ → mở POPUP hồ sơ khu phố (18/8, thay trang /khu-pho/[slug]) */
+  onOpen?: (slug: string) => void;
+}) {
   // Chỉ khu ĐÃ ĐẠT CHUẨN 4N; is_featured chỉ còn dùng để ưu tiên thứ tự
   // (server đã ORDER BY featured_position, name).
   const list = useMemo(
@@ -122,7 +129,7 @@ export default function NeighborhoodSlider({ map }: { map: MapData }) {
               }}
             >
               {slides.map((n, i) => (
-                <Slide key={`${n.id}-${i}`} nb={n} />
+                <Slide key={`${n.id}-${i}`} nb={n} onOpen={onOpen} />
               ))}
             </div>
           )}
@@ -156,7 +163,7 @@ export default function NeighborhoodSlider({ map }: { map: MapData }) {
 }
 
 /** Một khu phố = 1 ảnh (ảnh #1, chưa upload thì dùng bản đồ cách điệu) + pill địa chỉ */
-function Slide({ nb }: { nb: MapNeighborhood }) {
+function Slide({ nb, onOpen }: { nb: MapNeighborhood; onOpen?: (slug: string) => void }) {
   const photo = nb.photo_urls[0] ?? nb.map_url ?? null;
   const addr = shortAddress(nb.ward, nb.city, nb.name);
   return (
@@ -173,8 +180,10 @@ function Slide({ nb }: { nb: MapNeighborhood }) {
         <PhotoPlaceholder />
       )}
 
-      {/* Địa chỉ dồn 1 dòng — pill nổi góc phải trên (thay dòng địa chỉ dưới ảnh) */}
-      <span className="absolute right-2.5 top-2.5 flex max-w-[75%] items-center gap-2 rounded-full border-[2.7px] border-white bg-brick px-3 py-1.5 text-white shadow-kp-s sm:right-3 sm:top-2.5 sm:h-[45px] sm:px-4 sm:py-0">
+      {/* Địa chỉ dồn 1 dòng — pill nổi góc phải trên (thay dòng địa chỉ dưới ảnh).
+          Bấm vào pill mở popup hồ sơ khu phố; để nút NHỎ như vậy (không bắt cả tấm ảnh)
+          thì thao tác vuốt ngang trên mobile không bị hiểu nhầm thành cú bấm. */}
+      <Pill onOpen={onOpen ? () => onOpen(nb.slug) : undefined}>
         <span aria-hidden className="grid h-6 w-6 flex-none place-items-center rounded-full bg-white/25">
           <IconPin />
         </span>
@@ -188,8 +197,25 @@ function Slide({ nb }: { nb: MapNeighborhood }) {
             </span>
           )}
         </span>
-      </span>
+      </Pill>
     </div>
+  );
+}
+
+/** Vỏ pill địa chỉ: là <button> khi bấm được (mở popup), còn lại là <span> tĩnh */
+function Pill({ onOpen, children }: { onOpen?: () => void; children: React.ReactNode }) {
+  const cls =
+    "absolute right-2.5 top-2.5 flex max-w-[75%] items-center gap-2 rounded-full border-[2.7px] border-white bg-brick px-3 py-1.5 text-left text-white shadow-kp-s sm:right-3 sm:top-2.5 sm:h-[45px] sm:px-4 sm:py-0";
+  if (!onOpen) return <span className={cls}>{children}</span>;
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      title="Xem hồ sơ khu phố"
+      className={`${cls} cursor-pointer transition hover:bg-brick-dark`}
+    >
+      {children}
+    </button>
   );
 }
 

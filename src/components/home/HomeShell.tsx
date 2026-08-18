@@ -21,6 +21,7 @@ import ProposeModal from "./ProposeModal";
 import SuggestModal from "./SuggestModal";
 import VoteModal from "./VoteModal";
 import LeadPromptModal from "./LeadPromptModal";
+import NeighborhoodModal from "./NeighborhoodModal";
 
 export default function HomeShell({ initial }: { initial: HomeData }) {
   const [data, setData] = useState<HomeData>(initial);
@@ -34,6 +35,8 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   const [toast, setToast] = useState<string | null>(null);
   const [notifs, setNotifs] = useState<NotificationItem[]>([]);
   const [leadPromptOpen, setLeadPromptOpen] = useState(false);
+  // Hồ sơ khu phố mở dạng POPUP (18/8) thay vì rời trang sang /khu-pho/[slug]
+  const [nbSlug, setNbSlug] = useState<string | null>(null);
 
   // Popup "Tôi muốn nhận ưu đãi" sau các luồng tương tác — tối đa 1 lần/thiết bị
   const maybeShowLeadPrompt = useCallback(() => {
@@ -89,6 +92,17 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         setMeLoaded(true);
       }
     })();
+  }, []);
+
+  // Deep-link `/?khu-pho=<slug>`: link chia sẻ khu phố mở thẳng popup trên trang chủ.
+  // Dọn luôn query khỏi URL (replaceState) để F5 không mở lại popup ngoài ý muốn.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const slug = url.searchParams.get("khu-pho");
+    if (!slug) return;
+    setNbSlug(slug);
+    url.searchParams.delete("khu-pho");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
   }, []);
 
   /** Chạy hành động cần định danh; chưa có → mở modal, xong tự chạy tiếp */
@@ -280,7 +294,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           </p>
         </div>
 
-        <NeighborhoodSlider map={data.map} />
+        <NeighborhoodSlider map={data.map} onOpen={(slug) => setNbSlug(slug)} />
 
         {/* KV khu phố đứng trên sàn gạch; -mt kéo KV đè lên đáy slider đúng như design */}
         <div className="relative -mt-10 sm:-mt-[143px]">
@@ -347,6 +361,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
             neighborhoods={data.map.neighborhoods}
             placeholder={data.content.hero_search_placeholder}
             onPropose={openPropose}
+            onOpenNeighborhood={(slug) => setNbSlug(slug)}
           />
         </div>
       </div>
@@ -454,6 +469,14 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           onChanged={refresh}
           onEngaged={maybeShowLeadPrompt}
           onWrite={(id) => setSuggestIssueId(id)}
+        />
+      )}
+      {nbSlug && (
+        <NeighborhoodModal
+          slug={nbSlug}
+          content={data.content}
+          onClose={() => setNbSlug(null)}
+          onWrite={() => { setNbSlug(null); scrollTo("goc-xom"); }}
         />
       )}
       {leadPromptOpen && (

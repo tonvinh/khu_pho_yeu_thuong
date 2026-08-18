@@ -140,3 +140,38 @@ export interface HomeData {
   approvedSigns: ApprovedSign[];
   content: SiteContentData;
 }
+
+/** Một biển đã duyệt/đã treo của khu phố — hiện trong popup khu phố */
+export interface NeighborhoodSign {
+  id: string;
+  content: string;
+  author_name: string;
+  location_text: string;
+  category: string;
+}
+
+/**
+ * Hồ sơ một khu phố — dùng CHUNG cho popup `NeighborhoodModal` (fetch qua
+ * `/api/v1/neighborhoods/{idOrSlug}`) và trang share `/khu-pho/[slug]` (SSR),
+ * để hai chỗ hiện y hệt nhau.
+ */
+export interface NeighborhoodDetail {
+  id: string;
+  name: string;
+  slug: string;
+  ward: string | null;
+  city: string | null;
+  certified_4n: boolean;
+  certified_at: string | null;
+  /** Ảnh tổng quan (theo position); rỗng thì rơi về `map_url` */
+  photo_urls: string[];
+  /** Ảnh bảng chứng nhận 4N — chỉ có khi admin đã upload */
+  certificate_url: string | null;
+  map_url: string | null;
+  total_issues: number;
+  signed_issues: number;
+  /** Số câu nhắc đã duyệt của cả khu */
+  suggestions_total: number;
+  progress_pct: number;
+  signs: NeighborhoodSign[];
+}
