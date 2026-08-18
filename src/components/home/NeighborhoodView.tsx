@@ -129,7 +129,12 @@ export default function NeighborhoodView({
             {nb.certified_at
               ? ` từ ngày ${new Date(nb.certified_at).toLocaleDateString("vi-VN")}`
               : ""}
-            {" — 100% biển đã treo 💛"}
+            {/* Chỉ khoe "100% biển đã treo" khi số liệu ĐÚNG là 100% — admin tick chứng
+                nhận thủ công nên có khu đạt chuẩn mà biển chưa treo hết. */}
+            {nb.total_issues > 0 &&
+              (nb.progress_pct === 100
+                ? " — 100% biển đã treo 💛"
+                : ` — ${nb.signed_issues}/${nb.total_issues} biển đã treo 💛`)}
           </span>
         </p>
       ) : (
