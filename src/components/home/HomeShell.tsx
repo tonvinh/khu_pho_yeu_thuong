@@ -337,14 +337,18 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           <div aria-hidden className="absolute inset-x-0 bottom-0 h-[26%] bg-gradient-to-b from-transparent to-cream" />
         </div>
 
-        <div className="relative bg-cream">
+        </header>
+
+        {/* Ô tra cứu để NGOÀI <header>: header phải overflow-hidden cho skyline/cung nét
+            đứt/KV tràn viền, mà ô tra cứu nằm sát đáy header nên danh sách gợi ý xổ xuống
+            bị cắt mất — gõ vào tưởng như search hỏng. */}
+        <div className="relative z-10 bg-cream">
           <HeroLookup
             neighborhoods={data.map.neighborhoods}
             placeholder={data.content.hero_search_placeholder}
             onPropose={openPropose}
           />
         </div>
-        </header>
       </div>
 
       {/* ===== 3 CON SỐ ===== */}
