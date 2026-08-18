@@ -57,8 +57,8 @@ export const ISSUE_STATUS_LABEL: Record<string, string> = {
 };
 
 export const INTERESTS = {
-  internet: "📶 Internet cho cả nhà",
-  internet_tv: "📺 Internet + Truyền hình",
-  fpt_play: "🎬 Gói FPT Play",
-  internet_camera: "📷 Internet + Camera",
+  internet: "Internet cho cả nhà",
+  internet_tv: "Internet + Truyền hình",
+  fpt_play: "Gói FPT Play",
+  internet_camera: "Internet + Camera",
 } as const;

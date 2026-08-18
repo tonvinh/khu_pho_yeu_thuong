@@ -1,0 +1,390 @@
+Landing page  [FRAME]  x=0 y=0 w=1440 h=4450  fill=#FFF7F2
+  abstract-pui-89-background-wallpaper 1  [ROUNDED_RECTANGLE]  x=-316 y=1165 w=2072 h=1165  fill=IMAGE:[242, 123, 132, 3, 36, 36, 78, 92, 197, 142, 67, 222, 20, 47, 238, 203, 135, 92, 57, 225]
+  Rectangle 1  [ROUNDED_RECTANGLE]  x=0 y=0 w=1440 h=900  fill=GRADIENT_LINEAR(#FF7B00→#FFEFE6)
+  123123 1  [ROUNDED_RECTANGLE]  x=0 y=704 w=1440 h=594  fill=IMAGE:[137, 69, 4, 102, 8, 222, 4, 21, 161, 160, 114, 245, 184, 115, 46, 229, 60, 132, 109, 110]
+  Artboard 2 1  [ROUNDED_RECTANGLE]  x=0 y=201 w=1440 h=867  fill=IMAGE:[128, 92, 153, 208, 78, 215, 198, 215, 137, 246, 156, 246, 54, 52, 54, 158, 60, 41, 206, 179]
+  Frame 151 1  [ROUNDED_RECTANGLE]  x=-54 y=689 w=1526 h=162  fill=IMAGE:[221, 100, 206, 85, 38, 243, 38, 246, 39, 88, 93, 198, 233, 183, 219, 50, 188, 55, 94, 158]
+  Rectangle 11  [ROUNDED_RECTANGLE]  x=0 y=685 w=1440 h=599  fill=GRADIENT_LINEAR(#FFF7F2 0%→#FFF7F2)
+  06 3  [ROUNDED_RECTANGLE]  x=66 y=1368.5 w=216 h=378  fill=IMAGE:[110, 174, 202, 65, 185, 60, 221, 252, 227, 218, 176, 38, 130, 137, 85, 250, 135, 83, 83, 34]
+  Frame 165  [FRAME]  x=257 y=149 w=929 h=112  autolayout VERTICAL gap=8 pad=0/0/0/0
+    Hãy gửi một lời thương cho xóm mình Nhé!  [TEXT]  x=257 y=149 w=929 h=56  fill=#FFFFFF  | ver 3 FPT SONGVUI BOLD Bold · 40px · lh auto · ls -3% · CENTER · UPPER
+    Chọn một góc xóm, cùng mọi người gửi những câu nhắc dễ thương theo tinh thần 4N và bấm “Thương” để bình chọn. Câu được nhiều lượt “Thương” nhất sẽ được FPT đưa lên biển thật, nối tiếp hơn 10.000 lời nhắc đã hiện diện khắp ngõ hẻm Việt Nam.  [TEXT]  x=257 y=213 w=929 h=48  fill=#FFFFFF  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto · ls -2% · CENTER
+  Frame 143  [FRAME]  x=300 y=293 w=840 h=430
+    Frame 136  [FRAME]  x=300 y=293 w=840 h=430  r=40  fill=#FFFFFF  stroke=#FFFFFF 1.5px
+    Frame 137  [FRAME]  x=314 y=308 w=812 h=400  r=28  fill=IMAGE:[97, 204, 139, 250, 47, 27, 227, 123, 183, 110, 126, 65, 163, 94, 47, 174, 213, 26, 234, 83]
+    Frame 142  [FRAME]  x=283.8 y=285.4 w=213 h=55  r=86.9  fill=#2323FF  stroke=#DBE9FF 3.3px  autolayout HORIZONTAL gap=0 pad=0/0/0/0
+      Khu phố tiêu biểu  [TEXT]  x=317.8 y=303.4 w=145 h=23  fill=#FFFFFF  | ver 3 FPT SONGVUI BOLD Bold · 18px · lh auto · ls -2% · CENTER · UPPER
+    Frame 142  [FRAME]  x=920.9 y=318 w=193.5 h=45  r=72  fill=#FF8206  stroke=#FFFFFF 2.7px  autolayout HORIZONTAL gap=0 pad=0/0/0/0
+      Phố Cổ P. Hội An, TP. Đà Nẵng  [TEXT]  x=975.8 y=324 w=102 h=33  fill=#FFFFFF  | ver 3 FPT SONGVUI REGULAR Regular · 14.4px · lh auto · ls -2%
+      vuesax/linear/location  [INSTANCE]  x=931 y=328.4 w=23 h=23
+    06 2  [ROUNDED_RECTANGLE]  x=1135.2 y=646 w=176.8 h=308.6  fill=IMAGE:[110, 174, 202, 65, 185, 60, 221, 252, 227, 218, 176, 38, 130, 137, 85, 250, 135, 83, 83, 34]
+  Subtract  [VECTOR]  x=82 y=39 w=543 h=60  r=80  fill=#FFFFFF  stroke=GRADIENT_LINEAR(#FFEBB8 0%→#FFEBB8) 1.5px
+  Subtract  [VECTOR]  x=1358 y=39 w=543 h=60  r=80  fill=#FFFFFF  stroke=GRADIENT_LINEAR(#FFEBB8 0%→#FFEBB8) 1.5px
+  Frame 166  [FRAME]  x=624 y=17 w=192 h=96
+    Rectangle 10  [VECTOR]  x=624 y=17 w=192 h=96  r=738.5  fill=#FFFFFF
+    Frame 1  [FRAME]  x=628.6 y=21.6 w=182.8 h=86.8  r=738.5  fill=#FFFFFF  stroke=#FF7B00 1.4px
+      Logo Khu phố biết thương  [FRAME]  x=653.5 y=28.7 w=132.9 h=71.2
+        Union  [BOOLEAN_OPERATION]  x=654.6 y=30.2 w=125.9 h=68.5  fill=#FFFFFF
+          Vector  [VECTOR]  x=665.7 y=50.3 w=11.7 h=2  fill=#FFFFFF
+          Vector  [VECTOR]  x=683.5 y=72.5 w=85.9 h=26.2  fill=#FFFFFF
+          Vector  [VECTOR]  x=766.7 y=49.2 w=5.2 h=3.9  fill=#FFFFFF
+          Vector  [VECTOR]  x=685.7 y=79.4 w=2.7 h=0.8  fill=#FFFFFF
+          Vector  [VECTOR]  x=662.6 y=58.2 w=11.6 h=14.4  fill=#FFFFFF
+          Vector  [VECTOR]  x=675.5 y=56.6 w=4.2 h=4.2  fill=#FFFFFF
+          Vector  [VECTOR]  x=675 y=61.8 w=3.3 h=10.8  fill=#FFFFFF
+          Vector  [VECTOR]  x=681.1 y=61.5 w=11.5 h=11.4  fill=#FFFFFF
+          Vector  [VECTOR]  x=691 y=54.4 w=4.9 h=3.6  fill=#FFFFFF
+          Vector  [VECTOR]  x=682 y=57 w=7.7 h=3.6  fill=#FFFFFF
+          Vector  [VECTOR]  x=694.1 y=58.3 w=9 h=14.4  fill=#FFFFFF
+          Vector  [VECTOR]  x=704.2 y=57.8 w=11.3 h=14.4  fill=#FFFFFF
+          Vector  [VECTOR]  x=717.3 y=56.5 w=10.6 h=15.6  fill=#FFFFFF
+          Vector  [VECTOR]  x=729.8 y=59.6 w=14.1 h=12.8  fill=#FFFFFF
+          Vector  [VECTOR]  x=743 y=59.6 w=12.4 h=12.8  fill=#FFFFFF
+          Vector  [VECTOR]  x=756.8 y=60 w=10.6 h=11.1  fill=#FFFFFF
+          Vector  [VECTOR]  x=768.9 y=60 w=11.5 h=16  fill=#FFFFFF
+          Vector  [VECTOR]  x=654.6 y=68.6 w=31 h=25  fill=#FFFFFF
+          Vector  [VECTOR]  x=703.8 y=69 w=17.6 h=9.6  fill=#FFFFFF
+          Vector  [VECTOR]  x=724.6 y=37.8 w=11.8 h=15.1  fill=#FFFFFF
+          Vector  [VECTOR]  x=738.2 y=37.8 w=13 h=15.1  fill=#FFFFFF
+          Vector  [VECTOR]  x=765.6 y=30.2 w=5.2 h=3.7  fill=#FFFFFF
+          Vector  [VECTOR]  x=757.2 y=32 w=8.2 h=3.7  fill=#FFFFFF
+          Vector  [VECTOR]  x=753.3 y=37.5 w=15.9 h=15.7  fill=#FFFFFF
+          Vector  [VECTOR]  x=678.9 y=37.8 w=12.4 h=15.1  fill=#FFFFFF
+          Vector  [VECTOR]  x=693.3 y=37.8 w=13 h=15.1  fill=#FFFFFF
+          Vector  [VECTOR]  x=708.8 y=37.8 w=12.7 h=15.4  fill=#FFFFFF
+        Union  [BOOLEAN_OPERATION]  x=653.5 y=28.7 w=132.9 h=71.2  fill=#FF8206
+          Vector  [VECTOR]  x=653.5 y=28.7 w=132.9 h=71.2  fill=#F26A21
+          Vector  [VECTOR]  x=666.1 y=66.7 w=4.5 h=2.6  fill=#F26A21
+          Vector  [VECTOR]  x=666.1 y=61.5 w=3.9 h=2.3  fill=#F26A21
+          Vector  [VECTOR]  x=684.5 y=64.4 w=4.7 h=1.6  fill=#F26A21
+          Vector  [VECTOR]  x=746.3 y=64.1 w=4 h=5.3  fill=#F26A21
+          Vector  [VECTOR]  x=772.2 y=64.1 w=4 h=5.1  fill=#F26A21
+          Vector  [VECTOR]  x=728.3 y=41.3 w=4.3 h=3.7  fill=#F26A21
+          Vector  [VECTOR]  x=757 y=40 w=8.4 h=8.8  fill=#F26A21
+          Vector  [VECTOR]  x=658.9 y=36.7 w=14.5 h=12.7  fill=#F26A21
+  Góc phố đang chờ  [TEXT]  x=189 y=61 w=136 h=18  fill=#FFFFFF  | ver 3 FPT SONGVUI REGULAR Regular · 16px · lh 100% · CENTER
+  Quà dành cho cư dân  [TEXT]  x=381 y=61 w=157 h=18  fill=#FFFFFF  | ver 3 FPT SONGVUI REGULAR Regular · 16px · lh 100% · CENTER
+  Frame 171  [FRAME]  x=1091.6 y=51.5 w=252 h=35  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+    Icon btn  [INSTANCE]  x=1091.6 y=51.5 w=35 h=35  r=875  stroke=#FFFFFF 1.5px  autolayout HORIZONTAL gap=10.9 pad=0/0/0/0
+    Button  [INSTANCE]  x=1091.6 y=51.5 w=201 h=35  r=70  stroke=#FFFFFF 1.5px  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+    Frame 145  [FRAME]  x=1309.6 y=51.5 w=35 h=35  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+      Xin chào, Trà  [TEXT]  x=1309.6 y=60 w=100 h=18  fill=#FFFFFF  | ver 3 FPT SONGVUI REGULAR Regular · 16px · lh 100% · RIGHT
+      Frame 144  [FRAME]  x=1309.6 y=51.5 w=35 h=35  r=700  fill=IMAGE:[232, 135, 208, 95, 244, 195, 101, 112, 207, 50, 75, 52, 205, 141, 62, 74, 199, 245, 73, 115]  stroke=#FFFFFF 1.5px  autolayout HORIZONTAL gap=8.8 pad=0/0/0/0
+  Frame 158  [FRAME]  x=191 y=1358 w=1058 h=83  autolayout VERTICAL gap=8 pad=0/0/0/0
+    đóng góp một câu cho khu phố mình nhé  [TEXT]  x=191 y=1357 w=1058 h=52  fill=#3D3D3D  | ver 3 FPT SONGVUI BOLD Bold · 40px · lh auto · ls -2% · CENTER · UPPER
+    Chọn một góc phố, để lại lời nhắn dễ thương và bình chọn cho lời thương ấm áp nhất  [TEXT]  x=421 y=1417 w=598 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto · ls -2%
+  Frame 180  [FRAME]  x=422 y=1474 w=596 h=39  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+    Tab  [INSTANCE]  x=422 y=1474 w=130 h=39  r=80  fill=#FF8206  stroke=#E86305 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+    Tab  [INSTANCE]  x=568 y=1474 w=209 h=39  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+    Tab  [INSTANCE]  x=794 y=1474 w=223 h=39  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+  Frame 181  [FRAME]  x=536 y=2202 w=368 h=39  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+    Tab  [INSTANCE]  x=536 y=2202 w=130 h=39  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+    Tab  [INSTANCE]  x=682 y=2202 w=221 h=39  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+  Frame 153  [FRAME]  x=82 y=1556 w=1276 h=550  r=40
+    Rectangle 28  [ROUNDED_RECTANGLE]  x=82 y=1556 w=1276 h=550  r=40  fill=#FFFFFF  stroke=#FF8206 1.9px
+    Frame 154  [FRAME]  x=82 y=1556 w=1276 h=8
+      Rectangle 12  [VECTOR]  x=20.1 y=1555 w=103.8 h=198.7  fill=#FFFFFF
+      Rectangle 16  [VECTOR]  x=191.6 y=1555 w=103.8 h=198.7  fill=#FFFFFF
+      Rectangle 14  [VECTOR]  x=104.9 y=1555 w=104 h=198.7  fill=#FFFFFF
+      Rectangle 17  [VECTOR]  x=276.4 y=1555 w=103.8 h=198.7  fill=#FFFFFF
+      Rectangle 20  [VECTOR]  x=362.5 y=1555 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 28  [VECTOR]  x=702.6 y=1556 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 24  [VECTOR]  x=532.6 y=1555 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 29  [VECTOR]  x=872.7 y=1555 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 36  [VECTOR]  x=1042.6 y=1555 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 22  [VECTOR]  x=447.9 y=1555 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 30  [VECTOR]  x=788 y=1555 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 25  [VECTOR]  x=617.9 y=1555 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 31  [VECTOR]  x=958 y=1555 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 37  [VECTOR]  x=1127.8 y=1556 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 40  [VECTOR]  x=1212 y=1556 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 13  [VECTOR]  x=62.8 y=1555 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 18  [VECTOR]  x=234.3 y=1555 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 15  [VECTOR]  x=148.9 y=1555 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 19  [VECTOR]  x=319.1 y=1555 w=104.4 h=198.7  fill=#FF8206
+      Rectangle 21  [VECTOR]  x=405.8 y=1555 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 32  [VECTOR]  x=745.9 y=1555 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 26  [VECTOR]  x=575.8 y=1555 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 33  [VECTOR]  x=915.9 y=1555 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 38  [VECTOR]  x=1085.7 y=1555 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 23  [VECTOR]  x=490 y=1555 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 34  [VECTOR]  x=830.1 y=1556 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 27  [VECTOR]  x=660 y=1555 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 35  [VECTOR]  x=1000.1 y=1555 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 39  [VECTOR]  x=1169.9 y=1556 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 41  [VECTOR]  x=1254.1 y=1556 w=103.8 h=198.7  fill=#FF8206
+    Frame 155  [FRAME]  x=82 y=2098 w=1276 h=8
+      Rectangle 12  [VECTOR]  x=20.1 y=2098 w=103.8 h=198.7  fill=#FFFFFF
+      Rectangle 16  [VECTOR]  x=191.6 y=2098 w=103.8 h=198.7  fill=#FFFFFF
+      Rectangle 14  [VECTOR]  x=104.9 y=2098 w=104 h=198.7  fill=#FFFFFF
+      Rectangle 17  [VECTOR]  x=276.4 y=2098 w=103.8 h=198.7  fill=#FFFFFF
+      Rectangle 20  [VECTOR]  x=362.5 y=2098 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 28  [VECTOR]  x=702.6 y=2098 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 24  [VECTOR]  x=532.6 y=2098 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 29  [VECTOR]  x=872.7 y=2098 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 36  [VECTOR]  x=1042.6 y=2098 w=104.4 h=198.7  fill=#FFFFFF
+      Rectangle 22  [VECTOR]  x=447.9 y=2098 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 30  [VECTOR]  x=788 y=2098 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 25  [VECTOR]  x=617.9 y=2098 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 31  [VECTOR]  x=958 y=2098 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 37  [VECTOR]  x=1127.8 y=2098 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 40  [VECTOR]  x=1212 y=2098 w=103.1 h=198.7  fill=#FFFFFF
+      Rectangle 13  [VECTOR]  x=62.8 y=2098 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 18  [VECTOR]  x=234.3 y=2098 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 15  [VECTOR]  x=148.9 y=2098 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 19  [VECTOR]  x=319.1 y=2098 w=104.4 h=198.7  fill=#FF8206
+      Rectangle 21  [VECTOR]  x=405.8 y=2098 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 32  [VECTOR]  x=745.9 y=2098 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 26  [VECTOR]  x=575.8 y=2098 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 33  [VECTOR]  x=915.9 y=2098 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 38  [VECTOR]  x=1085.7 y=2098 w=103.1 h=198.7  fill=#FF8206
+      Rectangle 23  [VECTOR]  x=490 y=2098 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 34  [VECTOR]  x=830.1 y=2098 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 27  [VECTOR]  x=660 y=2098 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 35  [VECTOR]  x=1000.1 y=2098 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 39  [VECTOR]  x=1169.9 y=2098 w=103.8 h=198.7  fill=#FF8206
+      Rectangle 41  [VECTOR]  x=1254.1 y=2098 w=103.8 h=198.7  fill=#FF8206
+    Button 3  [INSTANCE]  x=576 y=2016 w=288.6 h=50  r=100  stroke=#FF8206 1.5px  autolayout HORIZONTAL gap=11.4 pad=0/0/0/0
+    Frame 177  [FRAME]  x=166 y=1598 w=1108 h=394  autolayout VERTICAL gap=16 pad=0/0/0/0
+      Frame 175  [FRAME]  x=166 y=1598 w=1108 h=50  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        Frame 234  [FRAME]  x=166 y=1598 w=972 h=50  autolayout VERTICAL gap=8 pad=0/0/0/0
+          Text button  [INSTANCE]  x=166 y=1597 w=972 h=25
+          Frame 176  [FRAME]  x=166 y=1631 w=272 h=17  autolayout HORIZONTAL gap=32 pad=0/0/0/0
+            Frame 174  [FRAME]  x=166 y=1631 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/location  [INSTANCE]  x=166 y=1631 w=16 h=16
+              Phường Bàn Cờ  [TEXT]  x=189 y=1631 w=99 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+            Frame 175  [FRAME]  x=320 y=1631 w=117 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/edit  [INSTANCE]  x=320 y=1631 w=16 h=16
+              15 câu đề xuất  [TEXT]  x=344 y=1631 w=94 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Button 3  [INSTANCE]  x=1154 y=1605.5 w=119 h=35  r=70  stroke=#2323FF 1px  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+      Line 2  [LINE]  x=166 y=1664 w=1108 h=0  stroke=#DEDEDE 1px
+      Frame 180  [FRAME]  x=166 y=1680 w=1108 h=50  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        Frame 234  [FRAME]  x=166 y=1680 w=972 h=50  autolayout VERTICAL gap=8 pad=0/0/0/0
+          Text button  [INSTANCE]  x=166 y=1679 w=972 h=25
+          Frame 176  [FRAME]  x=166 y=1713 w=272 h=17  autolayout HORIZONTAL gap=32 pad=0/0/0/0
+            Frame 174  [FRAME]  x=166 y=1713 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/location  [INSTANCE]  x=166 y=1714 w=16 h=16
+              Phường Bàn Cờ  [TEXT]  x=189 y=1713 w=99 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+            Frame 175  [FRAME]  x=320 y=1713 w=117 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/edit  [INSTANCE]  x=320 y=1714 w=16 h=16
+              15 câu đề xuất  [TEXT]  x=344 y=1713 w=94 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Button 3  [INSTANCE]  x=1154 y=1687.5 w=119 h=35  r=70  stroke=#2323FF 1px  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+      Line 3  [LINE]  x=166 y=1746 w=1108 h=0  stroke=#DEDEDE 1px
+      Frame 181  [FRAME]  x=166 y=1762 w=1108 h=50  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        Frame 234  [FRAME]  x=166 y=1762 w=972 h=50  autolayout VERTICAL gap=8 pad=0/0/0/0
+          Text button  [INSTANCE]  x=166 y=1761 w=972 h=25
+          Frame 176  [FRAME]  x=166 y=1795 w=272 h=17  autolayout HORIZONTAL gap=32 pad=0/0/0/0
+            Frame 174  [FRAME]  x=166 y=1795 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/location  [INSTANCE]  x=166 y=1796 w=16 h=16
+              Phường Bàn Cờ  [TEXT]  x=189 y=1795 w=99 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+            Frame 175  [FRAME]  x=320 y=1795 w=117 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/edit  [INSTANCE]  x=320 y=1796 w=16 h=16
+              15 câu đề xuất  [TEXT]  x=344 y=1795 w=94 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Button 3  [INSTANCE]  x=1154 y=1769.5 w=119 h=35  r=70  stroke=#2323FF 1px  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+      Line 4  [LINE]  x=166 y=1828 w=1108 h=0  stroke=#DEDEDE 1px
+      Frame 182  [FRAME]  x=166 y=1844 w=1108 h=50  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        Frame 234  [FRAME]  x=166 y=1844 w=972 h=50  autolayout VERTICAL gap=8 pad=0/0/0/0
+          Text button  [INSTANCE]  x=166 y=1843 w=972 h=25
+          Frame 176  [FRAME]  x=166 y=1877 w=272 h=17  autolayout HORIZONTAL gap=32 pad=0/0/0/0
+            Frame 174  [FRAME]  x=166 y=1877 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/location  [INSTANCE]  x=166 y=1878 w=16 h=16
+              Phường Bàn Cờ  [TEXT]  x=189 y=1877 w=99 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+            Frame 175  [FRAME]  x=320 y=1877 w=117 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/edit  [INSTANCE]  x=320 y=1878 w=16 h=16
+              15 câu đề xuất  [TEXT]  x=344 y=1877 w=94 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Button 3  [INSTANCE]  x=1154 y=1851.5 w=119 h=35  r=70  stroke=#2323FF 1px  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+      Line 5  [LINE]  x=166 y=1910 w=1108 h=0  stroke=#DEDEDE 1px
+      Frame 183  [FRAME]  x=166 y=1926 w=1108 h=50  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        Frame 234  [FRAME]  x=166 y=1926 w=972 h=50  autolayout VERTICAL gap=8 pad=0/0/0/0
+          Text button  [INSTANCE]  x=166 y=1925 w=972 h=25
+          Frame 176  [FRAME]  x=166 y=1959 w=272 h=17  autolayout HORIZONTAL gap=32 pad=0/0/0/0
+            Frame 174  [FRAME]  x=166 y=1959 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/location  [INSTANCE]  x=166 y=1960 w=16 h=16
+              Phường Bàn Cờ  [TEXT]  x=189 y=1959 w=99 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+            Frame 175  [FRAME]  x=320 y=1959 w=117 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+              vuesax/linear/edit  [INSTANCE]  x=320 y=1960 w=16 h=16
+              15 câu đề xuất  [TEXT]  x=344 y=1959 w=94 h=18  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Button 02  [INSTANCE]  x=1154 y=1933.5 w=120 h=35  r=70  stroke=#969696 1px  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+      Line 6  [LINE]  x=166 y=1992 w=1108 h=0  stroke=#DEDEDE 1px
+  Rectangle 28  [ROUNDED_RECTANGLE]  x=82 y=2163 w=1276 h=650  fill=GRADIENT_LINEAR(#FF8206→#FF8206 0%)
+  02 2  [ROUNDED_RECTANGLE]  x=1238.2 y=708 w=160.5 h=187.5  fill=IMAGE:[51, 54, 80, 225, 172, 249, 180, 119, 23, 122, 168, 157, 138, 190, 123, 136, 175, 147, 97, 240]
+  01 1  [ROUNDED_RECTANGLE]  x=10 y=739 w=236 h=171  fill=IMAGE:[118, 219, 162, 62, 233, 237, 69, 58, 86, 129, 106, 192, 51, 78, 204, 133, 219, 206, 233, 86]
+  Khu phố 2 1  [ROUNDED_RECTANGLE]  x=203 y=580 w=1034 h=558  fill=IMAGE:[68, 149, 120, 120, 226, 132, 248, 226, 226, 148, 89, 65, 79, 238, 128, 233, 120, 56, 68, 196]
+  Button  [FRAME]  x=1160 y=502 w=40 h=40  r=1000  fill=#FFFFFF  autolayout HORIZONTAL gap=12.5 pad=0/0/0/0
+    vuesax/linear/arrow-right  [INSTANCE]  x=1165 y=507 w=29 h=29
+  Button  [FRAME]  x=280 y=502 w=40 h=40  r=1000  fill=#FFFFFF  autolayout HORIZONTAL gap=12.5 pad=0/0/0/0
+    vuesax/linear/arrow-right  [INSTANCE]  x=285 y=507 w=29 h=29
+  Frame 232  [FRAME]  x=82 y=2186 w=1276 h=788  autolayout VERTICAL gap=40 pad=0/0/0/0
+    Lời nhắc khi lên biển trông như thế nào?  [TEXT]  x=82 y=2186 w=1276 h=52  fill=#3D3D3D  | ver 3 FPT SONGVUI BOLD Bold · 40px · lh auto · ls -2% · CENTER · UPPER
+    Frame 230  [FRAME]  x=82 y=2278 w=1276 h=696  autolayout VERTICAL gap=32 pad=0/0/0/0
+      Frame 228  [FRAME]  x=82 y=2278 w=1276 h=332  autolayout HORIZONTAL gap=32 pad=0/0/0/0
+        Frame 226  [FRAME]  x=82 y=2278 w=404 h=332  autolayout VERTICAL gap=16 pad=0/0/0/0
+          INT - EPL-01 1  [ROUNDED_RECTANGLE]  x=82 y=2278 w=404 h=269  r=8  fill=IMAGE:[52, 139, 111, 10, 131, 0, 150, 236, 22, 179, 203, 98, 202, 104, 143, 153, 254, 255, 25, 202]
+          Frame 225  [FRAME]  x=82 y=2563 w=288 h=46  autolayout VERTICAL gap=8 pad=0/0/0/0
+            Chủ đề: Ngõ nhỏ nhà tôi ở đó  [TEXT]  x=82 y=2563 w=288 h=21  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto
+            Frame 224  [FRAME]  x=82 y=2591 w=288 h=17  autolayout HORIZONTAL gap=24 pad=0/0/0/0
+              Frame 174  [FRAME]  x=82 y=2591 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/location  [INSTANCE]  x=82 y=2592 w=16 h=16
+                Phường Bàn Cờ  [TEXT]  x=105 y=2591 w=99 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+              Frame 175  [FRAME]  x=229 y=2591 w=140 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/user  [INSTANCE]  x=229 y=2592 w=16 h=16
+                Trà - FPT Telecom  [TEXT]  x=252 y=2591 w=117 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Frame 227  [FRAME]  x=518 y=2278 w=404 h=332  autolayout VERTICAL gap=16 pad=0/0/0/0
+          INT - EPL-01 1  [ROUNDED_RECTANGLE]  x=518 y=2278 w=404 h=269  r=8  fill=IMAGE:[52, 139, 111, 10, 131, 0, 150, 236, 22, 179, 203, 98, 202, 104, 143, 153, 254, 255, 25, 202]
+          Frame 225  [FRAME]  x=518 y=2563 w=288 h=46  autolayout VERTICAL gap=8 pad=0/0/0/0
+            Chủ đề: Ngõ nhỏ nhà tôi ở đó  [TEXT]  x=518 y=2563 w=288 h=21  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto
+            Frame 224  [FRAME]  x=518 y=2591 w=288 h=17  autolayout HORIZONTAL gap=24 pad=0/0/0/0
+              Frame 174  [FRAME]  x=518 y=2591 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/location  [INSTANCE]  x=518 y=2592 w=16 h=16
+                Phường Bàn Cờ  [TEXT]  x=541 y=2591 w=99 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+              Frame 175  [FRAME]  x=665 y=2591 w=140 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/user  [INSTANCE]  x=665 y=2592 w=16 h=16
+                Trà - FPT Telecom  [TEXT]  x=688 y=2591 w=117 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Frame 228  [FRAME]  x=954 y=2278 w=404 h=332  autolayout VERTICAL gap=16 pad=0/0/0/0
+          INT - EPL-01 1  [ROUNDED_RECTANGLE]  x=954 y=2278 w=404 h=269  r=8  fill=IMAGE:[52, 139, 111, 10, 131, 0, 150, 236, 22, 179, 203, 98, 202, 104, 143, 153, 254, 255, 25, 202]
+          Frame 225  [FRAME]  x=954 y=2563 w=288 h=46  autolayout VERTICAL gap=8 pad=0/0/0/0
+            Chủ đề: Ngõ nhỏ nhà tôi ở đó  [TEXT]  x=954 y=2563 w=288 h=21  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto
+            Frame 224  [FRAME]  x=954 y=2591 w=288 h=17  autolayout HORIZONTAL gap=24 pad=0/0/0/0
+              Frame 174  [FRAME]  x=954 y=2591 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/location  [INSTANCE]  x=954 y=2592 w=16 h=16
+                Phường Bàn Cờ  [TEXT]  x=977 y=2591 w=99 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+              Frame 175  [FRAME]  x=1101 y=2591 w=140 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/user  [INSTANCE]  x=1101 y=2592 w=16 h=16
+                Trà - FPT Telecom  [TEXT]  x=1124 y=2591 w=117 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+      Frame 229  [FRAME]  x=82 y=2642 w=1276 h=332  autolayout HORIZONTAL gap=32 pad=0/0/0/0
+        Frame 226  [FRAME]  x=82 y=2642 w=404 h=332  autolayout VERTICAL gap=16 pad=0/0/0/0
+          INT - EPL-01 1  [ROUNDED_RECTANGLE]  x=82 y=2642 w=404 h=269  r=8  fill=IMAGE:[52, 139, 111, 10, 131, 0, 150, 236, 22, 179, 203, 98, 202, 104, 143, 153, 254, 255, 25, 202]
+          Frame 225  [FRAME]  x=82 y=2927 w=288 h=46  autolayout VERTICAL gap=8 pad=0/0/0/0
+            Chủ đề: Ngõ nhỏ nhà tôi ở đó  [TEXT]  x=82 y=2927 w=288 h=21  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto
+            Frame 224  [FRAME]  x=82 y=2955 w=288 h=17  autolayout HORIZONTAL gap=24 pad=0/0/0/0
+              Frame 174  [FRAME]  x=82 y=2955 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/location  [INSTANCE]  x=82 y=2956 w=16 h=16
+                Phường Bàn Cờ  [TEXT]  x=105 y=2955 w=99 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+              Frame 175  [FRAME]  x=229 y=2955 w=140 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/user  [INSTANCE]  x=229 y=2956 w=16 h=16
+                Trà - FPT Telecom  [TEXT]  x=252 y=2955 w=117 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Frame 227  [FRAME]  x=518 y=2642 w=404 h=332  autolayout VERTICAL gap=16 pad=0/0/0/0
+          INT - EPL-01 1  [ROUNDED_RECTANGLE]  x=518 y=2642 w=404 h=269  r=8  fill=IMAGE:[52, 139, 111, 10, 131, 0, 150, 236, 22, 179, 203, 98, 202, 104, 143, 153, 254, 255, 25, 202]
+          Frame 225  [FRAME]  x=518 y=2927 w=288 h=46  autolayout VERTICAL gap=8 pad=0/0/0/0
+            Chủ đề: Ngõ nhỏ nhà tôi ở đó  [TEXT]  x=518 y=2927 w=288 h=21  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto
+            Frame 224  [FRAME]  x=518 y=2955 w=288 h=17  autolayout HORIZONTAL gap=24 pad=0/0/0/0
+              Frame 174  [FRAME]  x=518 y=2955 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/location  [INSTANCE]  x=518 y=2956 w=16 h=16
+                Phường Bàn Cờ  [TEXT]  x=541 y=2955 w=99 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+              Frame 175  [FRAME]  x=665 y=2955 w=140 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/user  [INSTANCE]  x=665 y=2956 w=16 h=16
+                Trà - FPT Telecom  [TEXT]  x=688 y=2955 w=117 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+        Frame 228  [FRAME]  x=954 y=2642 w=404 h=332  autolayout VERTICAL gap=16 pad=0/0/0/0
+          INT - EPL-01 1  [ROUNDED_RECTANGLE]  x=954 y=2642 w=404 h=269  r=8  fill=IMAGE:[52, 139, 111, 10, 131, 0, 150, 236, 22, 179, 203, 98, 202, 104, 143, 153, 254, 255, 25, 202]
+          Frame 225  [FRAME]  x=954 y=2927 w=288 h=46  autolayout VERTICAL gap=8 pad=0/0/0/0
+            Chủ đề: Ngõ nhỏ nhà tôi ở đó  [TEXT]  x=954 y=2927 w=288 h=21  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto
+            Frame 224  [FRAME]  x=954 y=2955 w=288 h=17  autolayout HORIZONTAL gap=24 pad=0/0/0/0
+              Frame 174  [FRAME]  x=954 y=2955 w=122 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/location  [INSTANCE]  x=954 y=2956 w=16 h=16
+                Phường Bàn Cờ  [TEXT]  x=977 y=2955 w=99 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+              Frame 175  [FRAME]  x=1101 y=2955 w=140 h=17  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+                vuesax/linear/user  [INSTANCE]  x=1101 y=2956 w=16 h=16
+                Trà - FPT Telecom  [TEXT]  x=1124 y=2955 w=117 h=18  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto
+  Frame 223  [FRAME]  x=0 y=3054 w=1440 h=1348.2
+    Rectangle 47  [ROUNDED_RECTANGLE]  x=0 y=3054 w=1440 h=756  r=40/40/0/0  fill=GRADIENT_LINEAR(#FFFFFF→#FFFFFF 80%→#FFFFFF 0%)
+    Frame 222  [FRAME]  x=102 y=3101 w=1244 h=1301.2  autolayout VERTICAL gap=32 pad=0/0/0/0
+      Frame 220  [FRAME]  x=270.5 y=3101 w=906 h=544  autolayout VERTICAL gap=40 pad=0/0/0/0
+        Frame 200  [FRAME]  x=270.5 y=3101 w=906 h=123  autolayout VERTICAL gap=16 pad=0/0/0/0
+          FPT muốn gửi lại xóm mình một diều dễ thương  [TEXT]  x=270.5 y=3101 w=907 h=60  fill=#3D3D3D  | ver 3 FPT SONGVUI BOLD Bold · 40px · lh auto · ls -2% · UPPER
+          FPT dành riêng cho cư dân “Khu phố biết thương” những ưu đãi khi đăng ký Internet, Truyền hình và FPT Play. Khi muốn tìm hiểu thêm, bạn chỉ cần để lại thông tin để FPT liên hệ tư vấn.  [TEXT]  x=270.5 y=3176 w=907 h=48  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto · ls -2% · CENTER
+        Frame 192  [FRAME]  x=270.5 y=3264 w=906 h=248  autolayout VERTICAL gap=16 pad=0/0/0/0
+          Frame 197  [FRAME]  x=270.5 y=3264 w=906 h=72  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+            Frame 190  [FRAME]  x=270.5 y=3264 w=445.5 h=72  autolayout VERTICAL gap=8 pad=0/0/0/0
+              Họ và tên  [TEXT]  x=270.5 y=3264 w=445.5 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI BOLD Bold · 16px · lh auto · ls -2%
+              Frame 193  [FRAME]  x=270.5 y=3296 w=445.5 h=40  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+                Nhập họ tên đầy đủ của bạn  [TEXT]  x=286.5 y=3307.5 w=174 h=21  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto · ls -2%
+            Frame 191  [FRAME]  x=732 y=3264 w=445.5 h=72  autolayout VERTICAL gap=8 pad=0/0/0/0
+              Số điện thoại  [TEXT]  x=732 y=3264 w=445.5 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI BOLD Bold · 16px · lh auto · ls -2%
+              Frame 189  [FRAME]  x=732 y=3296 w=445.5 h=40  r=80  stroke=#3D3D3D 1.5px
+                VD: 0912 xxx xxx  [TEXT]  x=748 y=3307.5 w=103 h=21  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto · ls -2%
+          Frame 198  [FRAME]  x=270.5 y=3352 w=906 h=72  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+            Frame 190  [FRAME]  x=270.5 y=3352 w=445.5 h=72  autolayout VERTICAL gap=8 pad=0/0/0/0
+              Tỉnh thành  [TEXT]  x=270.5 y=3352 w=445.5 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI BOLD Bold · 16px · lh auto · ls -2%
+              Frame 193  [FRAME]  x=270.5 y=3384 w=445.5 h=40  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+                Frame 218  [FRAME]  x=286.5 y=3393.5 w=58 h=23  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+                  Lựa chọn  [TEXT]  x=286.5 y=3395.5 w=58 h=21  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto · ls -2%
+                vuesax/linear/arrow-down  [INSTANCE]  x=676 y=3392 w=24 h=24
+            Frame 191  [FRAME]  x=732 y=3352 w=445.5 h=72  autolayout VERTICAL gap=8 pad=0/0/0/0
+              Địa chỉ  [TEXT]  x=732 y=3352 w=445.5 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI BOLD Bold · 16px · lh auto · ls -2%
+              Frame 189  [FRAME]  x=732 y=3384 w=445.5 h=40  r=80  stroke=#3D3D3D 1.5px
+                VD: 107 Nguyễn Phong Sắc, Cầu Giấy, Hà Nội  [TEXT]  x=748 y=3395.5 w=272 h=21  fill=#969696  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto · ls -2%
+          Frame 193  [FRAME]  x=270.5 y=3440 w=906 h=72  autolayout VERTICAL gap=8 pad=0/0/0/0
+            Nhà mình đang muốn tìm hiểu dịch vụ nào?  [TEXT]  x=270.5 y=3440 w=907 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI BOLD Bold · 16px · lh auto · ls -2%
+            Frame 194  [FRAME]  x=270.5 y=3472 w=906 h=40  autolayout HORIZONTAL gap=12 pad=0/0/0/0
+              Frame 189  [FRAME]  x=270.5 y=3472 w=217.7 h=40  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+                Internet cho cả nhà  [TEXT]  x=308.9 y=3481 w=141 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto · ls -2%
+              Frame 193  [FRAME]  x=500.3 y=3472 w=217.7 h=40  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+                Internet + Truyền hình  [TEXT]  x=529.6 y=3481 w=159 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto · ls -2%
+              Frame 194  [FRAME]  x=730 y=3472 w=217.7 h=40  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+                Gói FPT Play  [TEXT]  x=794.4 y=3481 w=89 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto · ls -2%
+              Frame 195  [FRAME]  x=959.7 y=3472 w=217.7 h=40  r=80  stroke=#3D3D3D 1.5px  autolayout HORIZONTAL gap=10 pad=0/0/0/0
+                Internet + Camera  [TEXT]  x=1001.6 y=3481 w=134 h=24  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto · ls -2%
+        Frame 198  [FRAME]  x=270.5 y=3553 w=906 h=92  autolayout VERTICAL gap=24 pad=0/0/0/0
+          Frame 196  [FRAME]  x=270.5 y=3553 w=565 h=18  autolayout HORIZONTAL gap=8 pad=0/0/0/0
+            Rectangle 48  [ROUNDED_RECTANGLE]  x=270.5 y=3553 w=18 h=18  r=6  fill=#FFFFFF  stroke=#3D3D3D 1.5px
+            Tôi đồng ý để FPT liên hệ tư vấn ưu đãi dành riêng cho cư dân “Khu phố biết thương”  [TEXT]  x=296.5 y=3553 w=517 h=18  fill=#000000  | ver 3 FPT SONGVUI LIGHT Light · 14px · lh auto · ls -2%
+            Vector  [VECTOR]  x=821.5 y=3555 w=14 h=14  fill=#3D3D3D
+          Button 02  [INSTANCE]  x=270.5 y=3595 w=906 h=50  r=100  stroke=#FF8206 1.5px  autolayout HORIZONTAL gap=11.4 pad=0/0/0/0
+      Frame 221  [FRAME]  x=102 y=3677 w=1244 h=725.2  autolayout VERTICAL gap=32 pad=0/0/0/0
+        Frame 202  [FRAME]  x=102 y=3677 w=1244 h=609.2
+          Khu phố 2 2  [ROUNDED_RECTANGLE]  x=102 y=3677 w=1244 h=570  fill=IMAGE:[68, 149, 120, 120, 226, 132, 248, 226, 226, 148, 89, 65, 79, 238, 128, 233, 120, 56, 68, 196]
+          Logo Khu phố biết thương  [FRAME]  x=577 y=4133 w=286.5 h=153.2
+            Union  [BOOLEAN_OPERATION]  x=579.2 y=4136.2 w=271.3 h=147.4  fill=#FFFFFF
+              Vector  [VECTOR]  x=603.3 y=4179.3 w=25.2 h=6.4  fill=#FFFFFF
+              Vector  [VECTOR]  x=641.6 y=4227.2 w=185.2 h=56.4  fill=#FFFFFF
+              Vector  [VECTOR]  x=820.8 y=4177.1 w=11.2 h=8.4  fill=#FFFFFF
+              Vector  [VECTOR]  x=646.2 y=4242.1 w=5.8 h=1.6  fill=#FFFFFF
+              Vector  [VECTOR]  x=596.5 y=4196.5 w=25 h=30.9  fill=#FFFFFF
+              Vector  [VECTOR]  x=624.4 y=4192.9 w=9 h=9.1  fill=#FFFFFF
+              Vector  [VECTOR]  x=625.3 y=4204.1 w=7 h=23.3  fill=#FFFFFF
+              Vector  [VECTOR]  x=636.3 y=4203.5 w=24.8 h=24.6  fill=#FFFFFF
+              Vector  [VECTOR]  x=657.8 y=4188.3 w=10.5 h=7.7  fill=#FFFFFF
+              Vector  [VECTOR]  x=640.5 y=4193.9 w=16.7 h=7.7  fill=#FFFFFF
+              Vector  [VECTOR]  x=664.3 y=4196.6 w=19.4 h=31  fill=#FFFFFF
+              Vector  [VECTOR]  x=686.1 y=4195.5 w=24.3 h=30.9  fill=#FFFFFF
+              Vector  [VECTOR]  x=714.3 y=4192.8 w=22.9 h=33.5  fill=#FFFFFF
+              Vector  [VECTOR]  x=741.3 y=4199.4 w=30.5 h=27.6  fill=#FFFFFF
+              Vector  [VECTOR]  x=769.9 y=4199.4 w=26.6 h=27.5  fill=#FFFFFF
+              Vector  [VECTOR]  x=799.5 y=4202.4 w=22.9 h=23.9  fill=#FFFFFF
+              Vector  [VECTOR]  x=825.6 y=4202.4 w=24.8 h=34.5  fill=#FFFFFF
+              Vector  [VECTOR]  x=579.2 y=4218.8 w=68.9 h=53.9  fill=#FFFFFF
+              Vector  [VECTOR]  x=685.3 y=4221.7 w=37 h=20.6  fill=#FFFFFF
+              Vector  [VECTOR]  x=730.2 y=4152.6 w=25.4 h=32.5  fill=#FFFFFF
+              Vector  [VECTOR]  x=759.4 y=4152.6 w=28.1 h=32.5  fill=#FFFFFF
+              Vector  [VECTOR]  x=818.6 y=4136.2 w=11.2 h=8  fill=#FFFFFF
+              Vector  [VECTOR]  x=800.3 y=4142.1 w=17.6 h=8  fill=#FFFFFF
+              Vector  [VECTOR]  x=791.9 y=4151.9 w=34.3 h=33.8  fill=#FFFFFF
+              Vector  [VECTOR]  x=631.6 y=4152.6 w=26.8 h=32.5  fill=#FFFFFF
+              Vector  [VECTOR]  x=662.6 y=4152.6 w=28.1 h=32.5  fill=#FFFFFF
+              Vector  [VECTOR]  x=696.1 y=4152.6 w=27.4 h=33.1  fill=#FFFFFF
+            Union  [BOOLEAN_OPERATION]  x=577 y=4133 w=286.5 h=153.2  fill=#FF8206
+              Vector  [VECTOR]  x=576 y=4133 w=286.5 h=153.2  fill=#F26A21
+              Vector  [VECTOR]  x=604.1 y=4214.8 w=9.6 h=5.5  fill=#F26A21
+              Vector  [VECTOR]  x=604.1 y=4203.6 w=8.5 h=5  fill=#F26A21
+              Vector  [VECTOR]  x=643.8 y=4209.8 w=10.1 h=3.5  fill=#F26A21
+              Vector  [VECTOR]  x=777 y=4209 w=10.7 h=11.3  fill=#F26A21
+              Vector  [VECTOR]  x=832.8 y=4209 w=10.7 h=10  fill=#F26A21
+              Vector  [VECTOR]  x=738.2 y=4160 w=9.3 h=7  fill=#F26A21
+              Vector  [VECTOR]  x=800 y=4159.4 w=18.1 h=18.9  fill=#F26A21
+              Vector  [VECTOR]  x=588.5 y=4150.2 w=31.3 h=27.3  fill=#F26A21
+        Một hoạt động thuộc chiến dịch “Khu phố biết thương” của FPT Telecom Nhắc · Nhở · Nhỏ · Nhẹ Đã là khách hàng của FPT và cần hỗ trợ kỹ thuật? Gọi 1900 6600, không cần điền biểu mẫu này. Chính sách dữ liệu · Gửi một lời nhắc, thêm một chút thương cho xóm mình.  [TEXT]  x=375.5 y=4318.2 w=697 h=84  fill=#000000  | ver 3 FPT SONGVUI REGULAR Regular · 16px · lh auto · CENTER
+  Frame 233  [FRAME]  x=312 y=1140 w=816 h=147  autolayout VERTICAL gap=24 pad=0/0/0/0
+    Searchbox  [INSTANCE]  x=312 y=1140 w=816 h=45
+    Frame 163  [FRAME]  x=320 y=1209 w=800 h=78  autolayout HORIZONTAL gap=24 pad=0/0/0/0
+      Frame 159  [FRAME]  x=320 y=1209 w=250.7 h=78  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        65  [TEXT]  x=320 y=1209 w=64 h=78  fill=#FF8206  | ver 3 FPT SONGVUI BOLD Bold · 60px · lh auto · ls -2%
+        Biển đã treo  [TEXT]  x=400 y=1235 w=110 h=26  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 20px · lh auto · ls -2%
+      Frame 160  [FRAME]  x=594.7 y=1209 w=250.7 h=78  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        25  [TEXT]  x=594.7 y=1209 w=64 h=78  fill=#FF8206  | ver 3 FPT SONGVUI BOLD Bold · 60px · lh auto · ls -2%
+        Góc phố đang chờ  [TEXT]  x=674.7 y=1235 w=163 h=26  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 20px · lh auto · ls -2%
+      Frame 161  [FRAME]  x=738 y=1209 w=213 h=78  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        +300  [TEXT]  x=738 y=1209 w=128 h=78  fill=#FF8206  | ver 3 FPT SONGVUI BOLD Bold · 60px · lh auto · ls -2%
+        Người đóng góp  [TEXT]  x=882 y=1227 w=69 h=42  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 16px · lh auto · ls -2%
+      Frame 162  [FRAME]  x=869.3 y=1209 w=250.7 h=78  autolayout HORIZONTAL gap=16 pad=0/0/0/0
+        08  [TEXT]  x=869.3 y=1209 w=64 h=78  fill=#FF8206  | ver 3 FPT SONGVUI BOLD Bold · 60px · lh auto · ls -2%
+        Khu phố tham gia  [TEXT]  x=949.3 y=1235 w=154 h=26  fill=#3D3D3D  | ver 3 FPT SONGVUI LIGHT Light · 20px · lh auto · ls -2%

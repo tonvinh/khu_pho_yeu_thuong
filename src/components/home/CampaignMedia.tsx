@@ -1,18 +1,27 @@
 "use client";
-// Khu hiển thị TVC + KV chiến dịch (dieuchinh.1.8 #19) — nội dung sửa được ở
-// /admin/noi-dung: tiêu đề/mô tả khu, video YouTube và ảnh KV. Chưa upload ảnh KV
-// → hiện placeholder "chờ thiết kế final" như demo ban đầu.
+// Khối TVC + KV chiến dịch — TẠM ẨN khỏi trang chủ theo email review 18/8
+// ("Bỏ khúc này. Maybe khi em làm w des bố trí đc vị trí phù hợp cho TVC em sẽ cho thêm
+//  nên anh back up ngầm cho em tool up link video nhé. Có thể hiển thị được nhiều vid,
+//  play lần lượt ạ.").
+// Component GIỮ NGUYÊN để bật lại chỉ bằng một dòng trong HomeShell khi design chốt
+// vị trí; danh sách video quản lý ở /admin/noi-dung (site_content.campaign_youtube_ids).
 import type { SiteContentData } from "./types";
 import { SectionHead } from "./ui";
 
 export default function CampaignMedia({ content }: { content: SiteContentData }) {
+  const ids = content.campaign_youtube_ids;
+  if (ids.length === 0) return null;
+  // Phát lần lượt: video đầu là src, các video sau đưa vào tham số playlist —
+  // YouTube tự chạy tiếp hết danh sách rồi quay vòng (loop=1).
+  const [first, ...rest] = ids;
+  const playlist = [...rest, first].join(",");
+
   return (
-    <section className="mx-auto max-w-[1120px] px-4 py-6 sm:px-5 sm:py-7">
+    <section className="mx-auto max-w-[1120px] px-4 py-8 sm:px-5 sm:py-12">
       <SectionHead title={content.campaign_title} hint={content.campaign_hint} />
-      <div className="grid items-stretch gap-4 [&>*]:min-w-0 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-        {/* KV chiến dịch — ảnh admin upload, chưa có → placeholder chờ team Design */}
+      <div className="grid items-stretch gap-5 [&>*]:min-w-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         {content.campaign_kv_url ? (
-          <div className="kp-card relative min-h-[180px] overflow-hidden sm:min-h-[220px]">
+          <div className="relative min-h-[180px] overflow-hidden rounded-3xl sm:min-h-[220px]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={content.campaign_kv_url}
@@ -21,28 +30,19 @@ export default function CampaignMedia({ content }: { content: SiteContentData })
             />
           </div>
         ) : (
-          <div className="kp-card relative flex min-h-[180px] flex-col items-center justify-center gap-2 overflow-hidden bg-gradient-to-br from-[#FBEAE3] to-[#F7EFE1] p-5 text-center sm:min-h-[220px] sm:p-6">
-            <span className="grid h-12 w-12 place-items-center rounded-full bg-brick text-2xl text-white shadow-kp-s">♥</span>
-            <div className="font-display text-xl font-extrabold">Khu phố biết thương</div>
+          <div className="flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-3xl bg-brick-light p-6 text-center sm:min-h-[220px]">
+            <div className="font-display text-xl font-bold text-brick">Khu phố biết thương</div>
             <div className="text-sm text-ink-soft">Nhắc · Nhở · Nhỏ · Nhẹ</div>
-            <span className="mt-2 rounded-full border border-dashed border-cream-dark bg-white px-3 py-1 text-[11.5px] text-ink-soft">
-              KV chiến dịch — chờ thiết kế final
-            </span>
           </div>
         )}
 
-        {/* TVC — nhúng YouTube. HAI điều kiện, thiếu cái nào cũng hỏng:
-            1. CSP của proxy phải có `frame-src` cho youtube-nocookie (deploy/Caddyfile),
-               không thì Chrome chặn → ô xám "This content is blocked".
-            2. referrerPolicy trên chính thẻ iframe: cả site đặt `Referrer-Policy: no-referrer`
-               (07 §63) nên YouTube không xác thực được domain nhúng → "Error 153 — Video
-               player configuration error". Thuộc tính này ghi đè CHỈ request của iframe,
-               gửi đúng origin (không kèm path), phần còn lại của site vẫn no-referrer.
-            Vẫn kèm link mở thẳng YouTube làm đường lui. */}
-        <div className="kp-card overflow-hidden">
+        {/* CSP của proxy phải mở frame-src cho youtube-nocookie (deploy/Caddyfile) và
+            iframe cần referrerPolicy riêng vì cả site đặt Referrer-Policy: no-referrer
+            (không có thì YouTube báo "Error 153"). */}
+        <div className="overflow-hidden rounded-3xl border border-cream-dark bg-white">
           <div className="relative aspect-video">
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${content.campaign_youtube_id}`}
+              src={`https://www.youtube-nocookie.com/embed/${first}?loop=1&playlist=${playlist}`}
               title={content.campaign_title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -52,7 +52,7 @@ export default function CampaignMedia({ content }: { content: SiteContentData })
           </div>
           <div className="border-t border-cream-dark px-4 py-2.5 text-center">
             <a
-              href={`https://www.youtube.com/watch?v=${content.campaign_youtube_id}`}
+              href={`https://www.youtube.com/watch?v=${first}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[12.5px] font-semibold text-ink-soft hover:text-brick-dark"

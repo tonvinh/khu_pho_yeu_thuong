@@ -11,7 +11,8 @@ export const COPY = {
   ctaSecondary: "Xem góc phố đang chờ",
   ctaTertiary: "🧧 Quà dành cho cư dân",
   ctaCampaign: "Gửi một lời nhắc, thêm một chút thương cho xóm mình.",
-  counterLabels: ["biển đã treo", "góc phố đang chờ", "người đóng góp", "khu phố tham gia"],
+  // 18/8: còn 3 ô — biển đã treo · khu phố tham gia · câu đóng góp
+  counterLabels: ["Biển đã treo", "Góc phố đang chờ", "Khu phố tham gia"],
   suggestionPlaceholder: "VD: Đi chậm chút nha, trong hẻm có đứa nhỏ đang chơi...",
   note4N: "Câu nhắc của bạn sẽ được FPT chúng tớ duyệt theo chuẩn 4N trước khi hiển thị lên website",
   noteEthics:

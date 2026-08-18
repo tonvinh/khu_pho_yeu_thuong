@@ -1,50 +1,159 @@
 "use client";
-// Mảnh UI dùng chung theo prototype v4: eyebrow pill, đầu section, drawer trượt phải,
-// field có nhãn, biển treo minh hoạ
+// Mảnh UI dùng chung theo SKIN MỚI (docs/lp/*.png, 18/8):
+// tiêu đề section IN HOA căn giữa, tab pill (đang chọn = khối cam đặc),
+// modal GIỮA màn hình (thay drawer trượt phải của bản cũ), dải sọc cam.
 import { useEffect } from "react";
 
-export function Eyebrow({ children }: { children: React.ReactNode }) {
-  return <span className="kp-kicker self-start">{children}</span>;
+/**
+ * Icon line 16px dùng ở dòng meta (design vẽ icon nét cam, bản cũ dùng emoji nên
+ * mỗi hệ điều hành ra một kiểu và màu không theo brand được).
+ * `currentColor` để chỗ nào cần cam thì bọc `text-brick`.
+ */
+function Icon({ path, className = "" }: { path: React.ReactNode; className?: string }) {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`inline-block h-[15px] w-[15px] flex-none ${className}`}
+    >
+      {path}
+    </svg>
+  );
 }
 
-export function SectionHead({ title, hint }: { title: string; hint?: string }) {
+export const IconPin = (p: { className?: string }) => (
+  <Icon
+    {...p}
+    path={
+      <>
+        <path d="M12 21s7-5.3 7-11a7 7 0 1 0-14 0c0 5.7 7 11 7 11Z" />
+        <circle cx="12" cy="10" r="2.6" />
+      </>
+    }
+  />
+);
+
+export const IconPencil = (p: { className?: string }) => (
+  <Icon
+    {...p}
+    path={
+      <>
+        <path d="M4 20h4.5L20 8.5a2.1 2.1 0 0 0-3-3L5.5 17 4 20Z" />
+        <path d="M14.5 6.5 17.5 9.5" />
+      </>
+    }
+  />
+);
+
+export const IconUser = (p: { className?: string }) => (
+  <Icon
+    {...p}
+    path={
+      <>
+        <circle cx="12" cy="8" r="3.6" />
+        <path d="M4.8 20a7.2 7.2 0 0 1 14.4 0" />
+      </>
+    }
+  />
+);
+
+export const IconHeart = (p: { className?: string }) => (
+  <Icon
+    {...p}
+    path={<path d="M12 20s-7.5-4.7-7.5-9.5A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.5 2.9C19.5 15.3 12 20 12 20Z" />}
+  />
+);
+
+export const IconHeartSolid = (p: { className?: string }) => (
+  <svg
+    aria-hidden
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={`inline-block h-[15px] w-[15px] flex-none ${p.className ?? ""}`}
+  >
+    <path d="M12 20.4S3.6 15.2 3.6 9.9a4.7 4.7 0 0 1 8.4-2.9 4.7 4.7 0 0 1 8.4 2.9c0 5.3-8.4 10.5-8.4 10.5Z" />
+  </svg>
+);
+
+export const IconSearch = (p: { className?: string }) => (
+  <Icon
+    {...p}
+    path={
+      <>
+        <circle cx="11" cy="11" r="6.4" />
+        <path d="m15.8 15.8 4 4" />
+      </>
+    }
+  />
+);
+
+/** Dải sọc chéo cam — viền trên/dưới card danh sách và mép dưới modal */
+export function Stripe({ className = "" }: { className?: string }) {
+  return <div aria-hidden className={`kp-stripe ${className}`} />;
+}
+
+export function SectionHead({
+  title,
+  hint,
+  /** Cột biển "Ngõ Xóm / Khu phố Biết Thương" bên trái tiêu đề (design khối đóng góp) */
+  signpost = false,
+}: {
+  title: string;
+  hint?: string;
+  signpost?: boolean;
+}) {
   return (
-    <div className="mb-4 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-      <h2 className="m-0 font-display text-[21px] font-extrabold leading-tight text-balance sm:text-2xl">
-        {title}
-      </h2>
-      {hint && <span className="text-[13px] leading-snug text-ink-soft sm:text-[13.5px]">{hint}</span>}
+    <div className="relative mb-6 text-center">
+      {signpost && (
+        // "06 3" trong .fig: x=66 y=1368.5 w=216 h=378 (khổ 1440) — tức lệch trái 18px
+        // so với khung nội dung (x=84) và thấp hơn mép trên tiêu đề 12px.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src="/brand/signpost.webp"
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute -left-[18px] top-[12px] hidden w-[216px] lg:block"
+        />
+      )}
+      {/* Frame 158: tiêu đề Bold 40px ls-2% IN HOA #3D3D3D, gap 8, hint Light 16px */}
+      <h2 className="kp-h2 kp-sec-title m-0 text-[clamp(22px,4.4vw,40px)] tracking-[-0.02em] text-ink text-balance">{title}</h2>
+      {hint && (
+        <p className="m-0 mt-2 font-light text-[14px] leading-snug tracking-[-0.02em] text-ink sm:text-[16px] sm:leading-[24px]">{hint}</p>
+      )}
     </div>
   );
 }
 
-/** Dãy pill lọc danh sách (Mới nhất · Chờ bạn bình chọn · …) — dùng chung cho
- *  danh sách góc phố và block lời nhắc, kèm số lượng từng mục */
+/** Dãy pill lọc — đang chọn là khối cam đặc, số lượng nằm trong chấm tròn */
 export function FilterTabs<K extends string>({
   tabs,
   active,
   onChange,
 }: {
-  /** `short` là nhãn rút gọn dùng riêng cho mobile (< 640px) để 3 tab nằm gọn
-   *  một hàng; màn rộng vẫn hiện nhãn đầy đủ. */
+  /** `short` là nhãn rút gọn cho mobile (< 640px) để các tab nằm gọn một hàng */
   tabs: { key: K; label: string; short?: string; count: number }[];
   active: K;
   onChange: (key: K) => void;
 }) {
-  // Mobile: một hàng cuộn ngang tràn mép màn hình (không xuống dòng lởm chởm);
-  // từ sm trở lên xếp bình thường và tự xuống dòng.
   return (
-    <div className="kp-scroll-x -mx-4 flex flex-nowrap gap-1.5 px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+    <div className="kp-scroll-x -mx-4 flex flex-nowrap justify-start gap-2 px-4 sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-4 sm:overflow-visible sm:px-0">
       {tabs.map((t) => {
         const isActive = active === t.key;
         return (
           <button
             key={t.key}
             onClick={() => onChange(t.key)}
-            className={`tap inline-flex flex-none cursor-pointer items-center whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold transition sm:px-3.5 sm:text-[12.5px] ${
+            /* Tab: cao 39, r hết cỡ, gap 10 — đang chọn nền #FF8206 viền #E86305,
+               tab thường viền #3D3D3D 1.5px (không phải viền kem) */
+            className={`tap tap-sm-auto inline-flex h-[44px] flex-none cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-full border-[1.5px] px-4 text-[14px] transition sm:h-[39px] sm:px-5 sm:text-[16px] ${
               isActive
-                ? "border-brick bg-brick text-white shadow-kp-s"
-                : "border-cream-dark bg-white text-ink-soft hover:border-brick/35 hover:text-brick-dark"
+                ? "border-brick-dark bg-brick text-white shadow-kp-s"
+                : "border-ink bg-transparent text-ink hover:border-brick hover:text-brick-dark"
             }`}
           >
             {t.short ? (
@@ -55,7 +164,13 @@ export function FilterTabs<K extends string>({
             ) : (
               t.label
             )}
-            <span className={`ml-1.5 text-[11px] ${isActive ? "text-white/80" : "text-ink-soft/70"}`}>
+            <span
+              /* Chip số trong tab (.fig): tab thường = tròn đặc #3D3D3D chữ trắng,
+                 tab đang chọn = tròn trắng chữ cam */
+              className={`grid h-[22px] min-w-[22px] place-items-center rounded-full px-1 text-[11.5px] font-bold ${
+                isActive ? "bg-white text-brick" : "bg-ink text-white"
+              }`}
+            >
               {t.count}
             </span>
           </button>
@@ -76,28 +191,36 @@ export function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-[12.5px] font-semibold text-ink-soft">{label}</span>
+      <span className="mb-1.5 block text-[13px] font-bold text-ink">{label}</span>
       {children}
     </label>
   );
 }
 
-/** Drawer trượt từ phải theo prototype (.scrim + .drawer), Esc để đóng */
-export function Drawer({
-  icon,
+/**
+ * Modal giữa màn hình theo design mới: card trắng bo 24px, tiêu đề căn giữa,
+ * nút × góc phải, nút ‹ góc trái khi có bước trước, dải sọc cam ló ra mép dưới.
+ * z-50 để luôn nằm trên mọi lớp khác (modal định danh có thể mở chồng lên modal khác).
+ * Trên mobile trượt lên từ đáy như bottom sheet.
+ */
+export function Modal({
   title,
-  sub,
   onClose,
+  onBack,
   children,
   wide = false,
+  topmost = false,
 }: {
-  icon?: React.ReactNode;
-  title: React.ReactNode;
-  sub?: React.ReactNode;
+  title?: React.ReactNode;
   onClose: () => void;
+  onBack?: () => void;
   children: React.ReactNode;
-  /** Bản rộng cho form dài (VD: đề xuất góc phố) */
   wide?: boolean;
+  /** Modal mở CHỒNG lên modal khác (định danh mở từ trong modal bình chọn/viết câu).
+   *  Cùng z-index thì cái đứng SAU trong DOM đè lên trước — HomeShell render modal định
+   *  danh trước nên bắt buộc phải nâng lớp, nếu không nó nằm dưới và người dùng tưởng
+   *  bấm không ăn (đúng lỗi #16 của bản drawer cũ). */
+  topmost?: boolean;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -106,100 +229,49 @@ export function Drawer({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40">
-      <div className="kp-scrim absolute inset-0 bg-ink/40 backdrop-blur-[2px]" onClick={onClose} />
-      <aside
+    <div
+      className={`fixed inset-0 flex items-end justify-center bg-ink/45 backdrop-blur-[3px] sm:items-center sm:p-6 ${
+        topmost ? "z-[60]" : "z-50"
+      }`}
+      onClick={onClose}
+    >
+      <div
         role="dialog"
         aria-modal="true"
-        className={`kp-drawer absolute right-0 top-0 flex h-full w-full flex-col bg-cream shadow-[-12px_0_40px_rgba(40,25,10,0.2)] ${
-          wide ? "max-w-[600px]" : "max-w-[440px]"
-        }`}
+        className={`slide-up relative w-full ${wide ? "sm:max-w-[720px]" : "sm:max-w-[620px]"}`}
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start gap-3 border-b border-cream-dark px-4 py-3.5 sm:px-5 sm:py-[18px]">
-          {icon && (
-            <div className="grid h-10 w-10 flex-none place-items-center rounded-[11px] bg-[#F3ECE0] text-[20px] sm:h-11 sm:w-11 sm:text-[22px]">
-              {icon}
-            </div>
-          )}
-          <div className="min-w-0">
-            <h3 className="m-0 font-display text-[17.5px] font-bold leading-tight sm:text-[19px]">{title}</h3>
-            {sub && <div className="text-[12.5px] leading-snug text-ink-soft sm:text-[13px]">{sub}</div>}
+        {/* Sọc cam ló dưới đáy modal (design) — ẩn trên mobile vì modal chạm mép dưới */}
+        <Stripe className="absolute inset-x-6 -bottom-2 hidden rounded-b-xl sm:block" />
+        <div className="kp-safe-b relative max-h-[90vh] overflow-y-auto rounded-t-3xl border border-brick/40 bg-white px-5 pt-4 shadow-kp sm:rounded-3xl sm:px-8 sm:pt-6">
+          {/* Tay nắm kéo — gợi ý bottom sheet trên mobile */}
+          <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-cream-dark sm:hidden" />
+          <div className="relative mb-4 flex min-h-9 items-center justify-center">
+            {onBack && (
+              <button
+                onClick={onBack}
+                aria-label="Quay lại bước trước"
+                className="absolute left-0 grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-cream-dark bg-white text-lg text-ink hover:border-brick hover:text-brick"
+              >
+                ‹
+              </button>
+            )}
+            {title && (
+              <h3 className="m-0 px-10 text-center font-display text-[19px] font-bold leading-tight sm:text-[21px]">
+                {title}
+              </h3>
+            )}
+            <button
+              onClick={onClose}
+              aria-label="Đóng"
+              className="absolute right-0 grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-cream-dark bg-white text-base text-ink-soft hover:border-brick hover:text-brick"
+            >
+              ×
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            aria-label="Đóng"
-            className="tap ml-auto w-11 flex-none cursor-pointer rounded-[10px] border border-cream-dark bg-white text-[17px] text-ink-soft hover:text-brick sm:w-[38px]"
-          >
-            ×
-          </button>
+          {children}
         </div>
-        <div className="kp-safe-b flex-1 overflow-y-auto px-4 py-4 sm:px-5 sm:py-[18px]">{children}</div>
-      </aside>
+      </div>
     </div>
-  );
-}
-
-/** Biển treo minh hoạ (prototype .donebox .sign) — có móc treo, nghiêng nhẹ,
- *  lời nhắc đã duyệt có hình thì hiện hình ngay trong biển; truyền onVote để
- *  hiện nút bình chọn dưới dòng tác giả (đã bình chọn thì chip chỉ hiển thị) */
-export function HangSign({
-  quote,
-  by,
-  spot,
-  imageUrl,
-  tilt = -1.5,
-  voted,
-  onVote,
-}: {
-  quote: string;
-  by?: string;
-  spot?: string;
-  imageUrl?: string | null;
-  tilt?: number;
-  voted?: boolean;
-  onVote?: () => void;
-}) {
-  return (
-    <figure className="m-0 flex w-full flex-col items-center gap-1.5 text-center sm:gap-2">
-      <span aria-hidden className="flex flex-col items-center">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#b9a888]" />
-        <span className="h-3 w-[2px] bg-[#b9a888]" />
-      </span>
-      <blockquote
-        className="m-0 w-full rounded-xl border-[1.5px] border-olive bg-white px-4 py-3 font-display text-[15.5px] font-semibold leading-snug text-balance shadow-kp-s sm:px-[18px] sm:py-[13px] sm:text-[17px]"
-        style={{ transform: `rotate(${tilt}deg)` }}
-      >
-        {imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt=""
-            loading="lazy"
-            className="mb-2.5 h-28 w-full rounded-lg object-cover sm:h-32"
-          />
-        )}
-        {quote}
-      </blockquote>
-      {(by || spot) && (
-        <figcaption className="text-xs text-ink-soft">
-          — {by}
-          {spot && ` · ${spot}`}
-        </figcaption>
-      )}
-      {onVote &&
-        (voted ? (
-          <span className="inline-flex cursor-default items-center gap-1 rounded-full border border-brick/25 bg-brick-light px-3.5 py-2 text-[12px] font-semibold text-brick-dark">
-            🧡 Đã bình chọn
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={onVote}
-            className="tap inline-flex cursor-pointer items-center gap-1 rounded-full border border-brick/35 bg-white px-5 text-[12.5px] font-semibold text-brick-dark transition hover:bg-brick-light"
-          >
-            🧡 Bình chọn
-          </button>
-        ))}
-    </figure>
   );
 }

@@ -1,8 +1,10 @@
 export interface CounterData {
   signs_installed: number;
-  issues_waiting: number;
-  contributors: number;
+  /** Góc phố đã duyệt còn mở — ô thứ 2 của dải 3 con số (design lp1) */
+  issues_open: number;
   neighborhoods_joined: number;
+  /** Số câu nhắc ĐÃ DUYỆT — thay 2 ô "góc phố đang chờ"/"người đóng góp" (18/8) */
+  suggestions_total: number;
 }
 
 export interface IssueCard {
@@ -31,7 +33,7 @@ export interface MapNeighborhood {
   /** Bật ở admin → xuất hiện trong block "Khu phố tiêu biểu" đầu trang chủ */
   is_featured: boolean;
   map_url: string | null;
-  /** Ảnh bảng chứng nhận 4N (admin upload) — hiện trong block chứng nhận trang chủ */
+  /** Ảnh bảng chứng nhận 4N (admin upload) — hiện ở trang /khu-pho/[slug] */
   certificate_url: string | null;
   /** Tối đa 4 ảnh tổng quan, kích thước đồng nhất (admin upload, theo position) */
   photo_urls: string[];
@@ -58,37 +60,6 @@ export interface Me {
   neighborhood_id: string | null;
   neighborhood_name?: string | null;
   score?: number;
-}
-
-export interface Ambassador {
-  user_id: string;
-  display_name: string;
-  share_slug: string;
-  neighborhood_name: string | null;
-  score: number;
-  signs_installed: number;
-  votes_received: number;
-  /** Điểm 7 ngày gần nhất — tab "Tuần này" + mũi tên đổi hạng */
-  week_points: number;
-  /** Câu được thương nhất của cây bút — hiện dưới tên */
-  top_quote: string | null;
-  top_quote_spot: string | null;
-  top_quote_installed: boolean;
-}
-
-/** Hạng của người xem trên bảng cây bút (null = chưa có điểm / chưa định danh) */
-export interface ViewerRank {
-  rank: number;
-  score: number;
-  above_name: string | null;
-  above_score: number | null;
-}
-
-export interface NeighborhoodOfMonth {
-  name: string;
-  slug: string;
-  new_signs: number;
-  votes: number;
 }
 
 export interface SuggestionItem {
@@ -123,39 +94,49 @@ export interface NotificationItem {
 
 /** Nội dung trang chủ admin sửa được ở /admin/noi-dung (mặc định từ copy.ts) */
 export interface SiteContentData {
-  hero_title_1: string;
-  hero_title_2: string;
+  hero_title: string;
   hero_body: string;
-  campaign_title: string;
-  campaign_hint: string;
-  campaign_youtube_id: string;
-  /** URL ảnh KV chiến dịch — null → placeholder "chờ thiết kế final" */
-  campaign_kv_url: string | null;
+  hero_search_placeholder: string;
+  board_title: string;
+  board_hint: string;
+  signs_title: string;
+  sign_promo_line1: string;
+  sign_promo_line2: string;
+  sign_sale_phone: string;
+  sign_hotline: string;
   lead_title: string;
   lead_body: string;
   lead_privacy: string;
+  footer_line1: string;
+  footer_line2: string;
+  footer_support: string;
+  footer_tagline: string;
+  campaign_title: string;
+  campaign_hint: string;
+  /** Danh sách video TVC phát lần lượt (khối TVC hiện tạm ẩn khỏi trang chủ) */
+  campaign_youtube_ids: string[];
+  /** URL ảnh KV chiến dịch — null → placeholder "chờ thiết kế final" */
+  campaign_kv_url: string | null;
 }
 
-/** Lời nhắc đã duyệt — hiện trong block "Lời nhắc khi lên biển trông như thế nào?" */
+/** Lời nhắc đã duyệt — hiện trong block "Biển mới của khu phố" */
 export interface ApprovedSign {
   id: string;
   content: string;
   author_name: string;
   location_text: string;
-  image_url: string | null;
+  /** Chủ đề của góc phố — hiện ở dòng meta dưới biển */
+  category: string;
+  neighborhood_name: string;
   votes: number;
-  /** Ngày duyệt câu (fallback ngày gửi) — tab "Mới nhất" của block lời nhắc */
+  /** Ngày duyệt câu (fallback ngày gửi) — thứ tự 6 biển mới nhất */
   approved_at: string;
-  voted: boolean;
 }
 
 export interface HomeData {
   counters: CounterData;
   issues: IssueCard[];
   map: MapData;
-  ambassadors: Ambassador[];
-  neighborhoodOfMonth: NeighborhoodOfMonth | null;
-  viewerRank: ViewerRank | null;
   approvedSigns: ApprovedSign[];
   content: SiteContentData;
 }

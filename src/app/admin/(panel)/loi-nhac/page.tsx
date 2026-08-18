@@ -15,6 +15,8 @@ import SignsPanel from "@/components/admin/SignsPanel";
 import { NbSelect } from "@/components/admin/IssuesPanel";
 import { Pager, SearchBox, Tabs, Th, useUrlState } from "@/components/admin/table-tools";
 import { CATEGORIES, CATEGORY_CODES, categoryIcon, categoryLabel } from "@/lib/taxonomy";
+import SignCard, { type SignPromo } from "@/components/home/SignCard";
+import { SITE_CONTENT_DEFAULTS } from "@/lib/site-content";
 
 interface Sugg {
   id: string; content: string; status: string; category: string;
@@ -80,6 +82,25 @@ export default function SuggestionsTablePage() {
   const [rejecting, setRejecting] = useState<Sugg | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+
+  // Text banner khuyến mãi in trên biển — lấy đúng bản admin đang ghi đè ở /admin/noi-dung
+  // để preview khớp biển thật trên trang chủ (rỗng → dùng mặc định).
+  const [promo, setPromo] = useState<SignPromo>({
+    line1: SITE_CONTENT_DEFAULTS.sign_promo_line1,
+    line2: SITE_CONTENT_DEFAULTS.sign_promo_line2,
+    sale_phone: SITE_CONTENT_DEFAULTS.sign_sale_phone,
+    hotline: SITE_CONTENT_DEFAULTS.sign_hotline,
+  });
+  useEffect(() => {
+    apiGet<{ overrides: Record<string, string> }>("/api/admin/site-content")
+      .then((r) => setPromo({
+        line1: r.overrides.sign_promo_line1 || SITE_CONTENT_DEFAULTS.sign_promo_line1,
+        line2: r.overrides.sign_promo_line2 || SITE_CONTENT_DEFAULTS.sign_promo_line2,
+        sale_phone: r.overrides.sign_sale_phone || SITE_CONTENT_DEFAULTS.sign_sale_phone,
+        hotline: r.overrides.sign_hotline || SITE_CONTENT_DEFAULTS.sign_hotline,
+      }))
+      .catch(() => {});
+  }, []);
 
   // Drawer sửa
   const [editing, setEditing] = useState<Sugg | null>(null);
@@ -336,6 +357,14 @@ export default function SuggestionsTablePage() {
             — {approving.author_name} · {categoryIcon(approving.category)} {categoryLabel(approving.category)} ·{" "}
             {approving.neighborhood_name}
           </p>
+          {/* Biển giờ RENDER từ câu (không còn upload ảnh) — xem trước để soát câu dài
+              có vỡ bố cục 2 dòng không trước khi cho lên trang chủ. */}
+          <div className="mt-3 rounded-xl border border-cream-dark bg-cream p-3">
+            <span className="text-[11px] font-bold text-ink-soft">Xem trước biển trên trang chủ</span>
+            <div className="mx-auto mt-2 max-w-sm">
+              <SignCard content={approving.content} promo={promo} />
+            </div>
+          </div>
           <FourNChecklist checks={checks} setChecks={setChecks} />
           <div className="mt-4 flex gap-2">
             <Btn onClick={approve} disabled={busy || !FOUR_N.every((f) => checks[f.key])}>

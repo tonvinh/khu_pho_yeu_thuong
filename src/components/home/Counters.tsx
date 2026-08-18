@@ -1,30 +1,25 @@
 "use client";
-// Lưới 4 ô số liệu trong hero (prototype .counters .ct) — nền paper2, số Baloo màu theo loại
+// Dải 3 con số theo skin mới (docs/lp): nằm NGOÀI hero, nền kem, một hàng ngang —
+// số cam cỡ lớn (đệm 0 cho số < 10 như design "08") + nhãn xám bên phải.
 import type { CounterData } from "./types";
 import { COPY } from "@/lib/copy";
 
 export default function Counters({ counters }: { counters: CounterData }) {
   const items = [
-    { value: counters.signs_installed, label: COPY.counterLabels[0], color: "text-teal" },
-    { value: counters.issues_waiting, label: COPY.counterLabels[1], color: "text-brick" },
-    { value: counters.contributors, label: COPY.counterLabels[2], color: "text-olive-dark" },
-    { value: counters.neighborhoods_joined, label: COPY.counterLabels[3], color: "text-fpt" },
+    { value: counters.signs_installed, label: COPY.counterLabels[0] },
+    { value: counters.issues_open, label: COPY.counterLabels[1] },
+    { value: counters.neighborhoods_joined, label: COPY.counterLabels[2] },
   ];
-  // Mobile: gộp 4 ô thành MỘT thẻ chia lưới 2×2 bằng đường kẻ mảnh — gọn hơn
-  // 4 hộp rời; từ sm trở lên tách lại thành 4 thẻ như prototype.
+  // .fig Frame 163: khối 800px canh giữa (x=320…1120), 3 nhóm rộng bằng nhau (250.7px)
+  // cách nhau 24px, mỗi nhóm: số 60px/lh78 + nhãn 20px/lh26, cách nhau 16px.
   return (
-    <div className="mt-6 grid w-full grid-cols-2 overflow-hidden rounded-[14px] border border-cream-dark bg-cream-panel sm:mt-7 sm:grid-cols-4 sm:gap-3 sm:border-0 sm:bg-transparent">
-      {items.map((it, i) => (
-        <div
-          key={it.label}
-          className={`px-3.5 py-3 sm:rounded-[14px] sm:border sm:border-cream-dark sm:bg-cream-panel sm:p-3.5 ${
-            i % 2 === 0 ? "border-r border-cream-dark" : ""
-          } ${i < 2 ? "border-b border-cream-dark" : ""}`}
-        >
-          <div className={`font-display text-[24px] font-extrabold leading-none sm:text-[26px] ${it.color}`}>
-            {it.value.toLocaleString("vi-VN")}
-          </div>
-          <div className="mt-1 text-[11.5px] leading-snug text-ink-soft sm:mt-1.5 sm:text-xs">{it.label}</div>
+    <div className="mx-auto flex max-w-[1312px] flex-wrap items-center justify-center gap-x-10 gap-y-4 px-4 pb-8 pt-6 sm:w-[800px] sm:flex-nowrap sm:gap-x-6 sm:px-0 sm:pb-[22px] sm:pt-[25px]">
+      {items.map((it) => (
+        <div key={it.label} className="flex items-center gap-3 sm:flex-1 sm:gap-4">
+          <span className="font-display text-[38px] font-bold leading-none tracking-[-0.02em] text-brick sm:text-[60px] sm:leading-[78px]">
+            {it.value < 10 ? `0${it.value}` : it.value.toLocaleString("vi-VN")}
+          </span>
+          <span className="font-light text-[14px] leading-snug tracking-[-0.02em] text-ink sm:text-[20px] sm:leading-[26px]">{it.label}</span>
         </div>
       ))}
     </div>

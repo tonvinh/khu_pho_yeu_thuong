@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool, one, q } from "@/lib/db";
 import { resolveNeighborhoodId } from "@/lib/neighborhoods";
+import { geoError } from "@/lib/geo";
 import { normalizePhone, looksFake } from "@/lib/phone";
 import { phoneHash, randomSlug, encryptPhone } from "@/lib/crypto";
 import { createSession, sessionCookieOptions, SESSION_COOKIE } from "@/lib/session";
@@ -15,7 +16,8 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => null);
   if (!body) return jsonError(400, "Dữ liệu không hợp lệ");
-  const { phone, display_name, neighborhood_id, neighborhood_text } = body;
+  const { phone, display_name, neighborhood_id, neighborhood_text,
+          neighborhood_city, neighborhood_ward } = body;
 
   const normalized = normalizePhone(String(phone || ""));
   if (!normalized) return jsonError(400, "Số điện thoại chưa đúng — kiểm tra lại giúp mình nhé");
@@ -30,9 +32,19 @@ export async function POST(req: NextRequest) {
     [hash]
   );
 
-  // #11: chọn từ danh sách HOẶC tự nhập tên phường (free text → khu phố ẩn chờ duyệt)
+  // #11: chọn từ danh sách HOẶC tự nhập tên phường (free text → khu phố ẩn chờ duyệt).
+  // 18/8: tự nhập thì BẮT BUỘC kèm Tỉnh/Thành (email review) — trước đây khu phố tạo ra
+  // từ đây luôn có city NULL vì quên truyền tham số geo cho resolveNeighborhoodId.
+  const freeText = !neighborhood_id && String(neighborhood_text || "").trim().length > 0;
+  if (freeText && !String(neighborhood_city || "").trim()) {
+    return jsonError(400, "Chọn tỉnh/thành của khu phố bạn nhé");
+  }
+  const geoMsg = await geoError(neighborhood_city, neighborhood_ward);
+  if (geoMsg) return jsonError(400, geoMsg);
+
   const nbId = await resolveNeighborhoodId(
-    getPool(), neighborhood_id || null, neighborhood_text || null
+    getPool(), neighborhood_id || null, neighborhood_text || null,
+    { city: neighborhood_city || null, ward: neighborhood_ward || null }
   );
 
   let userId: string;

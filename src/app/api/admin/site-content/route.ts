@@ -64,10 +64,18 @@ export async function PATCH(req: NextRequest) {
     if (typeof raw !== "string") return jsonError(400, `Trường ${key} phải là chuỗi`);
     let value = raw.trim();
     if (value.length > MAX_LEN) return jsonError(400, `Trường ${key} tối đa ${MAX_LEN} ký tự`);
-    if (key === "campaign_youtube_id" && value) {
-      const id = parseYoutubeId(value);
-      if (!id) return jsonError(400, "Link YouTube không hợp lệ — dán link video hoặc ID 11 ký tự");
-      value = id;
+    // 18/8: một ô chứa NHIỀU video (phát lần lượt) — tách theo dấu phẩy/xuống dòng,
+    // chuẩn hoá từng link về ID rồi ghép lại.
+    if (key === "campaign_youtube_ids" && value) {
+      const ids: string[] = [];
+      for (const part of value.split(/[,\n]/).map((x) => x.trim()).filter(Boolean)) {
+        const id = parseYoutubeId(part);
+        if (!id) {
+          return jsonError(400, `Link YouTube không hợp lệ: “${part}” — dán link video hoặc ID 11 ký tự`);
+        }
+        if (!ids.includes(id)) ids.push(id);
+      }
+      value = ids.join(",");
     }
     changes.push({ key, value: value && value !== SITE_CONTENT_DEFAULTS[key] ? value : null });
   }
