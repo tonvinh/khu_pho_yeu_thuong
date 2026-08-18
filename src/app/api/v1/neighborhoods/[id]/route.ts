@@ -1,34 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { one } from "@/lib/db";
 import { jsonError } from "@/lib/api";
-import { imgUrl } from "@/lib/storage";
+import { loadNeighborhoodDetail } from "@/lib/neighborhood";
 
 export const dynamic = "force-dynamic";
 
-// Trạng thái chứng nhận "Khu phố biết thương" chuẩn 4N (02 §6)
+// Hồ sơ khu phố: tiến độ chứng nhận 4N (02 §6) + ảnh + biển đã có.
+// Popup khu phố ở trang chủ (NeighborhoodModal) gọi route này bằng SLUG.
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
-  const nb = await one(
-    `SELECT n.id, n.name, n.slug, n.certified_4n, n.certified_at, n.certificate_photo_key,
-       (SELECT p.photo_key FROM neighborhood_photos p
-         WHERE p.neighborhood_id = n.id ORDER BY p.position LIMIT 1) AS photo_key,
-       (SELECT count(*)::int FROM issues WHERE neighborhood_id = n.id
-         AND status IN ('waiting','voting','signed')) AS total_issues,
-       (SELECT count(*)::int FROM issues WHERE neighborhood_id = n.id
-         AND status = 'signed') AS signed_issues
-     FROM neighborhoods n WHERE n.id = $1 OR n.slug = $1`,
-    [id]
-  );
+  const nb = await loadNeighborhoodDetail(id);
   if (!nb) return jsonError(404, "Không tìm thấy khu phố");
-  const total = Number(nb.total_issues) || 0;
-  return NextResponse.json({
-    neighborhood: {
-      ...nb,
-      photo_url: imgUrl(nb.photo_key as string | null),
-      certificate_photo_url: imgUrl(nb.certificate_photo_key as string | null),
-      photo_key: undefined,
-      certificate_photo_key: undefined,
-      progress_pct: total === 0 ? 0 : Math.round((Number(nb.signed_issues) / total) * 100),
-    },
-  });
+  return NextResponse.json({ neighborhood: nb });
 }

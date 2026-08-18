@@ -197,14 +197,20 @@ Người bị shadow-ban vẫn nhận 200 và thấy UI bình thường, nhưng 
 
 ### 2.10 `GET /api/v1/neighborhoods/{idOrSlug}`
 
-Tra cứu tiến độ chứng nhận (dùng cho ô "Xóm mình đã đạt chuẩn 4N chưa?").
+Hồ sơ khu phố — dùng cho POPUP khu phố ở trang chủ (`NeighborhoodModal`, mở từ ô tra cứu
+"Xóm mình đã đạt chuẩn 4N chưa?" / pill địa chỉ trên slider) và trang share `/khu-pho/{slug}`
+(cùng loader `src/lib/neighborhood.ts` nên hai chỗ hiện y hệt nhau).
 
 ```json
-{ "neighborhood": { "id": "…", "name": "…", "slug": "…",
+{ "neighborhood": { "id": "…", "name": "…", "slug": "…", "ward": "…", "city": "…",
   "certified_4n": false, "certified_at": null,
-  "total_issues": 4, "signed_issues": 1, "progress_pct": 25,
-  "photo_url": null } }
+  "photo_urls": ["/api/img/public/…"], "certificate_url": null, "map_url": null,
+  "total_issues": 4, "signed_issues": 1, "suggestions_total": 7, "progress_pct": 25,
+  "signs": [{ "id": "…", "content": "…", "author_name": "…",
+              "location_text": "…", "category": "xom_xanh_sach" }] } }
 ```
+
+`signs` là tối đa 4 câu đã duyệt/đã treo mới nhất của khu (render bằng `SignCard`).
 
 ### 2.11 `POST /api/v1/auth/identify` — định danh (KHÔNG OTP)
 
