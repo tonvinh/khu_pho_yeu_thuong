@@ -6,42 +6,92 @@
 // Mỗi khu phố hiển thị ĐÚNG MỘT ảnh — ảnh vị trí #1 trong neighborhood_photos (quyết định
 // F14: vẫn giữ nguyên dữ liệu 4 ảnh/khu ở admin, trang chủ chỉ lấy ảnh đầu). Mũi tên &
 // auto-slide 4s do đó chuyển thẳng sang KHU KẾ, không lật ảnh trong cùng một khu.
-import { useCallback, useEffect, useMemo, useState } from "react";
+//
+// TRƯỢT NGANG (18/8): track flex dịch bằng translateX. Để vòng lặp không bị "quét ngược"
+// khi từ khu cuối về khu đầu, track được kẹp thêm bản sao khu cuối ở đầu và khu đầu ở cuối;
+// trượt tới clone xong thì TẮT transition, nhảy về slide thật rồi bật lại (double rAF).
+// Cú nhảy đó hẹn bằng SETTIMEOUT chứ không nghe `transitionend`: tab đang ẩn hoặc máy bật
+// "giảm chuyển động" thì transition không chạy, sự kiện không bắn, index sẽ trôi ra ngoài
+// dãy slide và khung ảnh trắng trơn.
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MapData, MapNeighborhood } from "./types";
 import { shortAddress } from "@/lib/address";
 import { IconPin } from "./ui";
 
-export default function NeighborhoodSlider({ map }: { map: MapData }) {
-  const [index, setIndex] = useState(0);
+/** Thời lượng một cú trượt (ms) — dùng chung cho transition và hẹn giờ nhảy qua clone */
+const SLIDE_MS = 450;
 
+export default function NeighborhoodSlider({ map }: { map: MapData }) {
   // Chỉ khu ĐÃ ĐẠT CHUẨN 4N; is_featured chỉ còn dùng để ưu tiên thứ tự
   // (server đã ORDER BY featured_position, name).
   const list = useMemo(
     () => map.neighborhoods.filter((n) => n.certified_4n),
     [map.neighborhoods]
   );
-  const nb: MapNeighborhood | undefined = list[Math.min(index, list.length - 1)];
+  const len = list.length;
+  const multiple = len > 1;
 
-  /** Ảnh chính của khu = ảnh #1; chưa upload ảnh nào thì dùng bản đồ cách điệu */
-  const mainPhoto = (n: MapNeighborhood) => n.photo_urls[0] ?? n.map_url ?? null;
-  const photo = nb ? mainPhoto(nb) : null;
+  // index logic: -1 và len là hai slide clone (chỉ tồn tại trong lúc trượt)
+  const [index, setIndex] = useState(0);
+  const [animate, setAnimate] = useState(true);
 
-  const prev = useCallback(
-    () => setIndex((i) => (i - 1 + list.length) % list.length),
-    [list.length]
+  // Đang ở clone (index ngoài [0, len-1]) thì bỏ qua cú bấm mới — chờ nhảy về slide thật
+  // đã, nếu không bấm dồn sẽ đẩy index ra ngoài dãy slide.
+  const step = useCallback(
+    (d: 1 | -1) => multiple && setIndex((i) => (i < 0 || i >= len ? i : i + d)),
+    [multiple, len]
   );
-  const next = useCallback(() => setIndex((i) => (i + 1) % list.length), [list.length]);
+  const prev = useCallback(() => step(-1), [step]);
+  const next = useCallback(() => step(1), [step]);
+
+  // Trượt hết sang clone → tắt transition, nhảy sang slide thật tương ứng
+  useEffect(() => {
+    if (index >= 0 && index < len) return;
+    const t = setTimeout(() => {
+      setAnimate(false);
+      setIndex((i) => ((i % len) + len) % len);
+    }, SLIDE_MS + 20);
+    return () => clearTimeout(t);
+  }, [index, len]);
+
+  // Bật lại transition SAU khi trình duyệt đã vẽ xong vị trí vừa nhảy (2 khung hình),
+  // nếu không cú nhảy đó cũng bị animate và người dùng thấy ảnh quét ngược.
+  useEffect(() => {
+    if (animate) return;
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setAnimate(true));
+    });
+    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
+  }, [animate]);
 
   // Tự trượt 4s; người dùng bấm tay thì index đổi → hẹn giờ tính lại từ đầu
   useEffect(() => {
-    if (list.length <= 1) return;
+    if (!multiple) return;
     const t = setInterval(() => {
       if (document.visibilityState === "visible") next();
     }, 4000);
     return () => clearInterval(t);
-  }, [next, index, list.length]);
+  }, [next, index, multiple]);
 
-  const multiple = list.length > 1;
+  // Vuốt ngang trên mobile (ngưỡng 40px, bỏ qua nếu vuốt dọc để không chặn cuộn trang)
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touch.current;
+    touch.current = null;
+    if (!start) return;
+    const dx = e.changedTouches[0].clientX - start.x;
+    const dy = e.changedTouches[0].clientY - start.y;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    dx < 0 ? next() : prev();
+  };
+
+  // Slide thật + 2 clone hai đầu (chỉ khi có nhiều hơn 1 khu)
+  const slides = multiple ? [list[len - 1], ...list, list[0]] : list;
+  const offset = multiple ? index + 1 : 0;
 
   return (
     <div className="relative mx-auto mt-8 w-full max-w-[920px] px-10 sm:mt-8 sm:px-10">
@@ -56,35 +106,25 @@ export default function NeighborhoodSlider({ map }: { map: MapData }) {
       {/* Frame 136 (khung r=40, nền TRẮNG 50% + viền trắng 1.5px — không phải trắng đặc,
           đo trên lp1.png: #FFDCBD trên nền #FFB97C) bọc Frame 137 (ảnh r=28), chèn 14px */}
       <div className="relative aspect-[840/430] overflow-hidden rounded-[28px] border-[1.5px] border-white bg-white/50 p-2 sm:rounded-[40px] sm:p-[12.5px]">
-        <div className="relative h-full w-full overflow-hidden rounded-[20px] sm:rounded-[28px]">
-          {photo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={photo}
-              alt={nb ? `Khu phố ${nb.name}` : "Khu phố tiêu biểu"}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
+        <div
+          className="relative h-full w-full overflow-hidden rounded-[20px] sm:rounded-[28px]"
+          onTouchStart={multiple ? onTouchStart : undefined}
+          onTouchEnd={multiple ? onTouchEnd : undefined}
+        >
+          {slides.length === 0 ? (
             <PhotoPlaceholder />
-          )}
-
-          {/* Địa chỉ dồn 1 dòng — pill nổi góc phải trên (thay dòng địa chỉ dưới ảnh) */}
-          {nb && (
-            <span className="absolute right-2.5 top-2.5 flex max-w-[75%] items-center gap-2 rounded-full border-[2.7px] border-white bg-brick px-3 py-1.5 text-white shadow-kp-s sm:right-3 sm:top-2.5 sm:h-[45px] sm:px-4 sm:py-0">
-              <span aria-hidden className="grid h-6 w-6 flex-none place-items-center rounded-full bg-white/25">
-                <IconPin />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-[13px] font-bold leading-tight sm:text-[14.4px]">
-                  {nb.name}
-                </span>
-                {shortAddress(nb.ward, nb.city, nb.name) && (
-                  <span className="block truncate text-[10.5px] leading-tight opacity-90 sm:text-[12px]">
-                    {shortAddress(nb.ward, nb.city, nb.name)}
-                  </span>
-                )}
-              </span>
-            </span>
+          ) : (
+            <div
+              className="flex h-full w-full motion-reduce:transition-none"
+              style={{
+                transform: `translate3d(-${offset * 100}%, 0, 0)`,
+                transition: animate ? `transform ${SLIDE_MS}ms cubic-bezier(0.4, 0, 0.2, 1)` : undefined,
+              }}
+            >
+              {slides.map((n, i) => (
+                <Slide key={`${n.id}-${i}`} nb={n} />
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -111,6 +151,44 @@ export default function NeighborhoodSlider({ map }: { map: MapData }) {
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+/** Một khu phố = 1 ảnh (ảnh #1, chưa upload thì dùng bản đồ cách điệu) + pill địa chỉ */
+function Slide({ nb }: { nb: MapNeighborhood }) {
+  const photo = nb.photo_urls[0] ?? nb.map_url ?? null;
+  const addr = shortAddress(nb.ward, nb.city, nb.name);
+  return (
+    <div className="relative h-full w-full flex-none">
+      {photo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={photo}
+          alt={`Khu phố ${nb.name}`}
+          draggable={false}
+          className="absolute inset-0 h-full w-full select-none object-cover"
+        />
+      ) : (
+        <PhotoPlaceholder />
+      )}
+
+      {/* Địa chỉ dồn 1 dòng — pill nổi góc phải trên (thay dòng địa chỉ dưới ảnh) */}
+      <span className="absolute right-2.5 top-2.5 flex max-w-[75%] items-center gap-2 rounded-full border-[2.7px] border-white bg-brick px-3 py-1.5 text-white shadow-kp-s sm:right-3 sm:top-2.5 sm:h-[45px] sm:px-4 sm:py-0">
+        <span aria-hidden className="grid h-6 w-6 flex-none place-items-center rounded-full bg-white/25">
+          <IconPin />
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-[13px] font-bold leading-tight sm:text-[14.4px]">
+            {nb.name}
+          </span>
+          {addr && (
+            <span className="block truncate text-[10.5px] leading-tight opacity-90 sm:text-[12px]">
+              {addr}
+            </span>
+          )}
+        </span>
+      </span>
     </div>
   );
 }
