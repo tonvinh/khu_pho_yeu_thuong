@@ -193,11 +193,6 @@ export default function LeadSection({
             >
               {busy ? "Đang gửi…" : COPY.leadButton}
             </button>
-            {!me && (
-              <p className="m-0 mt-2.5 text-center text-xs text-ink-soft">
-                Bạn sẽ xác thực số điện thoại một lần trước khi gửi để bảo vệ thông tin của mình.
-              </p>
-            )}
           </>
         )}
       </div>

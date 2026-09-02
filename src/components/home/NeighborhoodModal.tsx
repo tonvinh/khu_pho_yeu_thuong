@@ -39,7 +39,6 @@ export default function NeighborhoodModal({
 
   return (
     <Modal
-      wide
       onClose={onClose}
       title={
         nb ? (

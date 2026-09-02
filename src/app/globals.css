@@ -190,33 +190,6 @@ body {
   padding-bottom: max(18px, env(safe-area-inset-bottom));
 }
 
-/* ===== Card theo prototype: viền mảnh + bóng mềm (không còn viền ink dày) ===== */
-.kp-card {
-  background: #fff;
-  border: 1px solid var(--color-cream-dark);
-  border-radius: 16px;
-  box-shadow: var(--shadow-kp-s);
-}
-.kp-card-3 {
-  border-radius: 22px;
-  box-shadow: var(--shadow-kp);
-}
-
-/* Eyebrow pill mở đầu mỗi section (prototype .eyebrow) */
-.kp-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--color-brick-dark);
-  background: #fff;
-  border: 1px solid var(--color-cream-dark);
-  padding: 6px 13px;
-  border-radius: 999px;
-}
-
 /* Nút skin mới: pill bo tròn hết cỡ. Nút CHÍNH là kiểu VIỀN cam nền trắng
    (design dùng kiểu này cho mọi CTA lớn); .kp-btn-solid dành cho tab đang chọn
    và các chỗ cần khối đặc. */
@@ -305,6 +278,16 @@ body {
   );
 }
 
+/* Frame 155: dải sọc đáy modal cao 12px (dày hơn dải 8px viền card danh sách) */
+.kp-stripe-b {
+  height: 12px;
+  background-image: repeating-linear-gradient(
+    115deg,
+    var(--color-brick) 0 50px,
+    transparent 50px 77.5px
+  );
+}
+
 /* Tiêu đề section skin mới: IN HOA, display, chữ sát nhau */
 /* FPT SongVui chỉ có 300/400/700 — đặt 800 sẽ bị trình duyệt giả đậm (faux bold),
    nét dày bệt và sai hẳn mặt chữ. Tiêu đề trong .fig là Bold = 700. */
@@ -333,32 +316,13 @@ body {
   }
 }
 
-/* Ghim giọt nước — còn dùng ở trang admin đặt pin */
-.kp-pin {
-  display: block;
-  border-radius: 50% 50% 50% 4px;
-  transform: rotate(-45deg);
-  border: 2px solid rgba(43, 38, 32, 0.55);
-}
-
-/* Khối trích câu nhắc */
-.kp-quote {
-  font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.35;
-  background: #f7f1e7;
-  border: 1px solid var(--color-cream-dark);
-  border-radius: 10px;
-}
-
-/* Input theo prototype .field: viền mảnh, focus terra.
-   Mobile để 16px: Safari iOS tự phóng to trang khi focus ô chữ < 16px. */
-/* Frame 189/193 trong .fig: cao 40, bo tròn hết cỡ, viền #3D3D3D 1.5px,
-   placeholder Light 14px #969696. */
+/* Ô nhập — hai cỡ, lấy đúng từ .fig:
+   · .kp-input       = Frame 189/193 khối ưu đãi: cao 40, chữ 14px
+   · .kp-input-lg    = Frame 193 trong 4 popup: cao 50, chữ 16px
+   Cả hai: bo tròn hết cỡ, viền 1.5px #3D3D3D, placeholder Light #969696.
+   Mobile luôn 16px vì Safari iOS tự phóng to trang khi focus ô chữ < 16px (07 §1). */
 .kp-input {
   font-family: var(--font-sans);
-  /* 16px trên mobile để iOS không tự phóng to khi focus (07 §1); từ sm mới xuống 14px
-     đúng như design. */
   font-size: 16px;
   letter-spacing: -0.02em;
   padding: 9px 16px;
@@ -369,12 +333,23 @@ body {
   width: 100%;
   resize: vertical;
 }
-.kp-input::placeholder {
-  color: var(--color-ink-soft);
+.kp-input-lg {
+  /* .fig Frame 193: ô một dòng CAO ĐÚNG 50; ô nhiều dòng cao 90, bo 16 */
+  height: 50px;
+  padding: 0 16px;
+  font-size: 16px;
+}
+textarea.kp-input-lg {
+  height: 90px;
+  padding: 12px 16px;
 }
 @media (min-width: 640px) {
   .kp-input {
     font-size: 14px;
+  }
+  .kp-input-lg {
+    /* .fig: 636×50, chữ 16px — giữ 16px cả ở desktop (không hạ xuống 14px) */
+    font-size: 16px;
   }
 }
 
@@ -388,94 +363,33 @@ body {
 /* Ô nhiều dòng & select nhiều lựa chọn không bo pill được — bo 18px */
 textarea.kp-input,
 select.kp-input[multiple] {
-  border-radius: 18px;
+  border-radius: 16px;
+}
+.kp-input::placeholder {
+  color: var(--color-ink-soft);
 }
 .kp-input:focus {
   outline: none;
   border-color: var(--color-brick);
 }
-.kp-input::placeholder {
-  color: rgba(110, 102, 90, 0.7);
-}
-@media (min-width: 640px) {
-  .kp-input {
-    font-size: 14.5px;
-  }
-}
 
-/* Chip 4N tĩnh trong form viết câu — chỉ nhắc, KHÔNG chấm tự động (Q2) */
+/* Chip 4N tĩnh trong form viết câu — chỉ nhắc, KHÔNG chấm tự động (Q2).
+   .fig Frame 243: 4 chip RỘNG BẰNG NHAU (147×37), viền 1.5px #3D3D3D, chữ 16px. */
 .kp-n4chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 5px 11px;
+  justify-content: center;
+  height: 37px;
+  font-size: 14px;
   border-radius: 999px;
-  border: 1.5px solid var(--color-cream-dark);
-  color: var(--color-ink-soft);
+  border: 1.5px solid var(--color-ink);
+  color: var(--color-ink);
   background: #fff;
 }
-
-/* Biển treo đung đưa trên bản đồ (prototype .sign-sway) */
-@keyframes kp-sway {
-  0%,
-  100% {
-    transform: rotate(-3deg);
+@media (min-width: 640px) {
+  .kp-n4chip {
+    font-size: 16px;
   }
-  50% {
-    transform: rotate(3deg);
-  }
-}
-.kp-sway {
-  transform-origin: center top;
-  animation: kp-sway 3.5s ease-in-out infinite;
-}
-.kp-pin-sign {
-  transition: transform 0.18s ease;
-}
-.kp-pin-sign:hover {
-  transform: translateY(-3px);
-}
-.kp-pin-sign:hover .kp-sway {
-  animation-duration: 1.1s;
-}
-
-/* Drawer trượt từ phải (prototype .drawer) */
-@keyframes kp-drawer-in {
-  from {
-    transform: translateX(102%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-.kp-drawer {
-  animation: kp-drawer-in 0.26s cubic-bezier(0.3, 0.8, 0.3, 1);
-}
-@keyframes kp-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-.kp-scrim {
-  animation: kp-fade-in 0.22s ease;
-}
-
-@keyframes kp-floaty {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-1.5deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(-1.5deg);
-  }
-}
-.floaty {
-  animation: kp-floaty 5s ease-in-out infinite;
 }
 
 @keyframes kp-pop {
@@ -508,10 +422,6 @@ select.kp-input[multiple] {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .floaty,
-  .kp-sway,
-  .kp-drawer,
-  .kp-scrim,
   .slide-up,
   .heart-pop {
     animation: none;

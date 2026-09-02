@@ -4,6 +4,8 @@
 //   Bước 1/2 — Lựa chọn chủ đề (6 chủ đề, chọn xong mới đi tiếp)
 //   Bước 2/2 — Thông tin khu phố: tên khu phố · tỉnh/thành · phường/xã · tên hẻm
 //              · mô tả vấn đề · câu nhắc thương (tuỳ chọn)
+// Quyết định 2/9 (docs/20): DESIGN THẮNG SPEC — bước 2 KHÔNG còn hộp cảnh báo
+// (docs/02 §62), chip 4N và bộ đếm ký tự vì .fig 7458:41714 không vẽ.
 // Giữ combobox tìm khu phố có sẵn (design vẽ input thường) để không sinh khu phố trùng —
 // resolveNeighborhoodId chỉ tạo bản ghi mới khi thật sự là tên chưa có.
 import { useEffect, useState } from "react";
@@ -14,7 +16,7 @@ import { COPY } from "@/lib/copy";
 import { EXAMPLE_ISSUE_DESC } from "@/lib/examples";
 import { formatAddress } from "@/lib/address";
 import NeighborhoodPicker from "./NeighborhoodPicker";
-import { Field, IconPin, Modal } from "./ui";
+import { Field, IconCheck, IconChevronDown, IconPin, Modal } from "./ui";
 
 interface GeoUnit { code: string; name: string }
 
@@ -113,18 +115,18 @@ export default function ProposeModal({
       title="Đề xuất góc phố mới"
       onClose={onClose}
       onBack={step === 2 ? () => { setStep(1); setError(null); } : undefined}
-      wide
     >
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <span className="text-[14.5px] font-bold">
-          {step === 1 ? "Lựa chọn chủ đề" : "Thông tin khu phố của bạn"}
-        </span>
-        <span className="text-[13px] text-ink-soft">{step}/2</span>
+      {/* Frame 212: hai đầu dòng, chữ 18px Regular #3D3D3D */}
+      <div className="mb-4 flex items-baseline justify-between gap-3 text-[15px] tracking-[-0.02em] text-ink sm:text-[18px]">
+        <span>{step === 1 ? "Lựa chọn chủ đề" : "Thông tin khu phố của bạn"}</span>
+        <span>{step}/2</span>
       </div>
 
       {step === 1 ? (
         <>
-          <div className="flex flex-col gap-2.5">
+          {/* Frame 240: 6 thẻ 636×54, bo 16, viền 1.5px #3D3D3D, cách nhau 16px;
+              thẻ đang chọn tô đặc #3D3D3D, chữ trắng, dấu ✓ bên phải */}
+          <div className="flex flex-col gap-4">
             {(Object.entries(CATEGORIES) as [CategoryCode, { label: string; icon: string; desc: string }][]).map(
               ([code, c]) => {
                 const on = category === code;
@@ -133,80 +135,89 @@ export default function ProposeModal({
                     key={code}
                     type="button"
                     onClick={() => setCategory(code)}
-                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+                    aria-pressed={on}
+                    className={`flex cursor-pointer items-center gap-3 rounded-2xl border-[1.5px] px-4 py-2.5 text-left transition sm:h-[54px] sm:py-0 ${
                       on
                         ? "border-ink bg-ink text-white"
-                        : "border-cream-dark bg-white text-ink hover:border-brick"
+                        : "border-ink bg-white text-ink hover:border-brick"
                     }`}
                   >
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[14.5px] font-bold">{c.label}</span>
-                      <span className={`block text-[12.5px] leading-snug ${on ? "text-white/75" : "text-ink-soft"}`}>
+                      <span className="block truncate text-[15px] font-bold leading-tight sm:text-[16px] sm:leading-[21px]">{c.label}</span>
+                      <span className={`block truncate text-[13px] font-light leading-snug sm:text-[14px] sm:leading-[18px] ${on ? "text-white/80" : "text-ink-soft"}`}>
                         {c.desc}
                       </span>
                     </span>
-                    {on && <span aria-hidden className="flex-none text-lg">✓</span>}
+                    {on && <IconCheck className="h-[22px] w-[22px] flex-none" />}
                   </button>
                 );
               }
             )}
           </div>
           {error && <p className="m-0 mt-3 text-sm font-medium text-status-waiting">{error}</p>}
-          <div className="py-5">
-            <button onClick={goStep2} className="kp-btn kp-btn-primary tap w-full px-5 py-3">
+          {/* Frame 205: nút cách danh sách 32px, cao 50 */}
+          <div className="pb-5 pt-8">
+            <button onClick={goStep2} className="kp-btn kp-btn-primary tap h-[50px] w-full px-5 text-[16px]">
               Tiếp tục đề xuất
             </button>
           </div>
         </>
       ) : (
         <>
-          <Field label="Tên khu phố">
+          <Field label="Tên khu phố" size="lg">
             <NeighborhoodPicker
               neighborhoods={neighborhoods}
               valueId={nbId}
               valueText={nbText}
               placeholder="Nhập tên khu phố của bạn"
+              size="lg"
               onChange={(id, text) => { setNbId(id); setNbText(text); }}
             />
           </Field>
 
-          <div className="mt-3.5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-            <Field label="Tỉnh/thành phố">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Tỉnh/thành phố" size="lg">
               {nb ? (
-                <input value={nb.city ?? ""} disabled className="kp-input bg-cream text-ink-soft" />
+                <input value={nb.city ?? ""} disabled className="kp-input kp-input-lg bg-cream text-ink-soft" />
               ) : (
-                <select
-                  value={cityCode}
-                  onChange={(e) => {
-                    const code = e.target.value;
-                    setCityCode(code);
-                    setCity(provinces.find((p) => p.code === code)?.name ?? "");
-                    setWard("");
-                  }}
-                  className="kp-input tap"
-                >
-                  <option value="">Lựa chọn</option>
-                  {provinces.map((p) => (
-                    <option key={p.code} value={p.code}>{p.name}</option>
-                  ))}
-                </select>
+                <span className="relative block">
+                  <select
+                    value={cityCode}
+                    onChange={(e) => {
+                      const code = e.target.value;
+                      setCityCode(code);
+                      setCity(provinces.find((p) => p.code === code)?.name ?? "");
+                      setWard("");
+                    }}
+                    className="kp-input kp-input-lg tap appearance-none pr-12"
+                  >
+                    <option value="">Lựa chọn</option>
+                    {provinces.map((p) => (
+                      <option key={p.code} value={p.code}>{p.name}</option>
+                    ))}
+                  </select>
+                  <IconChevronDown className="pointer-events-none absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-ink" />
+                </span>
               )}
             </Field>
-            <Field label="Phường /Xã">
+            <Field label="Phường /Xã" size="lg">
               {nb ? (
-                <input value={nb.ward ?? ""} disabled className="kp-input bg-cream text-ink-soft" />
+                <input value={nb.ward ?? ""} disabled className="kp-input kp-input-lg bg-cream text-ink-soft" />
               ) : (
-                <select
-                  value={ward}
-                  onChange={(e) => setWard(e.target.value)}
-                  disabled={!cityCode}
-                  className="kp-input tap disabled:bg-cream disabled:text-ink-soft"
-                >
-                  <option value="">{cityCode ? "Lựa chọn" : "Chọn tỉnh/thành trước"}</option>
-                  {wards.map((w) => (
-                    <option key={w.code} value={w.name}>{w.name}</option>
-                  ))}
-                </select>
+                <span className="relative block">
+                  <select
+                    value={ward}
+                    onChange={(e) => setWard(e.target.value)}
+                    disabled={!cityCode}
+                    className="kp-input kp-input-lg tap appearance-none pr-12 disabled:bg-cream disabled:text-ink-soft"
+                  >
+                    <option value="">{cityCode ? "Lựa chọn" : "Chọn tỉnh/thành trước"}</option>
+                    {wards.map((w) => (
+                      <option key={w.code} value={w.name}>{w.name}</option>
+                    ))}
+                  </select>
+                  <IconChevronDown className="pointer-events-none absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-ink" />
+                </span>
               )}
             </Field>
           </div>
@@ -216,12 +227,12 @@ export default function ProposeModal({
             </p>
           )}
 
-          <Field label="Tên hẻm/ngõ muốn treo" className="mt-3.5">
+          <Field label="Tên hẻm/ngõ muốn treo" size="lg" className="mt-4">
             <input
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Nhập tên hẻm ngõ nơi bạn sinh sống"
-              className="kp-input tap"
+              className="kp-input kp-input-lg tap"
             />
             {addressPreview && (
               <p className="m-0 mt-1.5 flex items-center gap-1.5 pl-1 text-[11.5px] text-ink-soft">
@@ -231,45 +242,35 @@ export default function ProposeModal({
             )}
           </Field>
 
-          <Field label="Mô tả vấn đề tại khu phố" className="mt-3.5">
+          <Field label="Mô tả vấn đề tại khu phố" size="lg" className="mt-4">
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={category ? EXAMPLE_ISSUE_DESC[category] : "Nhập đoạn mô tả"}
               rows={3}
-              className="kp-input"
+              className="kp-input kp-input-lg"
             />
           </Field>
 
           {/* Design để trống nhãn ô thứ 2 (trùng nhãn ô mô tả) — theo flow hiện có,
               đây là câu nhắc thương gửi kèm, tuỳ chọn. */}
-          <Field label="Viết câu nhắc thương của bạn (nếu có)" className="mt-3.5">
+          <Field label="Viết câu nhắc thương của bạn (nếu có)" size="lg" className="mt-4">
             <textarea
               value={suggestion}
               onChange={(e) => setSuggestion(e.target.value.slice(0, 120))}
               placeholder={COPY.suggestionPlaceholder}
-              rows={2}
-              className="kp-input"
+              rows={3}
+              className="kp-input kp-input-lg"
             />
-            <div className="mt-1.5 flex items-center justify-between gap-2">
-              <span className="flex gap-1.5">
-                {["Nhắc", "Nhở", "Nhỏ", "Nhẹ"].map((n) => (
-                  <span key={n} className="kp-n4chip">{n}</span>
-                ))}
-              </span>
-              <span className="text-xs text-ink-soft">{suggestion.length}/120</span>
-            </div>
           </Field>
 
-          <p className="m-0 mt-3.5 rounded-2xl border border-cream-dark bg-cream px-4 py-2.5 text-[12px] leading-relaxed text-ink-soft">
-            {COPY.proposeWarning}
-          </p>
-          {error && <p className="m-0 mt-2 text-sm font-medium text-status-waiting">{error}</p>}
-          <div className="py-5">
+          {error && <p className="m-0 mt-3 text-sm font-medium text-status-waiting">{error}</p>}
+          {/* Frame 192: nút cách khối form 32px, cao 50 */}
+          <div className="pb-5 pt-8">
             <button
               onClick={submit}
               disabled={busy}
-              className="kp-btn kp-btn-primary tap w-full px-5 py-3 disabled:opacity-60"
+              className="kp-btn kp-btn-primary tap h-[50px] w-full px-5 text-[16px] disabled:opacity-60"
             >
               {busy ? "Đang gửi…" : "Gửi đề xuất"}
             </button>

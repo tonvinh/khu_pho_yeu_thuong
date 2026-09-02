@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import type { MapNeighborhood, Me } from "./types";
 import { apiGet, apiSend } from "../client-api";
 import NeighborhoodPicker from "./NeighborhoodPicker";
-import { Field, Modal } from "./ui";
+import { Field, IconChevronDown, Modal } from "./ui";
 
 interface GeoUnit { code: string; name: string }
 
@@ -69,59 +69,67 @@ export default function IdentifyModal({
 
   return (
     <Modal title={title} onClose={onClose} topmost>
-      <p className="m-0 mb-4 text-[13.5px] leading-relaxed text-ink-soft">{intro}</p>
+      {/* Frame 192 (.fig 7502:932): mô tả 16px Light #969696, cách khối ô nhập 24px */}
+      <p className="m-0 mb-6 font-light text-[15px] leading-relaxed tracking-[-0.02em] text-ink-soft sm:text-[16px]">
+        {intro}
+      </p>
 
-      <Field label="Số điện thoại">
+      <Field label="Số điện thoại" size="lg">
         <input
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="VD: 0988 123 xxx"
-          className="kp-input tap"
+          className="kp-input kp-input-lg tap"
         />
       </Field>
-      <Field label="Tên người dùng" className="mt-3.5">
+      <Field label="Tên người dùng" size="lg" className="mt-4">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nhập tên hiển thị cho khu phố"
-          className="kp-input tap"
+          className="kp-input kp-input-lg tap"
         />
       </Field>
-      <div className="mt-3.5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-        <Field label="Địa chỉ khu phố">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Địa chỉ khu phố" size="lg">
           <NeighborhoodPicker
             neighborhoods={neighborhoods}
             valueId={nbId}
             valueText={nbText}
             placeholder="Tìm kiếm hoặc tự nhập tên phường"
+              size="lg"
             onChange={(id, text) => { setNbId(id); setNbText(text); }}
           />
         </Field>
-        <Field label="Tỉnh/thành phố">
+        <Field label="Tỉnh/thành phố" size="lg">
           {picked ? (
-            <input value={picked.city ?? ""} disabled className="kp-input bg-cream text-ink-soft" />
+            <input value={picked.city ?? ""} disabled className="kp-input kp-input-lg bg-cream text-ink-soft" />
           ) : (
-            <select
-              value={cityCode}
-              onChange={(e) => setCityCode(e.target.value)}
-              className="kp-input tap"
-            >
-              <option value="">Lựa chọn</option>
-              {provinces.map((p) => (
-                <option key={p.code} value={p.code}>{p.name}</option>
-              ))}
-            </select>
+            <span className="relative block">
+              <select
+                value={cityCode}
+                onChange={(e) => setCityCode(e.target.value)}
+                className="kp-input kp-input-lg tap appearance-none pr-12"
+              >
+                <option value="">Lựa chọn</option>
+                {provinces.map((p) => (
+                  <option key={p.code} value={p.code}>{p.name}</option>
+                ))}
+              </select>
+              <IconChevronDown className="pointer-events-none absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-ink" />
+            </span>
           )}
         </Field>
       </div>
 
       {error && <p className="m-0 mt-3 text-sm font-medium text-status-waiting">{error}</p>}
-      <div className="py-5">
+      {/* .fig: ô cuối kết ở y=432, nút y=506 → cách 74px, nút cao 50 */}
+      <div className="pb-5 pt-8 sm:pt-[74px]">
         <button
           onClick={submit}
           disabled={busy}
-          className="kp-btn kp-btn-primary tap w-full px-5 py-3 disabled:opacity-60"
+          className="kp-btn kp-btn-primary tap h-[50px] w-full px-5 text-[16px] disabled:opacity-60"
         >
           {busy ? "Đang xử lý…" : "Bắt đầu thôi"}
         </button>

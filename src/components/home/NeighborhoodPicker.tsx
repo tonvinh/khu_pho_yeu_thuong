@@ -22,6 +22,7 @@ export default function NeighborhoodPicker({
   onChange,
   placeholder = "Gõ để tìm hoặc tự nhập tên phường…",
   allowFreeText = true,
+  size = "md",
 }: {
   neighborhoods: MapNeighborhood[];
   /** id khu phố đã chọn từ danh sách (null nếu đang tự nhập) */
@@ -31,6 +32,8 @@ export default function NeighborhoodPicker({
   onChange: (id: string | null, text: string) => void;
   placeholder?: string;
   allowFreeText?: boolean;
+  /** `lg` = ô cao 50 như 4 popup trong .fig; `md` = cao 40 như khối ưu đãi */
+  size?: "md" | "lg";
 }) {
   const [open, setOpen] = useState(false);
   const blurTimer = useRef<number | null>(null);
@@ -60,7 +63,7 @@ export default function NeighborhoodPicker({
         placeholder={placeholder}
         role="combobox"
         aria-expanded={open}
-        className="kp-input tap"
+        className={`kp-input tap ${size === "lg" ? "kp-input-lg" : ""}`}
       />
       {selected && (
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-status-signed">

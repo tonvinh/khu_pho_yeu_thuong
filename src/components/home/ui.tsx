@@ -80,6 +80,22 @@ export const IconHeartSolid = (p: { className?: string }) => (
   </svg>
 );
 
+export const IconCheck = (p: { className?: string }) => (
+  <Icon {...p} path={<path d="m5 12.5 4.5 4.5L19 7.5" />} />
+);
+
+export const IconChevronDown = (p: { className?: string }) => (
+  <Icon {...p} path={<path d="m6 9.5 6 6 6-6" />} />
+);
+
+export const IconClose = (p: { className?: string }) => (
+  <Icon {...p} path={<path d="M7 7l10 10M17 7 7 17" />} />
+);
+
+export const IconArrowLeft = (p: { className?: string }) => (
+  <Icon {...p} path={<path d="M13.5 7.5 9 12l4.5 4.5" />} />
+);
+
 export const IconSearch = (p: { className?: string }) => (
   <Icon
     {...p}
@@ -141,7 +157,9 @@ export function FilterTabs<K extends string>({
   onChange: (key: K) => void;
 }) {
   return (
-    <div className="kp-scroll-x -mx-4 flex flex-nowrap justify-start gap-2 px-4 sm:mx-0 sm:flex-wrap sm:justify-center sm:gap-4 sm:overflow-visible sm:px-0">
+    /* Mobile: cuộn ngang nhưng VẪN chừa lề 16px — bản cũ dùng -mx-4 nên tab đầu
+       chạm sát mép màn hình (quy chuẩn mobile 2/9: không phần tử nào chạm mép). */
+    <div className="kp-scroll-x flex flex-nowrap justify-start gap-2 px-4 sm:flex-wrap sm:justify-center sm:gap-4 sm:overflow-visible sm:px-0">
       {tabs.map((t) => {
         const isActive = active === t.key;
         return (
@@ -184,38 +202,50 @@ export function Field({
   label,
   children,
   className = "",
+  size = "md",
 }: {
   label: string;
   children: React.ReactNode;
   className?: string;
+  /** `lg` = nhãn 16px Bold, cách ô 8px — cỡ của 4 popup trong .fig (Frame 190).
+   *  `md` = nhãn 14px, dùng cho khối ưu đãi (nhãn 16px nhưng khối chật hơn). */
+  size?: "md" | "lg";
 }) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-[13px] font-bold text-ink">{label}</span>
+      <span
+        className={`block font-bold text-ink ${
+          size === "lg" ? "mb-2 text-[15px] sm:text-[16px]" : "mb-1.5 text-[14px] sm:text-[16px]"
+        }`}
+      >
+        {label}
+      </span>
       {children}
     </label>
   );
 }
 
 /**
- * Modal giữa màn hình theo design mới: card trắng bo 24px, tiêu đề căn giữa,
- * nút × góc phải, nút ‹ góc trái khi có bước trước, dải sọc cam ló ra mép dưới.
+ * Modal giữa màn hình — số đo lấy nguyên từ 4 frame popup trong .fig
+ * (7458:41634 · 7458:41714 · 7458:42002 · 7502:932):
+ *   khung 700×auto · bo 24 · viền 2px #FF8206 · lề trong 32px
+ *   thanh tiêu đề cao 67: nút ‹ và × 35×35 ở hai mép, tiêu đề 25px REGULAR #3D3D3D
+ *   dải sọc cam 12px là phần tử CUỐI, nằm TRONG khung, bị bo góc cắt.
  * z-50 để luôn nằm trên mọi lớp khác (modal định danh có thể mở chồng lên modal khác).
- * Trên mobile trượt lên từ đáy như bottom sheet.
+ * Mobile (không có trong design — quy chuẩn 2/9): bottom sheet full width, bo trên 24,
+ * có tay nắm kéo, cuộn trong, giấu dải sọc vì sheet chạm mép dưới màn hình.
  */
 export function Modal({
   title,
   onClose,
   onBack,
   children,
-  wide = false,
   topmost = false,
 }: {
   title?: React.ReactNode;
   onClose: () => void;
   onBack?: () => void;
   children: React.ReactNode;
-  wide?: boolean;
   /** Modal mở CHỒNG lên modal khác (định danh mở từ trong modal bình chọn/viết câu).
    *  Cùng z-index thì cái đứng SAU trong DOM đè lên trước — HomeShell render modal định
    *  danh trước nên bắt buộc phải nâng lớp, nếu không nó nằm dưới và người dùng tưởng
@@ -238,38 +268,42 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`slide-up relative w-full ${wide ? "sm:max-w-[720px]" : "sm:max-w-[620px]"}`}
+        className="slide-up relative w-full sm:max-w-[700px]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Sọc cam ló dưới đáy modal (design) — ẩn trên mobile vì modal chạm mép dưới */}
-        <Stripe className="absolute inset-x-6 -bottom-2 hidden rounded-b-xl sm:block" />
-        <div className="kp-safe-b relative max-h-[90vh] overflow-y-auto rounded-t-3xl border border-brick/40 bg-white px-5 pt-4 shadow-kp sm:rounded-3xl sm:px-8 sm:pt-6">
-          {/* Tay nắm kéo — gợi ý bottom sheet trên mobile */}
-          <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-cream-dark sm:hidden" />
-          <div className="relative mb-4 flex min-h-9 items-center justify-center">
-            {onBack && (
+        <div className="kp-modal-card relative flex max-h-[92vh] flex-col overflow-hidden rounded-t-3xl border-2 border-brick bg-white shadow-kp sm:rounded-3xl">
+          <div className="kp-safe-b min-h-0 flex-1 overflow-y-auto px-4 pt-4 sm:px-8 sm:pt-6">
+            {/* Tay nắm kéo — gợi ý bottom sheet trên mobile (design không có mobile) */}
+            <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-cream-dark sm:hidden" />
+            {/* Title frame: cao 67, hai nút 35×35 sát lề 32 */}
+            <div className="relative mb-4 flex min-h-[35px] items-center justify-center sm:mb-[16px] sm:min-h-[43px]">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  aria-label="Quay lại bước trước"
+                  className="absolute left-0 grid h-[35px] w-[35px] cursor-pointer place-items-center rounded-full border-[1.5px] border-ink-soft/50 bg-white text-ink transition hover:border-brick hover:text-brick"
+                >
+                  <IconArrowLeft className="h-[18px] w-[18px]" />
+                </button>
+              )}
+              {title && (
+                <h3 className="m-0 px-12 text-center text-[19px] font-normal leading-tight tracking-[-0.02em] text-ink sm:text-[25px]">
+                  {title}
+                </h3>
+              )}
               <button
-                onClick={onBack}
-                aria-label="Quay lại bước trước"
-                className="absolute left-0 grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-cream-dark bg-white text-lg text-ink hover:border-brick hover:text-brick"
+                onClick={onClose}
+                aria-label="Đóng"
+                className="absolute right-0 grid h-[35px] w-[35px] cursor-pointer place-items-center rounded-full border-[1.5px] border-ink-soft/50 bg-white text-ink-soft transition hover:border-brick hover:text-brick"
               >
-                ‹
+                <IconClose className="h-[16px] w-[16px]" />
               </button>
-            )}
-            {title && (
-              <h3 className="m-0 px-10 text-center font-display text-[19px] font-bold leading-tight sm:text-[21px]">
-                {title}
-              </h3>
-            )}
-            <button
-              onClick={onClose}
-              aria-label="Đóng"
-              className="absolute right-0 grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-cream-dark bg-white text-base text-ink-soft hover:border-brick hover:text-brick"
-            >
-              ×
-            </button>
+            </div>
+            {children}
           </div>
-          {children}
+          {/* Frame 155 — dải sọc cam đáy modal, nằm TRONG khung. Mobile ẩn vì
+              bottom sheet chạm mép dưới màn hình. */}
+          <div aria-hidden className="kp-stripe-b hidden flex-none sm:block" />
         </div>
       </div>
     </div>
