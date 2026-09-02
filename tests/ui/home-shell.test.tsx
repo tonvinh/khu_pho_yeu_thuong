@@ -119,3 +119,36 @@ describe("HomeShell · B4 — avatar mở menu đăng xuất", () => {
     expect(screen.queryByRole("button", { name: /Tài khoản của/ })).toBeNull();
   });
 });
+
+// ── QC Figma mới 2/9 · mục A ────────────────────────────────────────────────
+// Frame 202 (ảnh KV 1244×570 + logo 286.5×153.2) bị `visible=false` trong bản .fig
+// upload 2/9 → chân trang chỉ còn KHỐI CHỮ rộng 697, canh giữa, 16px, màu #000.
+// Ảnh KV cũng chính là thủ phạm của C1 (không có width/height → CLS ~673px).
+describe("HomeShell · A — chân trang không còn khối KV", () => {
+  it("footer KHÔNG còn ảnh nào (gỡ KV + logo, hết luôn CLS của C1)", () => {
+    const { container } = render(<HomeShell initial={homeData()} />);
+    const footer = container.querySelector("footer")!;
+    expect(footer.querySelectorAll("img")).toHaveLength(0);
+  });
+
+  it("logo vẫn còn ở top bar — chỉ gỡ ở chân trang", () => {
+    const { container } = render(<HomeShell initial={homeData()} />);
+    const logos = container.querySelectorAll('img[src="/brand/logo-khu-pho.svg"]');
+    expect(logos).toHaveLength(1);
+    expect(logos[0].closest("footer")).toBeNull();
+  });
+
+  it("khối chữ chân trang giữ đủ 4 dòng + link chính sách dữ liệu", () => {
+    const { container } = render(<HomeShell initial={homeData()} />);
+    const footer = container.querySelector("footer")!;
+    expect(footer.textContent).toContain("Chính sách dữ liệu");
+    expect(footer.querySelector('a[href="/chinh-sach-du-lieu"]')).toBeTruthy();
+  });
+
+  it("chữ chân trang màu #000 (design), không còn text-ink #3D3D3D", () => {
+    const { container } = render(<HomeShell initial={homeData()} />);
+    const box = container.querySelector("footer > div")!;
+    expect(box.className).toContain("text-black");
+    expect(box.className).not.toContain("text-ink");
+  });
+});

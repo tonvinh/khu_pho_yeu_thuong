@@ -416,31 +416,15 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         <LeadSection me={me} content={data.content} requireIdentity={requireIdentity} showToast={showToast} />
       </section>
 
-      {/* ===== FOOTER: KV + logo + các dòng chân trang ===== */}
-      <footer className="overflow-hidden pt-6">
-        {/* KV 1244 rộng, logo 286.5×153.2 đè lên đáy KV (thò xuống 39.2px) — quy ra %
-            theo bề ngang khối để co giãn đúng tỷ lệ như trong .fig. */}
-        <div className="mx-auto w-[88%] max-w-[1244px]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/kv-khu-pho-sm.webp"
-            alt=""
-            aria-hidden
-            loading="lazy"
-            className="block w-full"
-          />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/logo-khu-pho.svg"
-            alt="Khu phố biết thương"
-            width={287}
-            height={153}
-            loading="lazy"
-            className="mx-auto block h-auto w-[23%] min-w-[120px]"
-            style={{ marginTop: "-9.16%" }}
-          />
-        </div>
-        <div className="mx-auto max-w-[697px] px-5 pb-10 pt-6 text-center text-[14px] leading-relaxed text-ink sm:text-[16px]">
+      {/* ===== FOOTER — chỉ còn KHỐI CHỮ (QC Figma mới 2/9 · mục A) =====
+           Bản .fig upload 2/9 để `Frame 202` (ảnh KV 1244×570 + logo 286.5×153.2)
+           ở `visible=false`: web render tiếp là dư ~887px so với frame chuẩn 3780.
+           Gỡ luôn ảnh KV cũng dứt điểm C1 — ảnh đó không khai width/height nên đẩy
+           cả trang xuống ~673px khi tải xong (CLS). Logo GIỮ ở top bar.
+           .fig: form ưu đãi → footer gap 64px, khối chữ w=697 canh giữa, 16px, #000,
+           đáy trang chừa 71px. */}
+      <footer className="overflow-hidden pt-8 sm:pt-[64px]">
+        <div className="mx-auto max-w-[697px] px-5 pb-10 text-center text-[14px] leading-relaxed text-black sm:pb-[71px] sm:text-[16px]">
           <div>{data.content.footer_line1}</div>
           <div>{data.content.footer_line2}</div>
           <div>{boldHotline(data.content.footer_support)}</div>
