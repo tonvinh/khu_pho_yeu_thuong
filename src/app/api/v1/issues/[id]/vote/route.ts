@@ -1,10 +1,13 @@
-// Toggle "thương" nhanh từ card trang chủ (không mở drawer): chưa thương góc này →
-// thương câu đang dẫn đầu; đã thương → bỏ phiếu đó. Cùng quy tắc với vote theo câu
-// (1 tài khoản 1 phiếu/câu, cấm tự thương, shadow-ban → is_valid=false).
+// Bình chọn nhanh cả góc phố: thương câu đang dẫn đầu. Cùng quy tắc với vote theo
+// câu (1 tài khoản 1 phiếu/câu, cấm tự thương, shadow-ban → is_valid=false) và
+// KHÔNG cho rút phiếu (QC 2/9 · C5, quyết định Q6).
+// LƯU Ý: từ bản Figma 2/9 không còn client nào gọi route này — IssueBoard tab 1
+// đổi sang "Gửi lời nhắc", tab 2 sang "Xem câu nhắc" (mở VoteModal). Giữ nguyên
+// endpoint vì là API công khai, nhưng luật phải khớp với route theo câu.
 import { NextRequest, NextResponse } from "next/server";
 import { tx } from "@/lib/db";
 import { jsonError, requireUserWrite } from "@/lib/api";
-import { recordScoreEvent, invalidateScoreEvent } from "@/lib/score-service";
+import { recordScoreEvent } from "@/lib/score-service";
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = await requireUserWrite(req);
@@ -14,7 +17,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   try {
     const result = await tx(async (c) => {
-      // Đã có phiếu trên câu nào của góc này? → bỏ thương (toggle off)
+      // Đã có phiếu trên câu nào của góc này? → chốt, không cho rút (Q6)
       const existing = await c.query(
         `SELECT v.id, v.suggestion_id, s.author_id FROM votes v
          JOIN suggestions s ON s.id = v.suggestion_id
@@ -22,12 +25,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
          ORDER BY v.created_at DESC LIMIT 1`,
         [id, user.id]
       );
-      if (existing.rowCount && existing.rowCount > 0) {
-        const vote = existing.rows[0];
-        await c.query(`DELETE FROM votes WHERE id = $1`, [vote.id]);
-        await invalidateScoreEvent(c, vote.author_id, "vote_received", vote.suggestion_id);
-        return { voted: false };
-      }
+      if (existing.rowCount && existing.rowCount > 0) throw new Error("ALREADY_VOTED");
 
       // Chưa thương → chọn câu dẫn đầu KHÔNG PHẢI của mình (đông phiếu nhất, cũ trước)
       const top = await c.query(
@@ -65,6 +63,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     const msg = e instanceof Error ? e.message : "";
     if (msg === "NO_SUGGESTION") return jsonError(404, "Góc này chưa có câu nhắc — bạn mở hàng nhé!");
     if (msg === "SELF_VOTE") return jsonError(409, "Câu của mình thì để cả xóm thương nhé 💛");
+    if (msg === "ALREADY_VOTED") return jsonError(409, "Bạn đã bình chọn câu này rồi 💛");
     throw e;
   }
 }

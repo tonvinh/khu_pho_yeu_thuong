@@ -74,9 +74,16 @@ d("A1 + A3 · markup top bar và banner", () => {
     expect(nav).not.toContain("sm:flex");
   });
 
+  // Figma bản 2/9 · B1 đổi nhãn CTA thành "Ưu đãi dành cho cư dân"; ngưỡng lg giữ nguyên.
   it("A3 · nhãn CTA đầy đủ bật từ lg, nhãn rút gọn ẩn từ lg", () => {
-    expect(html).toMatch(/class="lg:hidden">\+ Đề xuất</);
-    expect(html).toMatch(/class="hidden lg:inline">\+ Đề xuất góc phố mới</);
+    expect(html).toMatch(/class="lg:hidden">Ưu đãi</);
+    expect(html).toMatch(/class="hidden lg:inline">Ưu đãi dành cho cư dân</);
+  });
+
+  it("B1 · ba nhãn nav mới, không còn nhãn cũ trong thanh nav", () => {
+    expect(html).toContain("Đóng góp lời nhắc");
+    expect(html).toContain("Đề xuất khu phố cần treo biển");
+    expect(html).not.toContain("Quà dành cho cư dân");
   });
 });
 
@@ -307,6 +314,165 @@ d("C1 + C2 · stylesheet server gửi ra", () => {
     expect(smRule).toMatch(/\.kp-input\s*\{[^}]*min-height:\s*0/);
     // ô trong popup không bị đụng tới
     expect(css).toMatch(/\.kp-input-lg\s*\{[^}]*height:\s*50px/);
+  });
+});
+
+// ===================================================================
+// QC Figma 2/9 · C5 + quyết định Q6 — phiếu "thương" KHÔNG rút lại được
+// ===================================================================
+d("C5 · bình chọn là chốt, không cho rút", () => {
+  const PHONE = process.env.E2E_PHONE || "0987650004";
+
+  /** Một câu ĐÃ DUYỆT không phải của user E2E — không có thì bỏ qua case */
+  async function pickSuggestion(): Promise<string | null> {
+    const rows = await sql<{ id: string }>(
+      `SELECT s.id FROM suggestions s
+       JOIN users u ON u.id = s.author_id
+       WHERE s.status IN ('approved','selected','produced','installed')
+         AND u.display_name <> $1
+       ORDER BY s.created_at DESC LIMIT 1`,
+      [E2E_USER_NAME]
+    );
+    return rows?.[0]?.id ?? null;
+  }
+
+  /** Xoá phiếu do test tạo — cleanupE2EUser không đụng tới bảng votes */
+  async function dropVotes() {
+    await sql(
+      `DELETE FROM votes WHERE user_id IN (SELECT id FROM users WHERE display_name = $1)`,
+      [E2E_USER_NAME]
+    );
+  }
+
+  it("bình chọn lần 1 được, lần 2 cùng câu bị từ chối 409 và số phiếu KHÔNG đổi", async () => {
+    const sid = await pickSuggestion();
+    if (!sid) return; // DB chưa có câu duyệt nào của người khác
+    await dropVotes();
+
+    const c = new Client();
+    const id = await c.sendJson("POST", "/api/v1/auth/identify", {
+      phone: PHONE, display_name: E2E_USER_NAME,
+    });
+    expect(id.status, JSON.stringify(id.body)).toBe(200);
+
+    const first = await c.sendJson<{ voted: boolean }>("POST", `/api/v1/suggestions/${sid}/vote`);
+    expect(first.status, JSON.stringify(first.body)).toBe(200);
+    expect(first.body.voted).toBe(true);
+
+    const after1 = await sql<{ n: number }>(
+      `SELECT count(*)::int AS n FROM votes WHERE suggestion_id = $1 AND is_valid`, [sid]
+    );
+
+    const second = await c.sendJson<{ error?: string }>("POST", `/api/v1/suggestions/${sid}/vote`);
+    expect(second.status).toBe(409);
+    expect(JSON.stringify(second.body)).toMatch(/đã bình chọn/i);
+
+    const after2 = await sql<{ n: number }>(
+      `SELECT count(*)::int AS n FROM votes WHERE suggestion_id = $1 AND is_valid`, [sid]
+    );
+    expect(after2?.[0]?.n).toBe(after1?.[0]?.n); // phiếu không bị rút
+
+    await dropVotes();
+  });
+
+  it("điểm của tác giả KHÔNG bị thu hồi sau lần bấm thứ hai", async () => {
+    const sid = await pickSuggestion();
+    if (!sid) return;
+    await dropVotes();
+
+    const author = await sql<{ author_id: string }>(
+      `SELECT author_id FROM suggestions WHERE id = $1`, [sid]
+    );
+    const authorId = author?.[0]?.author_id;
+    if (!authorId) return;
+
+    const c = new Client();
+    await c.sendJson("POST", "/api/v1/auth/identify", { phone: PHONE, display_name: E2E_USER_NAME });
+    await c.sendJson("POST", `/api/v1/suggestions/${sid}/vote`);
+
+    const before = await sql<{ p: number }>(
+      `SELECT COALESCE(sum(points),0)::int AS p FROM score_events
+       WHERE user_id = $1 AND is_valid`, [authorId]
+    );
+    await c.sendJson("POST", `/api/v1/suggestions/${sid}/vote`); // bị 409
+    const after = await sql<{ p: number }>(
+      `SELECT COALESCE(sum(points),0)::int AS p FROM score_events
+       WHERE user_id = $1 AND is_valid`, [authorId]
+    );
+    expect(after?.[0]?.p).toBe(before?.[0]?.p);
+
+    await dropVotes();
+  });
+
+  it("vẫn cấm tự thương câu của chính mình (quy tắc cứng 3 không bị nới)", async () => {
+    const c = new Client();
+    await c.sendJson("POST", "/api/v1/auth/identify", { phone: PHONE, display_name: E2E_USER_NAME });
+    const mine = await sql<{ id: string }>(
+      `SELECT s.id FROM suggestions s JOIN users u ON u.id = s.author_id
+       WHERE u.display_name = $1 AND s.status IN ('approved','selected','produced','installed')
+       LIMIT 1`,
+      [E2E_USER_NAME]
+    );
+    if (!mine?.[0]) return;
+    const res = await c.sendJson("POST", `/api/v1/suggestions/${mine[0].id}/vote`);
+    expect(res.status).toBe(409);
+  });
+});
+
+// ===================================================================
+// QC Figma 2/9 · B4 — dòng tab 2 cần tên người viết câu dẫn đầu
+// ===================================================================
+d("B4 · dữ liệu dòng góc phố", () => {
+  it("GET /api/v1/issues trả kèm top_author_name", async () => {
+    const { status, body } = await new Client().getJson<{ issues: any[] }>("/api/v1/issues");
+    expect(status).toBe(200);
+    for (const it of body.issues) {
+      expect(it).toHaveProperty("top_author_name");
+      // Góc phố đã có câu duyệt thì phải có tên người viết
+      if (it.suggestion_count > 0) expect(typeof it.top_author_name).toBe("string");
+    }
+  });
+
+  it("GET /api/v1/leaderboard trả kèm suggestions_count", async () => {
+    const { body } = await new Client().getJson<{ ambassadors: any[] }>("/api/v1/leaderboard");
+    for (const a of body.ambassadors) expect(typeof a.suggestions_count).toBe("number");
+  });
+});
+
+// ===================================================================
+// QC Figma 2/9 · B6 — 6 mã dịch vụ, mã lạ bị lọc
+// ===================================================================
+d("B6 · mã dịch vụ của lead", () => {
+  const PHONE = process.env.E2E_PHONE || "0987650005";
+
+  it("nhận 2 mã MỚI và lọc bỏ mã rác", async () => {
+    const c = new Client();
+    const id = await c.sendJson("POST", "/api/v1/auth/identify", {
+      phone: PHONE, display_name: E2E_USER_NAME,
+    });
+    if (id.status !== 200) return; // đâm trần rate limit thì bỏ qua
+
+    const res = await c.sendJson("POST", "/api/v1/leads", {
+      name: E2E_USER_NAME,
+      phone: PHONE,
+      province: "Thành phố Hồ Chí Minh",
+      address: "E2E",
+      interests: ["camera", "internet_tv_camera", "khong_ton_tai"],
+      opted_in: true,
+      confirm_switch: true,
+    });
+    expect(res.status, JSON.stringify(res.body)).toBe(200);
+
+    const rows = await sql<{ interests: string[] }>(
+      `SELECT interests FROM leads WHERE name = $1 ORDER BY created_at DESC LIMIT 1`,
+      [E2E_USER_NAME]
+    );
+    const saved = rows?.[0]?.interests ?? [];
+    expect(saved).toContain("camera");
+    expect(saved).toContain("internet_tv_camera");
+    expect(saved).not.toContain("khong_ton_tai");
+
+    await sql(`DELETE FROM leads WHERE name = $1`, [E2E_USER_NAME]);
   });
 });
 

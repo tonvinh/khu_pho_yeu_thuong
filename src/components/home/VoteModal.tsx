@@ -48,19 +48,20 @@ export default function VoteModal({
   }, [issueId, onClose]);
   useEffect(() => { load(); }, [load]);
 
+  // QC 2/9 · C5 + quyết định Q6: 1 phiếu/câu và KHÔNG rút lại được. Bản cũ là toggle
+  // hai chiều (bấm lại thì -1 và server xoá phiếu); nay đã bỏ phiếu là khoá nút.
   const vote = (s: SuggestionItem) =>
     requireIdentity(async () => {
+      if (s.voted) return; // đã bình chọn — nút đã disabled, chặn thêm ở đây cho chắc
       // Optimistic UI — lỗi thì trả lại như cũ
       setPopId(s.id);
       setSuggestions((list) =>
-        list.map((it) =>
-          it.id === s.id ? { ...it, voted: !it.voted, votes: it.votes + (it.voted ? -1 : 1) } : it
-        )
+        list.map((it) => (it.id === s.id ? { ...it, voted: true, votes: it.votes + 1 } : it))
       );
       try {
         await apiSend("POST", `/api/v1/suggestions/${s.id}/vote`);
         onChanged();
-        if (!s.voted) onEngaged?.();
+        onEngaged?.();
       } catch (e) {
         setSuggestions((list) =>
           list.map((it) => (it.id === s.id ? { ...it, voted: s.voted, votes: s.votes } : it))
@@ -114,6 +115,7 @@ export default function VoteModal({
             {sorted.map((s) => (
               <div
                 key={s.id}
+                data-sugg
                 className="flex items-start gap-3 rounded-2xl border border-cream-dark bg-white p-3.5"
               >
                 <div className="min-w-0 flex-1 text-[14.5px]">
@@ -134,10 +136,12 @@ export default function VoteModal({
                 ) : (
                   <button
                     onClick={() => vote(s)}
-                    className={`min-w-[56px] flex-none cursor-pointer rounded-xl border px-2 py-1.5 text-center transition ${
+                    disabled={s.voted}
+                    aria-label={s.voted ? `Bạn đã thương câu của ${s.author_name}` : `Thương câu của ${s.author_name}`}
+                    className={`min-w-[56px] flex-none rounded-xl border px-2 py-1.5 text-center transition ${
                       s.voted
-                        ? "border-accent-blue bg-accent-blue text-white"
-                        : "border-accent-blue/40 bg-white text-accent-blue hover:bg-accent-blue-light"
+                        ? "cursor-default border-accent-blue bg-accent-blue text-white"
+                        : "cursor-pointer border-accent-blue/40 bg-white text-accent-blue hover:bg-accent-blue-light"
                     } ${popId === s.id ? "heart-pop" : ""}`}
                   >
                     <div className="font-display text-base font-bold leading-none">{s.votes}</div>
