@@ -476,6 +476,41 @@ d("B6 · mã dịch vụ của lead", () => {
   });
 });
 
+// ===================================================================
+// QC Figma 2/9 · B10 — endpoint cho popup "Cây bút khu phố"
+// ===================================================================
+d("B10 · GET /api/v1/ambassadors/{slug}", () => {
+  it("slug có thật → 200, đủ trường popup cần, KHÔNG lộ SĐT", async () => {
+    const c = new Client();
+    const { body } = await c.getJson<{ ambassadors: any[] }>("/api/v1/leaderboard");
+    if (body.ambassadors.length === 0) return;
+
+    const slug = body.ambassadors[0].share_slug;
+    const res = await c.getJson<{ ambassador: any }>(`/api/v1/ambassadors/${slug}`);
+    expect(res.status).toBe(200);
+    const a = res.body.ambassador;
+    expect(typeof a.display_name).toBe("string");
+    expect(a).toHaveProperty("ward");
+    expect(Array.isArray(a.notes)).toBe(true);
+    expect(JSON.stringify(a)).not.toMatch(/phone/i);
+
+    for (const n of a.notes) {
+      expect(typeof n.content).toBe("string");
+      expect(typeof n.votes).toBe("number");
+      expect(typeof n.voted).toBe("boolean");
+      expect(typeof n.is_mine).toBe("boolean");
+    }
+    // .fig xếp câu nhiều thương nhất lên trước
+    const votes = a.notes.map((n: any) => n.votes);
+    expect([...votes].sort((x: number, y: number) => y - x)).toEqual(votes);
+  });
+
+  it("slug không tồn tại → 404", async () => {
+    const res = await new Client().getJson("/api/v1/ambassadors/khong-co-slug-nay-dau");
+    expect(res.status).toBe(404);
+  });
+});
+
 // Dọn dấu vết E2E một lần ở CUỐI: xoá user giữa chừng sẽ khiến mỗi lần định danh sau đó
 // bị tính là "tạo định danh MỚI" và đâm vào trần 3 SĐT mới/thiết bị/giờ.
 afterAll(cleanupE2EUser);

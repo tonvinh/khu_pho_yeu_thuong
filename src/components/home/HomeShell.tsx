@@ -23,6 +23,7 @@ import SuggestModal from "./SuggestModal";
 import VoteModal from "./VoteModal";
 import LeadPromptModal from "./LeadPromptModal";
 import NeighborhoodModal from "./NeighborhoodModal";
+import AmbassadorModal from "./AmbassadorModal";
 import BackToTop from "./BackToTop";
 import UserMenu from "./UserMenu";
 
@@ -450,6 +451,15 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           </div>
         </div>
       </footer>
+
+      {ambassadorSlug && (
+        <AmbassadorModal
+          slug={ambassadorSlug}
+          onClose={() => setAmbassadorSlug(null)}
+          showToast={showToast}
+          onChanged={refresh}
+        />
+      )}
 
       {/* Nút nổi "Lên đầu trang" (Figma 2/9 · B7) — chỉ hiện khi đã cuộn quá 1 màn hình */}
       <BackToTop />
