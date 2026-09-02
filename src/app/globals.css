@@ -426,11 +426,25 @@ select.kp-input[multiple] {
   background-position: top left, bottom left;
 }
 
+/* Chú thích dưới chip 4N — .fig Frame 243: 12px Light #969696, khối rộng 147,
+   canh giữa, hai dòng (Figma bản 2/9 · B8) */
+.kp-n4note {
+  display: block;
+  max-width: 147px;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--color-ink-soft);
+}
+
 .kp-n4chip {
   display: inline-flex;
+  width: 100%;
+  max-width: 147px;
   align-items: center;
   justify-content: center;
-  height: 37px;
+  height: 40px;
   font-size: 14px;
   border-radius: 999px;
   border: 1.5px solid var(--color-ink);

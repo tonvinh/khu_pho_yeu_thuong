@@ -13,6 +13,14 @@ import { COPY } from "@/lib/copy";
 import { EXAMPLE_SUGGESTIONS } from "@/lib/examples";
 import { Field, IconPin, Modal } from "./ui";
 
+/** Chú thích dưới mỗi chip 4N — nguyên văn .fig Frame 243 (Figma bản 2/9 · B8) */
+const N4_CHIPS: [string, string][] = [
+  ["Nhắc", "Không cấm, không phạt"],
+  ["Nhở", "Như nói với người nhà"],
+  ["Nhỏ", "Quan tâm từ những chuyện nhỏ"],
+  ["Nhẹ", "Đọc xong thấy nhẹ lòng"],
+];
+
 export default function SuggestModal({
   issueId,
   me,
@@ -21,6 +29,8 @@ export default function SuggestModal({
   showToast,
   onChanged,
   onEngaged,
+  initialTitle,
+  initialWard,
 }: {
   issueId: string;
   me: Me | null;
@@ -30,6 +40,11 @@ export default function SuggestModal({
   onChanged: () => void;
   /** Gọi sau khi gửi câu thành công — mở popup ưu đãi */
   onEngaged?: () => void;
+  /** QC 2/9 · C4 — tên chủ đề + phường mà IssueBoard ĐÃ CÓ sẵn ở client. Truyền
+   *  xuống để popup hiện ngay, khỏi loé "Đang tải…" ~4s trong lúc chờ fetch.
+   *  Fetch vẫn chạy (cần danh sách ví dụ) và sẽ đè lên khi có dữ liệu server. */
+  initialTitle?: string;
+  initialWard?: string;
 }) {
   const [issue, setIssue] = useState<IssueDetail | null>(null);
   const [content, setContent] = useState("");
@@ -78,15 +93,20 @@ export default function SuggestModal({
       {/* Frame 247: tên chủ đề 30px Bold, cách 4px tới dòng địa chỉ 14px Light #969696 */}
       <div className="mb-5">
         <div className="text-[22px] font-bold leading-tight tracking-[-0.02em] sm:text-[30px]">
-          {issue ? categoryLabel(issue.category) : "Đang tải…"}
+          {issue ? categoryLabel(issue.category) : initialTitle ?? "Đang tải…"}
         </div>
-        {issue && (
+        {issue ? (
           <div className="mt-1 font-light text-[14px] text-ink-soft">
             <IconPin className="mr-2 text-brick" />
             {issue.neighborhood_name}
             {issue.location_text ? ` · ${issue.location_text}` : ""}
           </div>
-        )}
+        ) : initialWard ? (
+          <div className="mt-1 font-light text-[14px] text-ink-soft">
+            <IconPin className="mr-2 text-brick" />
+            {initialWard}
+          </div>
+        ) : null}
       </div>
 
       <Field label="Viết câu nhắc của bạn" size="lg">
@@ -98,11 +118,16 @@ export default function SuggestModal({
           className="kp-input kp-input-lg"
         />
       </Field>
-      {/* Frame 243: 4 chip 4N RỘNG BẰNG NHAU (147×37), cách nhau 16px — chip tĩnh,
-          KHÔNG chấm tự động (Q2). Bộ đếm ký tự nằm dưới, design không vẽ khung riêng. */}
-      <div className="mt-3.5 grid grid-cols-4 gap-2 sm:gap-4">
-        {["Nhắc", "Nhở", "Nhỏ", "Nhẹ"].map((n) => (
-          <span key={n} className="kp-n4chip">{n}</span>
+      {/* Frame 243 (636×84): 4 chip 4N RỘNG BẰNG NHAU (147×40) kèm CHÚ THÍCH 12px
+          Light #969696 bên dưới, cách nhau 16px. Chip TĨNH — không chấm tự động và
+          không có trạng thái chọn: quyết định Q4 (2/9) chốt chip chỉ để tự soát,
+          không lưu vào suggestions. */}
+      <div className="mt-3.5 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        {N4_CHIPS.map(([name, note]) => (
+          <div key={name} data-n4 className="flex flex-col items-center gap-1.5">
+            <span className="kp-n4chip">{name}</span>
+            <span className="kp-n4note">{note}</span>
+          </div>
         ))}
       </div>
       <p className="m-0 mt-3.5 flex items-center justify-between gap-3 font-light text-[13px] text-ink-soft sm:text-[14px]">

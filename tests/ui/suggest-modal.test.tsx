@@ -128,3 +128,84 @@ describe("SuggestModal — luật nghiệp vụ", () => {
     expect(onClose).toHaveBeenCalled();
   });
 });
+
+// ── QC Figma bản 2/9 · B8 + C4 ──────────────────────────────────────────────
+// B8: .fig Frame 243 (636×84) — mỗi chip 4N có CHÚ THÍCH 12px Light #969696 bên
+//     dưới. Quyết định Q4: chip chỉ trang trí, KHÔNG cho chọn, không lưu DB.
+// C4: popup loé chữ "Đang tải…" ~4s ở đúng chỗ tên góc phố rồi mới đổi thành
+//     "Giúp đỡ, san sẻ" + phường. Dữ liệu đó IssueBoard đã có sẵn ở client.
+describe("SuggestModal · B8 — chú thích 4 chip 4N", () => {
+  const NOTES = [
+    "Không cấm, không phạt",
+    "Như nói với người nhà",
+    "Quan tâm từ những chuyện nhỏ",
+    "Đọc xong thấy nhẹ lòng",
+  ];
+
+  it("mỗi chip có đúng chú thích của design", async () => {
+    setup();
+    await waitFor(() => expect(screen.getByText("Trẻ con trong xóm")).toBeTruthy());
+    for (const note of NOTES) expect(screen.getByText(note)).toBeTruthy();
+  });
+
+  it("chú thích đứng đúng cặp với chip của nó", async () => {
+    setup();
+    await waitFor(() => expect(screen.getByText("Trẻ con trong xóm")).toBeTruthy());
+    const cells = Array.from(document.querySelectorAll("[data-n4]"));
+    expect(cells.map((c) => c.textContent)).toEqual([
+      "Nhắc" + NOTES[0], "Nhở" + NOTES[1], "Nhỏ" + NOTES[2], "Nhẹ" + NOTES[3],
+    ]);
+  });
+
+  it("chip KHÔNG bấm được (Q4: chỉ trang trí, không lưu DB)", async () => {
+    setup();
+    await waitFor(() => expect(screen.getByText("Trẻ con trong xóm")).toBeTruthy());
+    for (const chip of document.querySelectorAll(".kp-n4chip")) {
+      expect(chip.tagName).not.toBe("BUTTON");
+    }
+  });
+});
+
+describe("SuggestModal · C4 — không loé 'Đang tải…'", () => {
+  it("có sẵn tên góc phố + phường thì hiện NGAY, không chờ fetch", () => {
+    apiGet.mockReturnValue(new Promise(() => {})); // fetch treo mãi
+    render(
+      <SuggestModal
+        issueId="iss-1"
+        me={null}
+        requireIdentity={runNow}
+        onClose={vi.fn()}
+        showToast={vi.fn()}
+        onChanged={vi.fn()}
+        initialTitle="Trẻ con trong xóm"
+        initialWard="Phường Bàn Cờ"
+      />
+    );
+    expect(screen.getByText("Trẻ con trong xóm")).toBeTruthy();
+    expect(screen.getByText(/Phường Bàn Cờ/)).toBeTruthy();
+    expect(screen.queryByText("Đang tải…")).toBeNull();
+  });
+
+  it("biên: không truyền sẵn (mở từ deep-link) thì vẫn rơi về 'Đang tải…'", () => {
+    apiGet.mockReturnValue(new Promise(() => {}));
+    setup();
+    expect(screen.getByText("Đang tải…")).toBeTruthy();
+  });
+
+  it("fetch xong thì dữ liệu server đè lên giá trị truyền sẵn", async () => {
+    render(
+      <SuggestModal
+        issueId="iss-1"
+        me={null}
+        requireIdentity={runNow}
+        onClose={vi.fn()}
+        showToast={vi.fn()}
+        onChanged={vi.fn()}
+        initialTitle="Tên cũ ở client"
+        initialWard="Phường cũ"
+      />
+    );
+    await waitFor(() => expect(screen.getByText("Trẻ con trong xóm")).toBeTruthy());
+    expect(screen.queryByText("Tên cũ ở client")).toBeNull();
+  });
+});

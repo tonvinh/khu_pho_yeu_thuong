@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { HomeData, Me, NotificationItem } from "./types";
 import { apiGet, apiSend, BASE } from "../client-api";
 import { COPY } from "@/lib/copy";
+import { categoryLabel } from "@/lib/taxonomy";
 import Counters from "./Counters";
 import NeighborhoodSlider from "./NeighborhoodSlider";
 import HeroLookup from "./HeroLookup";
@@ -153,6 +154,9 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   // trước đây gọi requireIdentity trước nên hiện modal "Để FPT gửi ưu đãi…",
   // team review đọc thành "click vào đang ra ô offer ưu đãi" (email 18/8).
   const openPropose = () => setProposeOpen(true);
+
+  // Góc phố đang mở form viết câu — dùng để truyền sẵn tên/phường cho SuggestModal (C4)
+  const suggestIssue = data.issues.find((it) => it.id === suggestIssueId) ?? null;
 
   return (
     <div>
@@ -481,6 +485,11 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           showToast={showToast}
           onChanged={refresh}
           onEngaged={maybeShowLeadPrompt}
+          /* QC 2/9 · C4 — tên chủ đề + phường đã có sẵn trong `data.issues` nên
+             truyền thẳng xuống, khỏi loé "Đang tải…" trong lúc chờ fetch. Góc phố
+             mở từ deep-link không nằm trong danh sách → rơi về "Đang tải…". */
+          initialTitle={suggestIssue ? categoryLabel(suggestIssue.category) : undefined}
+          initialWard={suggestIssue?.neighborhood_name}
         />
       )}
       {voteIssueId && (
