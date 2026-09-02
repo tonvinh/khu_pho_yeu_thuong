@@ -225,6 +225,36 @@ export function Field({
   );
 }
 
+/* ── Khoá cuộn trang nền khi có modal (QC 2/9 · C2) ──────────────────────────
+   Đếm số modal đang mở: modal định danh mở CHỒNG lên modal viết câu/bình chọn,
+   đóng cái trên mà nhả khoá ngay thì trang nền cuộn được trong khi vẫn còn popup.
+   Vị trí cuộn lưu một lần lúc modal ĐẦU TIÊN mở và trả lại lúc modal CUỐI đóng. */
+let lockCount = 0;
+let lockedAt = 0;
+
+function lockScroll() {
+  if (lockCount++ > 0) return;
+  lockedAt = window.scrollY;
+  const body = document.body;
+  // Bù đúng bề rộng thanh cuộn để trang không giật ngang lúc mở popup
+  const gap = window.innerWidth - document.documentElement.clientWidth;
+  body.style.position = "fixed";
+  body.style.top = `-${lockedAt}px`;
+  body.style.width = "100%";
+  if (gap > 0) body.style.paddingRight = `${gap}px`;
+}
+
+function unlockScroll() {
+  if (--lockCount > 0) return;
+  lockCount = 0;
+  const body = document.body;
+  body.style.position = "";
+  body.style.top = "";
+  body.style.width = "";
+  body.style.paddingRight = "";
+  window.scrollTo(0, lockedAt);
+}
+
 /**
  * Modal giữa màn hình — số đo lấy nguyên từ 4 frame popup trong .fig
  * (7458:41634 · 7458:41714 · 7458:42002 · 7502:932):
@@ -257,6 +287,16 @@ export function Modal({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // QC 2/9 · C2 — khoá cuộn trang nền.
+  // `overflow: hidden` trên body KHÔNG đủ trên iOS Safari (vẫn cuộn được) nên ghim
+  // hẳn `position: fixed; top: -scrollY`, đóng thì trả lại đúng vị trí cũ. Chính
+  // việc trả lại vị trí này cũng là chỗ nghi của C3 (sau chuỗi popup, scrollTo(0,0)
+  // dừng ở y=88/172.5) — nay chỉ có một nơi khôi phục scroll, chạy đúng một lần.
+  useEffect(() => {
+    lockScroll();
+    return unlockScroll;
+  }, []);
 
   return (
     <div
