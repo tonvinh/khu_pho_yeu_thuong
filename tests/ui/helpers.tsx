@@ -1,7 +1,13 @@
 // Tiện ích dùng chung cho bộ test giao diện (jsdom).
 // Mỗi file test tự khai `@vitest-environment jsdom` ở dòng đầu — cấu hình vitest
 // vẫn để môi trường `node` cho bộ test logic cũ (four-n/phone/scoring/stylize).
-import type { MapNeighborhood, SiteContentData } from "@/components/home/types";
+import type {
+  AmbassadorRow,
+  HomeData,
+  IssueCard,
+  MapNeighborhood,
+  SiteContentData,
+} from "@/components/home/types";
 import { SITE_CONTENT_DEFAULTS } from "@/lib/site-content-defaults";
 
 export function nb(over: Partial<MapNeighborhood> = {}): MapNeighborhood {
@@ -32,3 +38,50 @@ export function siteContent(over: Partial<SiteContentData> = {}): SiteContentDat
 
 /** Chạy hành động ngay, thay cho luồng hỏi định danh của HomeShell */
 export const runNow = (fn: () => void) => fn();
+
+export function issue(over: Partial<IssueCard> = {}): IssueCard {
+  return {
+    id: "is-1",
+    category: "sach_dep",
+    location_text: "Hẻm 42 Lê Lợi",
+    description: null,
+    status: "voting",
+    neighborhood_id: "nb-1",
+    neighborhood_name: "Xóm Lò Gốm",
+    suggestion_count: 0,
+    top_votes: 0,
+    top_quote: null,
+    voted: false,
+    ...over,
+  };
+}
+
+export function ambassador(over: Partial<AmbassadorRow> = {}): AmbassadorRow {
+  return {
+    user_id: "u-1",
+    display_name: "Cô Bảy",
+    share_slug: "co-bay-abc",
+    neighborhood_name: "Xóm Lò Gốm",
+    score: 82,
+    signs_installed: 1,
+    votes_received: 45,
+    week_points: 5,
+    top_quote: "Đi chậm chút nha, có trẻ con đang chơi.",
+    top_quote_spot: "Hẻm 42 Lê Lợi",
+    top_quote_installed: true,
+    ...over,
+  };
+}
+
+/** Dữ liệu SSR tối thiểu cho HomeShell */
+export function homeData(over: Partial<HomeData> = {}): HomeData {
+  return {
+    counters: { signs_installed: 3, issues_open: 5, neighborhoods_joined: 21, suggestions_total: 10 },
+    issues: [],
+    map: { neighborhoods: [], pins: [] },
+    approvedSigns: [],
+    content: siteContent(),
+    ambassadors: [],
+    ...over,
+  };
+}

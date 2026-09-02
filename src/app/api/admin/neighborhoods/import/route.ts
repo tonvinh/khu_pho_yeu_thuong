@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import { q, tx } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
 import { geoError } from "@/lib/geo";
+import { readWorkbook } from "@/lib/spreadsheet";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -50,7 +51,8 @@ export async function POST(req: NextRequest) {
 
   let wb: XLSX.WorkBook;
   try {
-    wb = XLSX.read(Buffer.from(await file.arrayBuffer()), { type: "buffer" });
+    // CSV không BOM phải tự giải mã UTF-8, xem @/lib/spreadsheet (QC 2/9 · B1)
+    wb = readWorkbook(Buffer.from(await file.arrayBuffer()), file.name, file.type);
   } catch {
     return jsonError(400, "Không đọc được file — dùng .xlsx hoặc .csv theo template");
   }

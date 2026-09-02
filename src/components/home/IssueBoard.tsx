@@ -3,29 +3,29 @@
 // (docs/lp/lp1.png, lp2.png) + email review 18/8:
 //  · Chủ thể là KHU PHỐ → 1 khối full-width, danh sách dạng DÒNG NGANG trong một card
 //    viền sọc cam (bản cũ: lưới card + cột bảng xếp hạng bên phải).
-//  · 3 tab đúng lp1/lp2, CẢ BA cùng là dòng góc phố (design vẽ y hệt nhau, chỉ khác bộ
-//    lọc và huy hiệu): "Mới nhất" (mọi góc phố đang mở, API xếp approved_at DESC) ·
-//    "Chờ bạn bình chọn" (đã có câu) · "Cây bút của khu phố" (TOP 10 góc phố có lời nhắc
-//    được thương nhiều nhất, kèm huy hiệu TOP 1/2/3 như lp1).
-//    → Bảng xếp hạng NGƯỜI (điểm · ▲ hạng · link chia sẻ) bỏ khỏi trang chủ theo design;
-//      trang chia sẻ /dai-su/[slug] và API /api/v1/leaderboard vẫn giữ nguyên.
+//  · 3 tab đúng lp1/lp2: "Mới nhất" (mọi góc phố đang mở, API xếp approved_at DESC) ·
+//    "Chờ bạn bình chọn" (góc phố đã có câu) · "Cây bút của khu phố".
+//  · QC 2/9 · A2: hai tab đầu là dòng GÓC PHỐ, tab thứ ba là dòng NGƯỜI — quyết định F3
+//    (docs/21): "hàng = tên cây bút · khu phố · câu được thương nhất · điểm · nút chia sẻ".
+//    Trước đây cả ba tab cùng dựng từ `issues` vì design vẽ lorem không phân biệt được;
+//    F3 chốt sau nên nay lấy dữ liệu người từ `getAmbassadors()` (trang chủ SSR sẵn,
+//    cùng nguồn với GET /api/v1/leaderboard). Trang chia sẻ /dai-su/[slug] giữ nguyên.
 //  · Nút mỗi dòng đổi theo trạng thái: "Gửi lời nhắc" (chưa có câu) / "Bình chọn" (có câu).
 //  · Bỏ "Xem thêm" → phân trang 5 dòng/trang để không mất dữ liệu.
 import { useState } from "react";
-import type { IssueCard } from "./types";
+import type { AmbassadorRow, IssueCard } from "./types";
 import { categoryLabel } from "@/lib/taxonomy";
+import { BASE } from "../client-api";
 import { FilterTabs, IconHeart, IconHeartSolid, IconPencil, IconPin, SectionHead, Stripe } from "./ui";
 
 const PAGE = 5;
-/** Tab "Cây bút" chỉ vinh danh TOP 10 — đúng con số 10 in trên chip của lp1 */
-const TOP_LIMIT = 10;
 
 type TabKey = "latest" | "to_vote" | "writers";
 
 const EMPTY_HINT: Record<TabKey, string> = {
   latest: "Chưa có góc phố nào đang mở — bạn đề xuất góc đầu tiên nhé!",
   to_vote: "Chưa có góc phố nào đủ câu để bình chọn — bạn viết câu mở hàng nhé!",
-  writers: "Chưa có góc phố nào được thương — bấm “Bình chọn” cho câu bạn thích nhé!",
+  writers: "Chưa có cây bút nào được vinh danh — viết câu đầu tiên cho xóm mình nhé!",
 };
 
 /** Huy hiệu hạng: TOP 1 xanh dương · TOP 2 cam · TOP 3 xanh lá · còn lại số xám */
@@ -50,6 +50,7 @@ export default function IssueBoard({
   title,
   hint,
   issues,
+  ambassadors,
   onWrite,
   onVote,
   onPropose,
@@ -57,6 +58,8 @@ export default function IssueBoard({
   title: string;
   hint: string;
   issues: IssueCard[];
+  /** TOP cây bút cho tab thứ 3 — server đã xếp theo điểm và loại tài khoản shadow-ban */
+  ambassadors: AmbassadorRow[];
   /** Góc phố chưa có câu → mở thẳng form viết câu nhắc */
   onWrite: (issueId: string) => void;
   /** Góc phố đã có câu → mở danh sách câu để bình chọn */
@@ -70,14 +73,16 @@ export default function IssueBoard({
   // dòng vẫn tự đổi "Gửi lời nhắc"/"Bình chọn" theo số câu, đúng như lp2.
   const open = issues.filter((it) => it.status !== "signed");
   const toVote = open.filter((it) => it.suggestion_count > 0);
-  const writers = [...toVote]
-    .sort((a, b) => b.top_votes - a.top_votes || b.suggestion_count - a.suggestion_count)
-    .slice(0, TOP_LIMIT);
 
-  const rows = tab === "latest" ? open : tab === "to_vote" ? toVote : writers;
-  const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+  // Hai tab đầu đếm/phân trang theo góc phố, tab "Cây bút" theo NGƯỜI (A2)
+  const isWriters = tab === "writers";
+  const total = isWriters ? ambassadors.length : tab === "latest" ? open.length : toVote.length;
+  const pages = Math.max(1, Math.ceil(total / PAGE));
   const safePage = Math.min(page, pages - 1);
-  const shown = rows.slice(safePage * PAGE, safePage * PAGE + PAGE);
+  const from = safePage * PAGE;
+  const spotRows = (tab === "latest" ? open : toVote).slice(from, from + PAGE);
+  const writerRows = ambassadors.slice(from, from + PAGE);
+  const empty = isWriters ? writerRows.length === 0 : spotRows.length === 0;
 
   const switchTab = (k: TabKey) => { setTab(k); setPage(0); };
 
@@ -91,7 +96,7 @@ export default function IssueBoard({
           tabs={[
             { key: "latest" as TabKey, label: "Mới nhất", count: open.length },
             { key: "to_vote" as TabKey, label: "Chờ bạn bình chọn", short: "Chờ bình chọn", count: toVote.length },
-            { key: "writers" as TabKey, label: "Cây bút của khu phố", short: "Cây bút", count: writers.length },
+            { key: "writers" as TabKey, label: "Cây bút của khu phố", short: "Cây bút", count: ambassadors.length },
           ]}
           active={tab}
           onChange={switchTab}
@@ -104,16 +109,58 @@ export default function IssueBoard({
       <div className="relative overflow-hidden rounded-[28px] border-[1.9px] border-brick bg-white shadow-kp-s sm:rounded-[40px]">
         <Stripe />
         <div className="px-4 py-2 sm:px-[84px] sm:pb-[32px] sm:pt-[34px]">
-          {shown.length === 0 && (
+          {empty && (
             <p className="m-0 px-1 py-8 text-center text-[14px] text-ink-soft">{EMPTY_HINT[tab]}</p>
           )}
 
-          {shown.map((it, i) => (
+          {/* Tab "Cây bút của khu phố" — hàng là NGƯỜI (F3): huy hiệu hạng · tên · khu phố ·
+              lượt thương · điểm · câu được thương nhất · nút chia sẻ ↗ sang /dai-su/{slug} */}
+          {isWriters && writerRows.map((a, i) => (
+            <div
+              key={a.user_id}
+              /* Dòng người có thêm câu trích nên cao hơn dòng góc phố: dùng min-h chứ
+                 KHÔNG chốt h-[82px] như dòng góc phố, nếu không chữ tràn đè dòng dưới. */
+              className="flex flex-col gap-2.5 border-b border-cream-dark py-4 last:border-0 sm:min-h-[82px] sm:flex-row sm:items-center sm:gap-4 sm:py-3"
+            >
+              <RankBadge rank={from + i + 1} />
+              <div className="min-w-0 flex-1">
+                <div className="text-[15px] font-bold leading-snug tracking-[-0.02em] sm:text-[18px]">
+                  {a.display_name}
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 font-light text-[12.5px] text-ink-soft sm:text-[14px]">
+                  {a.neighborhood_name && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <IconPin className="text-brick" />
+                      {a.neighborhood_name}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1.5">
+                    <IconHeart className="text-brick" />
+                    {a.votes_received.toLocaleString("vi-VN")} lượt thương
+                  </span>
+                  <span className="font-bold text-brick">{a.score.toLocaleString("vi-VN")}đ</span>
+                </div>
+                {a.top_quote && (
+                  <p className="m-0 mt-1 truncate font-light text-[12.5px] italic text-ink-soft sm:text-[14px]">
+                    “{a.top_quote}”
+                  </p>
+                )}
+              </div>
+              <a
+                href={`${BASE}/dai-su/${a.share_slug}`}
+                aria-label={`Chia sẻ trang của ${a.display_name}`}
+                className="kp-btn kp-btn-ghost tap tap-sm-auto h-[44px] flex-none px-5 text-[13.5px] sm:h-[35px] sm:w-auto sm:text-[14px]"
+              >
+                Chia sẻ ↗
+              </a>
+            </div>
+          ))}
+
+          {!isWriters && spotRows.map((it) => (
             <div
               key={it.id}
               className="flex flex-col gap-2.5 border-b border-cream-dark py-4 last:border-0 sm:h-[82px] sm:flex-row sm:items-center sm:gap-4 sm:first:h-[66px]"
             >
-              {tab === "writers" && <RankBadge rank={safePage * PAGE + i + 1} />}
               <div className="min-w-0 flex-1">
                 <div className="text-[15px] font-bold leading-snug tracking-[-0.02em] sm:text-[18px]">
                   {categoryLabel(it.category)} · {it.location_text}

@@ -73,6 +73,8 @@ export default function SuggestionsTablePage() {
 
   const [rows, setRows] = useState<Sugg[]>([]);
   const [total, setTotal] = useState(0);
+  // QC 2/9 · B3: khung hình đầu tiên rows rỗng → loé "Không có câu nào khớp bộ lọc"
+  const [loaded, setLoaded] = useState(false);
   const [nbs, setNbs] = useState<Nb[]>([]);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
@@ -115,7 +117,9 @@ export default function SuggestionsTablePage() {
     else if (nbFilter) p.set("neighborhood", nbFilter);
     if (search) p.set("q", search);
     apiGet<{ suggestions: Sugg[]; total: number }>(`/api/admin/suggestions?${p}`)
-      .then((r) => { setRows(r.suggestions); setTotal(r.total); }).catch(() => {});
+      .then((r) => { setRows(r.suggestions); setTotal(r.total); })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, [uiReady, status, category, nbFilter, search, page, per]);
   useEffect(load, [load]);
 
@@ -265,7 +269,7 @@ export default function SuggestionsTablePage() {
             {rows.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-3 py-6 text-center text-sm text-ink-soft">
-                  Không có câu nào khớp bộ lọc.
+                  {loaded ? "Không có câu nào khớp bộ lọc." : "Đang tải…"}
                 </td>
               </tr>
             )}

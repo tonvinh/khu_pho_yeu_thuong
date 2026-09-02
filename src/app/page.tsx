@@ -3,6 +3,7 @@ import { getCounters } from "@/lib/counters";
 import { q } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { getSiteContent } from "@/lib/site-content";
+import { getAmbassadors } from "@/lib/leaderboard";
 import { imgUrl } from "@/lib/storage";
 import HomeShell from "@/components/home/HomeShell";
 import type { HomeData } from "@/components/home/types";
@@ -12,11 +13,14 @@ export const dynamic = "force-dynamic";
 /** Khối "Biển mới của khu phố" cố định 6 ô, xếp theo NGÀY DUYỆT mới nhất (18/8) */
 const SIGN_SLOTS = 6;
 
+/** Tab "Cây bút của khu phố" chỉ vinh danh TOP 10 — đúng con số in trên chip của lp1 */
+const TOP_WRITERS = 10;
+
 async function loadHomeData(): Promise<HomeData> {
   // Người xem hiện tại (cookie kp_session) — để đánh dấu góc phố đã bình chọn hay chưa
   const viewer = await getSessionUser();
   const viewerId = viewer?.id ?? "00000000-0000-0000-0000-000000000000";
-  const [counters, issues, neighborhoods, pins, approvedSigns, content] =
+  const [counters, issues, neighborhoods, pins, approvedSigns, content, ambassadors] =
     await Promise.all([
       getCounters(),
       q(`SELECT i.id, i.category, i.location_text, i.description, i.status,
@@ -59,6 +63,9 @@ async function loadHomeData(): Promise<HomeData> {
          ORDER BY approved_at DESC
          LIMIT ${SIGN_SLOTS}`),
       getSiteContent(),
+      // Tab "Cây bút của khu phố" vinh danh NGƯỜI (quyết định F3, docs/21) — cùng
+      // truy vấn với GET /api/v1/leaderboard để hai chỗ không lệch nhau.
+      getAmbassadors(TOP_WRITERS),
     ]);
 
   return {
@@ -91,6 +98,7 @@ async function loadHomeData(): Promise<HomeData> {
       approved_at: String(s.approved_at),
     })),
     content,
+    ambassadors,
   };
 }
 

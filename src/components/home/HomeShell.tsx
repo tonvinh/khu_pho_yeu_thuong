@@ -22,6 +22,7 @@ import SuggestModal from "./SuggestModal";
 import VoteModal from "./VoteModal";
 import LeadPromptModal from "./LeadPromptModal";
 import NeighborhoodModal from "./NeighborhoodModal";
+import UserMenu from "./UserMenu";
 
 /** .fig in ĐẬM số tổng đài trong dòng hỗ trợ chân trang. Text do admin sửa được nên
  *  không khớp mẫu thì trả nguyên văn. */
@@ -62,16 +63,19 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [counters, issuesRes, mapRes] = await Promise.all([
+      const [counters, issuesRes, mapRes, boardRes] = await Promise.all([
         apiGet<HomeData["counters"]>("/api/v1/counters"),
         apiGet<{ issues: HomeData["issues"] }>("/api/v1/issues"),
         apiGet<HomeData["map"]>("/api/v1/map"),
+        // Tab "Cây bút" đổi theo lượt thương nên polling luôn cho tươi (A2)
+        apiGet<{ ambassadors: HomeData["ambassadors"] }>("/api/v1/leaderboard"),
       ]);
       // content + biển đã duyệt chỉ SSR lúc đầu — polling giữ nguyên bản đang có
       setData((prev) => ({
         counters,
         issues: issuesRes.issues,
         map: mapRes,
+        ambassadors: boardRes.ambassadors,
         approvedSigns: prev.approvedSigns,
         content: prev.content,
       }));
@@ -180,7 +184,10 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
             <span className="absolute -top-[34px] left-[calc(50%-12px)] h-[120px] w-[120px] rounded-full border-[1.5px] border-[var(--kp-nav-border)]" />
           </span>
 
-          <div className="relative hidden min-w-0 items-center gap-14 sm:flex">
+          {/* QC 2/9 · A3: bố cục này lấy số đo Figma khổ 1440 nhưng trước đây bật ngay từ
+              sm=640 → từ 640 đến ~1170px hai cụm chữ chồng lên pill logo 192px ở giữa.
+              Đo thực: hai link nav an toàn từ 1200 (xl), nhãn CTA đầy đủ từ 1000 (lg). */}
+          <div className="relative hidden min-w-0 items-center gap-14 xl:flex">
             <button
               onClick={() => scrollTo("goc-xom")}
               className="cursor-pointer whitespace-nowrap text-[16px] text-white"
@@ -220,24 +227,31 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
                  logo + nhãn đầy đủ nên nút bị logo đè lên. Desktop giữ nguyên .fig. */
               className="tap tap-sm-auto h-[44px] cursor-pointer whitespace-nowrap rounded-full border-[1.5px] border-white px-3.5 text-[13px] text-white transition hover:bg-white hover:text-brick sm:h-[35px] sm:px-[22px] sm:text-[15px]"
             >
-              <span className="sm:hidden">+ Đề xuất</span>
-              <span className="hidden sm:inline">+ Đề xuất góc phố mới</span>
+              <span className="lg:hidden">+ Đề xuất</span>
+              <span className="hidden lg:inline">+ Đề xuất góc phố mới</span>
             </button>
             {meLoaded && me && (
-              <span
-                title={`Chào ${me.display_name}`}
-                className="grid h-[35px] w-[35px] flex-none place-items-center rounded-full border-[1.5px] border-white bg-white/20 font-display text-[14px] font-bold text-white"
-              >
-                {me.display_name.trim().charAt(0).toUpperCase()}
-              </span>
+              <UserMenu
+                me={me}
+                onLoggedOut={() => {
+                  setMe(null);
+                  setNotifs([]);
+                  showToast("Bạn đã đăng xuất khỏi thiết bị này.");
+                  refresh();
+                }}
+              />
             )}
           </div>
         </div>
       </div>
 
       {/* Banner báo tin in-web (thay SMS — Q1): biển đã treo + duyệt/từ chối */}
+      {/* `relative` BẮT BUỘC (QC 2/9 · A1): nền hero ở trên là `absolute` nên trong cùng
+          stacking context nó vẽ đè lên mọi con `static`, bất kể thứ tự DOM — banner bị
+          phủ kín, không đọc và không bấm được. Thanh nav phía trên có `relative` nên
+          thoát bẫy này. */}
       {notifs.length > 0 && (
-        <div className="bg-[var(--kp-hero-from)] px-4 pt-4 sm:px-6">
+        <div className="relative bg-[var(--kp-hero-from)] px-4 pt-4 sm:px-6">
           <div className="mx-auto max-w-[1312px]">
             {notifs.map((n) => {
               const rejected = n.type === "issue_rejected" || n.type === "suggestion_rejected";
@@ -386,6 +400,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         title={data.content.board_title}
         hint={data.content.board_hint}
         issues={data.issues}
+        ambassadors={data.ambassadors}
         onWrite={(id) => setSuggestIssueId(id)}
         onVote={(id) => setVoteIssueId(id)}
         onPropose={openPropose}

@@ -6,6 +6,9 @@ export default defineConfig({
     // Test logic thuần vẫn chạy môi trường `node`; test giao diện tự khai
     // `@vitest-environment jsdom` ở đầu file để không đổi môi trường của bộ test cũ.
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
+    // Test giao diện dựng cả cây React trong jsdom; máy đang chạy dev server thì vài ca
+    // chạm trần 5s mặc định và đỏ oan (đã gặp 2/9). 15s đủ rộng mà vẫn bắt được treo thật.
+    testTimeout: 15_000,
   },
   // JSX runtime tự động như Next (tsconfig "jsx": "preserve" + SWC) — không phải
   // import React thủ công trong từng file test.

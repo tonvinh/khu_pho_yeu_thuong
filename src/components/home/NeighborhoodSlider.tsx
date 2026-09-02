@@ -72,14 +72,28 @@ export default function NeighborhoodSlider({
     return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
   }, [animate]);
 
+  // "Giảm chuyển động" của hệ điều hành (QC 2/9 · C3): CSS mới chỉ tắt transition
+  // (motion-reduce:transition-none) nên trước đây ảnh vẫn NHẢY mỗi 4 giây — với người
+  // nhạy cảm chuyển động còn khó chịu hơn trượt mượt. Tắt hẳn auto-slide; mũi tên ‹ ›
+  // vẫn bấm chuyển được vì đó là chuyển động do người dùng chủ động.
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (!mq) return;
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+
   // Tự trượt 4s; người dùng bấm tay thì index đổi → hẹn giờ tính lại từ đầu
   useEffect(() => {
-    if (!multiple) return;
+    if (!multiple || reduced) return;
     const t = setInterval(() => {
       if (document.visibilityState === "visible") next();
     }, 4000);
     return () => clearInterval(t);
-  }, [next, index, multiple]);
+  }, [next, index, multiple, reduced]);
 
   // Vuốt ngang trên mobile (ngưỡng 40px, bỏ qua nếu vuốt dọc để không chặn cuộn trang)
   const touch = useRef<{ x: number; y: number } | null>(null);

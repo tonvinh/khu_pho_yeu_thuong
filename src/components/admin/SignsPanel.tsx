@@ -18,7 +18,9 @@ export default function SignsPanel({ onChanged }: { onChanged?: () => void }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [selectNoteId, setSelectNoteId] = useState<string | null>(null);
   const [note, setNote] = useState("");
-  const [installDate, setInstallDate] = useState("");
+  // Ngày treo phải theo TỪNG DÒNG (QC 2/9 · B2): một biến dùng chung khiến gõ ngày ở
+  // dòng A rồi bấm "Đã treo biển" ở dòng B lại ghi ngày của A.
+  const [installDate, setInstallDate] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     try {
@@ -132,10 +134,13 @@ export default function SignsPanel({ onChanged }: { onChanged?: () => void }) {
               />
             </label>
             <input
-              type="date" value={installDate} onChange={(e) => setInstallDate(e.target.value)}
+              type="date"
+              aria-label={`Ngày treo biển — ${s.content}`}
+              value={installDate[s.id] ?? ""}
+              onChange={(e) => setInstallDate((d) => ({ ...d, [s.id]: e.target.value }))}
               className="rounded-xl border border-cream-dark px-2 py-1 text-xs"
             />
-            <Btn onClick={() => act(s.id, "installed", { installed_date: installDate || undefined })}>
+            <Btn onClick={() => act(s.id, "installed", { installed_date: installDate[s.id] || undefined })}>
               Đã treo biển
             </Btn>
           </Row>

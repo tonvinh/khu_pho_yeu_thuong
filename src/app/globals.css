@@ -302,6 +302,21 @@ body {
 /* Tiêu đề hero: trong .fig khối chữ là 929×56 (line-height 56px cho cỡ 40px).
    .kp-h2 nằm NGOÀI @layer nên utility `leading-*` của Tailwind không đè được —
    phải đặt bằng class riêng, khai báo sau .kp-h2. */
+
+/* Cùng cái bẫy đó với LETTER-SPACING (QC 2/9 · C1): markup ghi tracking-[-0.03em] /
+   tracking-[-0.02em] nhưng `.kp-h2 { letter-spacing: -0.01em }` thắng utility.
+   .fig: hero -3%, tiêu đề section -2%, tiêu đề khối ưu đãi -2%. Không @media vì
+   letter-spacing tính theo em nên đúng ở mọi khổ. */
+.kp-hero-title {
+  letter-spacing: -0.03em;
+}
+.kp-sec-title {
+  letter-spacing: -0.02em;
+}
+.kp-lead-title {
+  letter-spacing: -0.02em;
+}
+
 @media (min-width: 640px) {
   .kp-hero-title {
     line-height: 56px;
@@ -325,7 +340,11 @@ body {
   font-family: var(--font-sans);
   font-size: 16px;
   letter-spacing: -0.02em;
-  padding: 9px 16px;
+  /* .fig vẽ ô cao ĐÚNG 40 — padding 9px + viền 1.5px cho ra ~44 nên phải chốt height
+     như .kp-input-lg đang làm (QC 2/9 · C2). Mobile giữ 44 cho đủ vùng chạm (quy chuẩn
+     2/9), hạ về 40 từ sm. Textarea trả lại padding vì cao tự do. */
+  height: 44px;
+  padding: 0 16px;
   border: 1.5px solid var(--color-ink);
   border-radius: 999px;
   background: #fff;
@@ -345,6 +364,11 @@ textarea.kp-input-lg {
 }
 @media (min-width: 640px) {
   .kp-input {
+    height: 40px;
+    /* Ô nhập trong khối ưu đãi đeo kèm `.tap` (min-height 44 cho vùng chạm mobile).
+       Từ sm trở lên .fig vẽ 40 nên phải nhả min-height ra, y như `.tap-sm-auto` làm
+       cho nút — nếu không height: 40px thua min-height và ô vẫn cao 44 (QC 2/9 · C2). */
+    min-height: 0;
     font-size: 14px;
   }
   .kp-input-lg {
@@ -360,9 +384,12 @@ textarea.kp-input-lg {
     min-height: 0;
   }
 }
-/* Ô nhiều dòng & select nhiều lựa chọn không bo pill được — bo 18px */
+/* Ô nhiều dòng & select nhiều lựa chọn không bo pill được — bo 18px; chiều cao cũng
+   phải trả về `auto` vì .kp-input đã chốt height cố định (C2). */
 textarea.kp-input,
 select.kp-input[multiple] {
+  height: auto;
+  padding: 9px 16px;
   border-radius: 16px;
 }
 .kp-input::placeholder {

@@ -119,6 +119,24 @@ export interface SiteContentData {
   campaign_kv_url: string | null;
 }
 
+/** Một cây bút trên bảng vinh danh — hình dạng đúng bằng `AmbassadorRow` của
+ *  `src/lib/leaderboard.ts` (khai lại ở đây để component client không phải import
+ *  module có `pg`). Cả trang chủ SSR lẫn GET /api/v1/leaderboard đều trả về nó. */
+export interface AmbassadorRow {
+  user_id: string;
+  display_name: string;
+  share_slug: string;
+  neighborhood_name: string | null;
+  score: number;
+  signs_installed: number;
+  votes_received: number;
+  week_points: number;
+  /** Câu được thương nhất của cây bút (đã duyệt trở lên) */
+  top_quote: string | null;
+  top_quote_spot: string | null;
+  top_quote_installed: boolean;
+}
+
 /** Lời nhắc đã duyệt — hiện trong block "Biển mới của khu phố" */
 export interface ApprovedSign {
   id: string;
@@ -139,6 +157,8 @@ export interface HomeData {
   map: MapData;
   approvedSigns: ApprovedSign[];
   content: SiteContentData;
+  /** TOP cây bút cho tab thứ 3 của IssueBoard (quyết định F3: hàng = NGƯỜI) */
+  ambassadors: AmbassadorRow[];
 }
 
 /** Một biển đã duyệt/đã treo của khu phố — hiện trong popup khu phố */

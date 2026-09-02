@@ -184,3 +184,48 @@ Link design chuẩn: `figma.com/design/FMiW4tzQvKgi8qomzYFlff/...?node-id=7217-1
 - Đã xoá: `CampaignMedia.tsx` (khối TVC bỏ khỏi trang chủ từ 18/8, 0 tham chiếu) và 10
   class CSS chết trong `globals.css` (`kp-drawer`, `kp-scrim`, `kp-quote`, `kp-pin`,
   `kp-pin-sign`, `kp-kicker`, `kp-card`, `kp-card-3`, `kp-sway`, `floaty`).
+
+## Sửa lỗi QC 2/9 (docs/QC-02-09-2026.md)
+
+Đã sửa A1–A3, B1–B4, C1–C3. Còn **C4 (đo LCP bản production)** vì phải dừng dev server để
+`pnpm build && pnpm start` — chưa làm, xem QC §E-a.
+
+- **A1**: nền hero là `absolute` nên mọi con `static` trong cùng stacking context bị vẽ đè.
+  Khối banner báo tin phải có `relative` (`HomeShell.tsx`). Bẫy này áp cho MỌI khối mới đặt
+  trong `<div className="relative">` bọc hero.
+- **A2**: tab "Cây bút của khu phố" giờ là NGƯỜI (quyết định F3). `page.tsx` gọi thêm
+  `getAmbassadors(10)` → `HomeData.ambassadors` → `IssueBoard`; `refresh()` polling kéo luôn
+  `/api/v1/leaderboard`. Hai tab đầu vẫn là góc phố. Dòng người dùng `sm:min-h-[82px]`
+  (KHÔNG chốt `h-`) vì có thêm dòng câu trích.
+- **A3**: bố cục nav lấy số đo Figma khổ 1440 nên chỉ bật từ `xl` (hai link) và `lg`
+  (nhãn CTA đầy đủ). Đo lại 375→1440: không còn chồng lấn.
+- **B1**: `@/lib/spreadsheet` — CSV phải tự giải mã UTF-8 (`XLSX.read(string)`), SheetJS
+  không có `cptable` sẽ đoán latin-1 cho CSV không BOM. Dùng ở cả 2 route import.
+- **B2**: ô "ngày treo" trong `SignsPanel` là `Record<id, string>`, không phải một biến chung.
+- **B3**: `/admin/khu-pho` + `/admin/loi-nhac` có cờ `loaded` → "Đang tải…" thay vì loé
+  thông báo rỗng ở khung hình đầu.
+- **B4**: `components/home/UserMenu.tsx` — avatar là `<button>` mở menu (tên · điểm ·
+  Đăng xuất). Bản tối giản vì câu hỏi F5 (docs/21) vẫn treo.
+- **C1**: `.kp-h2` ngoài `@layer` đè cả `letter-spacing` chứ không chỉ `line-height` →
+  thêm `.kp-hero-title/.kp-sec-title/.kp-lead-title` (khai báo SAU `.kp-h2`).
+- **C2**: `.kp-input` chốt `height` (44 mobile → 40 từ sm) và **phải nhả `min-height: 0`**
+  ở sm, nếu không `.tap` (min-height 44) đè mất.
+- **C3**: `NeighborhoodSlider` đọc `prefers-reduced-motion` để tắt auto-slide; CSS
+  `motion-reduce:transition-none` chỉ tắt hiệu ứng trượt, ảnh vẫn nhảy.
+
+### Kiểm thử
+
+- `pnpm test` — unit + UI (jsdom). Test mới: `tests/spreadsheet.test.ts`,
+  `tests/globals-css.test.ts` (đọc thẳng `globals.css`: khai báo có tồn tại và có đứng
+  SAU `.kp-h2` không), `tests/ui/{issue-board,user-menu,home-shell,slider-motion,signs-panel,admin-loading}.test.tsx`.
+- `pnpm test:e2e` — gọi THẲNG server đang chạy (`E2E_BASE_URL`, mặc định
+  `http://localhost:3001`), không mock gì; tự SKIP khi không thấy server.
+  `tests/e2e/client.ts` là cookie jar + CSRF double-submit; mỗi Client có User-Agent
+  riêng vì trần "3 SĐT mới/thiết bị/giờ" tính theo (IP + UA). `tests/e2e/db.ts` chỉ dùng
+  để DỰNG/DỌN fixture (đọc `DATABASE_URL` từ `.env`), mọi khẳng định vẫn đi qua HTTP.
+  Dọn user E2E một lần ở CUỐI file — xoá giữa chừng làm mỗi lần định danh sau bị tính là
+  "tạo định danh MỚI" và đâm trần rate limit.
+- Số đo px / media query / prefers-reduced-motion đo bằng DOM thật trong Chrome (jsdom
+  không tính layout). Mẹo dùng lại được: dựng `<iframe src="/" width=...>` rồi đo trong
+  `contentDocument` — media query ăn theo bề ngang iframe, và vá `matchMedia`/`fetch` của
+  `contentWindow` trước khi trang hydrate để giả lập giảm chuyển động / mạng chậm.

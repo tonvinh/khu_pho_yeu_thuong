@@ -42,6 +42,9 @@ const URL_DEFAULTS = { tab: "khu-pho", status: "", category: "", nb: "", q: "", 
 export default function NeighborhoodsPage() {
   const [ui, setUi, uiReady] = useUrlState(URL_DEFAULTS);
   const [rows, setRows] = useState<Nb[]>([]);
+  // QC 2/9 · B3: thiếu cờ này thì khung hình đầu tiên đã có rows.length === 0 nên màn
+  // hình loé thông báo "Chưa có khu phố nào" trước khi dữ liệu về — admin tưởng mất data.
+  const [loaded, setLoaded] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -51,7 +54,9 @@ export default function NeighborhoodsPage() {
 
   const load = useCallback(() => {
     apiGet<{ neighborhoods: Nb[] }>("/api/admin/neighborhoods")
-      .then((r) => setRows(r.neighborhoods)).catch(() => {});
+      .then((r) => setRows(r.neighborhoods))
+      .catch(() => {})
+      .finally(() => setLoaded(true));
   }, []);
   useEffect(load, [load]);
 
@@ -222,7 +227,11 @@ export default function NeighborhoodsPage() {
         />
       )}
 
-      {!issuesTab && (rows.length === 0 ? (
+      {!issuesTab && (!loaded ? (
+        <Card>
+          <p className="text-sm text-ink-soft">Đang tải…</p>
+        </Card>
+      ) : rows.length === 0 ? (
         <Card>
           <p className="text-sm text-ink-soft">
             Chưa có khu phố nào. Bấm <strong>➕ Thêm khu phố</strong> để tạo khu phố đầu tiên.
