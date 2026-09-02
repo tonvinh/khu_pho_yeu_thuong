@@ -229,3 +229,71 @@ Link design chuẩn: `figma.com/design/FMiW4tzQvKgi8qomzYFlff/...?node-id=7217-1
   không tính layout). Mẹo dùng lại được: dựng `<iframe src="/" width=...>` rồi đo trong
   `contentDocument` — media query ăn theo bề ngang iframe, và vá `matchMedia`/`fetch` của
   `contentWindow` trước khi trang hydrate để giả lập giảm chuyển động / mạng chậm.
+
+## Figma BẢN MỚI 2/9 — design đã đổi, code chưa theo
+
+**Đọc `docs/22-QC-FIGMA-MOI-02-09.md` trước khi động vào trang chủ.** File `.fig` 18/8 đã bị
+xoá và thay bằng bản mới (`docs/lp/LandingpageFCM.fig`, upload 2/9) + 5 ảnh export
+`docs/lp/Landing page*.png`. Frame chuẩn `7217:1990` giờ cao **3780** (cũ 4450).
+
+- Parse lại: `rm scripts/figma/nodes.pkl && python3 scripts/figma/parse.py` rồi
+  `python3 scripts/figma/dump.py 7217:1990 [depth]`.
+- **Design đã BỎ khối KV + logo ở chân trang** (`Frame 202` bị `visible=false`) — web vẫn render
+  `kv-khu-pho-sm.webp` nên dư ~887px. Đây là lỗi team báo đầu tiên.
+- Đổi nhiều chữ/bố cục: nhãn nav, nhãn 3 con số, 3 nhãn tab, mô tả khối đóng góp thành 2 dòng,
+  dòng danh sách khác nhau theo tab, 6 lựa chọn dịch vụ ở khối ưu đãi, nút "Lên đầu trang",
+  kẻ ngăn dòng là **nét đứt [5,5]** chứ không liền. Chi tiết + số đo trong docs/22.
+- 2 popup MỚI chưa dựng: `Cây bút khu phố` (7727:1743) · `Thông tin khu phố` (7756:2954).
+- **BẪY**: `dump.py` không lọc `visible=false` VÀ không resolve text override của INSTANCE →
+  nhãn nút/tab phải đọc từ ảnh PNG, chỉ tin `.fig` ở toạ độ/màu/kích thước.
+- Design chưa đồng bộ: 6 frame popup còn nhãn nav CŨ, 3 frame landing còn nhãn 3 con số CŨ.
+  Lấy `7217:1990` làm chuẩn, phần mâu thuẫn phải hỏi lại Design (danh sách câu hỏi ở docs/22 §E.3).
+
+## Đã áp Figma 2/9 (ngày 2–3/9) — 7 quyết định + phần còn treo
+
+Toàn bộ mục A, B1–B10, C1–C5 của `docs/22` đã làm. 7 câu chặn đã chốt:
+
+| # | Chốt |
+|---|---|
+| Q1 | Nav: `Đóng góp lời nhắc` cuộn `#goc-xom` · `Đề xuất khu phố cần treo biển` **mở popup đề xuất** · CTA `Ưu đãi dành cho cư dân` cuộn `#uu-dai`. Dưới 1280px hai link ẩn ⇒ nav mobile KHÔNG còn lối vào đề xuất (vào từ nút đáy IssueBoard / tra cứu rỗng) |
+| Q2 | Avatar giữ "chỉ hiện khi đã định danh" — lệch Figma có chủ ý |
+| Q3 | `INTERESTS` giữ 4 MÃ cũ, chỉ đổi nhãn + thêm `camera`, `internet_tv_camera`. Không migration. Nhãn `fpt_play` đổi thành "Truyền hình FPT Play" nên lead cũ hiện theo nhãn mới |
+| Q4 | Chip 4N chỉ trang trí + chú thích, KHÔNG cho chọn, không lưu DB (test khoá: chip không phải `<button>`) |
+| Q5 | `NeighborhoodView` đổi theo design mới cho cả popup lẫn trang share, nhưng trang share bật prop `hero` để giữ ảnh + badge 4N (nội dung chứng nhận + ảnh OG) |
+| Q6 | **Cấm rút phiếu**: cả 2 route vote trả 409 `ALREADY_VOTED`; UI khoá nút sau khi bấm |
+| Q7 | Tab 3 bỏ `Chia sẻ ↗`, dùng `Bình chọn` mở popup Cây bút. `/dai-su/[slug]` vẫn sống nhưng KHÔNG còn lối vào từ trang chủ |
+
+### Bẫy mới phát hiện khi đo trên Chrome
+
+- **`scroll-behavior: smooth` toàn cục** ⇒ `window.scrollTo(0, y)` dạng 2 tham số bị cuộn
+  MƯỢT và bị cắt ngang giữa đường. Đây chính là C3. Mọi lệnh cuộn "phải tới nơi" bắt buộc
+  dùng `scrollTo({ top, behavior: "instant" })`. Xem `lockScroll`/`unlockScroll` (`ui.tsx`).
+- Khoá cuộn nền dùng `position: fixed; top: -scrollY` (không phải `overflow:hidden` — iOS
+  Safari vẫn cuộn) + **đếm số modal đang mở**: modal định danh mở chồng, nhả khoá sớm là
+  nền cuộn được trong khi vẫn còn popup.
+- Đo bằng iframe thì **cộng thêm 17px** cho thanh cuộn: `width:1457px` mới ra `clientWidth`
+  1440. Iframe cũng không cuộn được bằng `scrollTo` khi trang có `scroll-behavior: smooth`.
+
+### API đổi / thêm
+
+- `GET /api/v1/issues` + SSR `page.tsx` trả thêm `top_author_name`; `getAmbassadors()` trả
+  thêm `suggestions_count`. **Sửa route mà quên SSR (hoặc ngược lại) là dòng nhảy chữ sau
+  20s polling.**
+- `GET /api/v1/ambassadors/{share_slug}` (MỚI) → `src/lib/ambassador.ts`, cho popup B10.
+- `loadNeighborhoodDetail(key, viewerId)` — thêm tham số người xem; `NeighborhoodDetail.signs`
+  → `notes` (status/votes/voted/is_mine).
+- `POST /api/v1/suggestions/{id}/vote` và `/api/v1/issues/{id}/vote`: đã bỏ nhánh rút phiếu.
+  `/api/v1/issues/{id}/vote` **không còn client nào gọi** — giữ vì là API công khai.
+- `wardAddress()` trong `address.ts`: dạng "Phường Bàn Cờ, TP. Hồ Chí Minh" mà .fig dùng ở
+  B3a/B9/B10 (khác `shortAddress` — không rút "Phường"→"P.", không bỏ phần trùng tên khu).
+
+### CÒN TREO — phải hỏi Design/BA
+
+1. **Khối biển cao 872 vs Figma 648 (+224px)** — mỗi ô biển 330 vs 262. docs/22 §B5 ghi
+   "khớp, không cần sửa" nhưng chỉ đối chiếu toạ độ y, không đối chiếu chiều cao. Đây là
+   phần lớn trong 212px trang còn dư so với frame 3780.
+2. **Chân trang dài hơn design**: khối chữ 697×134 (5 dòng) vs .fig 697×84 (~3 dòng) — dòng
+   `footer_support` ("Đã là khách hàng của FPT…") chiếm 2 dòng. Design có bỏ dòng này không?
+3. **Dropdown tra cứu 1 kết quả**: design chỉ vẽ MỘT dòng mời ("Khu phố mình chưa có nhiều
+   lời nhắc…") nên khu ĐÃ đạt chuẩn 4N cũng đọc thấy câu đó. Cần câu riêng cho khu đạt chuẩn?
+4. Sáu frame popup trong .fig vẫn còn nhãn nav CŨ — chưa đồng bộ với `7217:1990`.
