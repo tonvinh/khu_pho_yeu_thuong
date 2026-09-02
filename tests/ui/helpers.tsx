@@ -76,7 +76,7 @@ export function ambassador(over: Partial<AmbassadorRow> = {}): AmbassadorRow {
 /** Dữ liệu SSR tối thiểu cho HomeShell */
 export function homeData(over: Partial<HomeData> = {}): HomeData {
   return {
-    counters: { signs_installed: 3, issues_open: 5, neighborhoods_joined: 21, suggestions_total: 10 },
+    counters: { signs_installed: 3, neighborhoods_joined: 21, suggestions_total: 10 },
     issues: [],
     map: { neighborhoods: [], pins: [] },
     approvedSigns: [],

@@ -11,8 +11,9 @@ export const COPY = {
   ctaSecondary: "Xem góc phố đang chờ",
   ctaTertiary: "🧧 Quà dành cho cư dân",
   ctaCampaign: "Gửi một lời nhắc, thêm một chút thương cho xóm mình.",
-  // 18/8: còn 3 ô — biển đã treo · khu phố tham gia · câu đóng góp
-  counterLabels: ["Biển đã treo", "Góc phố đang chờ", "Khu phố tham gia"],
+  // Figma bản 2/9 (7217:1990): 3 ô — biển đã treo · khu phố · câu đóng góp.
+  // Hai ô cuối đổi CẢ nhãn lẫn ý nghĩa, xem docs/22 §B2.
+  counterLabels: ["Biển đã treo", "Khu phố", "Câu đóng góp"],
   suggestionPlaceholder: "VD: Đi chậm chút nha, trong hẻm có đứa nhỏ đang chơi...",
   note4N: "Câu nhắc của bạn sẽ được FPT chúng tớ duyệt theo chuẩn 4N trước khi hiển thị lên website",
   noteEthics:

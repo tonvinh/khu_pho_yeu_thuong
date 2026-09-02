@@ -28,27 +28,13 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+// Nhãn + nguồn số của dải 3 con số đã chuyển hẳn sang tests/ui/counters.test.tsx
+// (Figma bản 2/9 · B2 đổi cả nhãn lẫn ý nghĩa hai ô cuối). Ở đây chỉ giữ lại phần
+// KHÔNG trùng: quy chuẩn mobile 1 hàng 3 cột.
 describe("Counters — dải 3 con số", () => {
-  it("render đúng 3 ô theo nhãn chuẩn và đệm 0 cho số < 10", () => {
-    render(
-      <Counters
-        counters={{ signs_installed: 8, issues_open: 25, neighborhoods_joined: 0, suggestions_total: 300 }}
-      />
-    );
-    expect(COPY.counterLabels).toHaveLength(3);
-    for (const label of COPY.counterLabels) expect(screen.getByText(label)).toBeTruthy();
-    expect(screen.getByText("08")).toBeTruthy();
-    expect(screen.getByText("25")).toBeTruthy();
-    expect(screen.getByText("00")).toBeTruthy();
-    // "+300 Người đóng góp" là node ẨN trong .fig → không được render
-    expect(screen.queryByText(/Người đóng góp/)).toBeNull();
-  });
-
   it("mobile giữ 1 hàng 3 cột (số trên — nhãn dưới)", () => {
     const { container } = render(
-      <Counters
-        counters={{ signs_installed: 65, issues_open: 25, neighborhoods_joined: 8, suggestions_total: 0 }}
-      />
+      <Counters counters={{ signs_installed: 65, neighborhoods_joined: 8, suggestions_total: 0 }} />
     );
     expect(container.firstElementChild!.className).toContain("grid-cols-3");
   });

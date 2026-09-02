@@ -1,14 +1,16 @@
 "use client";
 // Dải 3 con số theo skin mới (docs/lp): nằm NGOÀI hero, nền kem, một hàng ngang —
 // số cam cỡ lớn (đệm 0 cho số < 10 như design "08") + nhãn xám bên phải.
+// Figma bản 2/9 · B2: ô 2 là SỐ KHU PHỐ, ô 3 là SỐ CÂU ĐÓNG GÓP (trước đây là
+// "góc phố đang chờ" / "khu phố tham gia"). Ô ẩn "+300 Người đóng góp" không dựng.
 import type { CounterData } from "./types";
 import { COPY } from "@/lib/copy";
 
 export default function Counters({ counters }: { counters: CounterData }) {
   const items = [
     { value: counters.signs_installed, label: COPY.counterLabels[0] },
-    { value: counters.issues_open, label: COPY.counterLabels[1] },
-    { value: counters.neighborhoods_joined, label: COPY.counterLabels[2] },
+    { value: counters.neighborhoods_joined, label: COPY.counterLabels[1] },
+    { value: counters.suggestions_total, label: COPY.counterLabels[2] },
   ];
   // .fig Frame 163: khối 800px canh giữa (x=320…1120), 3 nhóm rộng bằng nhau (250.7px)
   // cách nhau 24px, mỗi nhóm: số 60px/lh78 + nhãn 20px/lh26, cách nhau 16px.

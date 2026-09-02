@@ -1,9 +1,8 @@
 export interface CounterData {
   signs_installed: number;
-  /** Góc phố đã duyệt còn mở — ô thứ 2 của dải 3 con số (design lp1) */
-  issues_open: number;
+  /** Khu phố đang tham gia — ô thứ 2 của dải 3 con số (Figma 2/9 · B2) */
   neighborhoods_joined: number;
-  /** Số câu nhắc ĐÃ DUYỆT — thay 2 ô "góc phố đang chờ"/"người đóng góp" (18/8) */
+  /** Số câu nhắc ĐÃ DUYỆT — ô thứ 3 (Figma 2/9 · B2) */
   suggestions_total: number;
 }
 
