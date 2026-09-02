@@ -22,6 +22,7 @@ import SuggestModal from "./SuggestModal";
 import VoteModal from "./VoteModal";
 import LeadPromptModal from "./LeadPromptModal";
 import NeighborhoodModal from "./NeighborhoodModal";
+import BackToTop from "./BackToTop";
 import UserMenu from "./UserMenu";
 
 /** .fig in ĐẬM số tổng đài trong dòng hỗ trợ chân trang. Text do admin sửa được nên
@@ -445,6 +446,9 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           </div>
         </div>
       </footer>
+
+      {/* Nút nổi "Lên đầu trang" (Figma 2/9 · B7) — chỉ hiện khi đã cuộn quá 1 màn hình */}
+      <BackToTop />
 
       {/* ===== Modals ===== */}
       {identifyOpen && (
