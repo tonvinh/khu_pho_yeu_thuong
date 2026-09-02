@@ -50,26 +50,30 @@ export default function LeadPromptModal({
 
   return (
     <Modal title={COPY.leadPromptTitle} onClose={onClose}>
-      <p className="m-0 mb-4 text-sm text-ink-soft">{COPY.leadPromptBody}</p>
-      <Field label="Số điện thoại" className="mt-4">
+      {/* Popup không có trong .fig — dùng chung cỡ chữ/ô của 3 popup đã đo (700px,
+          ô cao 50, nhãn 16px Bold) để cả bộ popup nhìn thống nhất. */}
+      <p className="m-0 mb-6 font-light text-[15px] leading-relaxed text-ink-soft sm:text-[16px]">
+        {COPY.leadPromptBody}
+      </p>
+      <Field label="Số điện thoại" size="lg">
         <input
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="VD: 090xxxxxxx"
-          className="kp-input tap"
+          className="kp-input kp-input-lg tap"
         />
       </Field>
-      <label className="mt-3.5 flex cursor-pointer items-start gap-2.5 text-[13px] leading-[1.45]">
+      <label className="mt-4 flex cursor-pointer items-start gap-2 font-light text-[14px] leading-[1.45]">
         <input
           type="checkbox"
           checked={optIn}
           onChange={(e) => setOptIn(e.target.checked)}
-          className="mt-[3px] h-4 w-4 flex-none cursor-pointer accent-brick"
+          className="mt-[2px] h-[18px] w-[18px] flex-none cursor-pointer rounded-[6px] accent-brick"
         />
         <span>{COPY.optInCheckbox}</span>
       </label>
-      <p className="m-0 mt-2.5 rounded-xl border border-dashed border-cream-dark bg-white px-[13px] py-2.5 text-[11.5px] leading-relaxed text-ink-soft">
+      <p className="m-0 mt-3 rounded-2xl border border-dashed border-cream-dark bg-white px-4 py-2.5 font-light text-[13px] leading-relaxed text-ink-soft">
         {content.lead_privacy}
       </p>
 
@@ -94,13 +98,13 @@ export default function LeadPromptModal({
       <button
         onClick={() => submit(false)}
         disabled={busy}
-        className="kp-btn kp-btn-primary tap mt-3.5 w-full px-5 py-3 disabled:opacity-60"
+        className="kp-btn kp-btn-primary tap mt-6 h-[50px] w-full px-5 text-[16px] disabled:opacity-60"
       >
         {busy ? "Đang gửi…" : COPY.leadButton}
       </button>
       <button
         onClick={onClose}
-        className="tap mt-1.5 w-full cursor-pointer py-2 text-center text-sm text-ink-soft hover:text-ink"
+        className="tap mb-5 mt-1.5 w-full cursor-pointer py-2 text-center text-sm text-ink-soft hover:text-ink"
       >
         Để lần sau
       </button>

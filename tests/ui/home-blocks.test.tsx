@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import Counters from "@/components/home/Counters";
 import LeadSection from "@/components/home/LeadSection";
+import LeadPromptModal from "@/components/home/LeadPromptModal";
 import { FilterTabs } from "@/components/home/ui";
 import { COPY } from "@/lib/copy";
 import { runNow, siteContent } from "./helpers";
@@ -102,6 +103,22 @@ describe("LeadSection — khối ưu đãi", () => {
 
   it("chưa tick đồng ý thì không gửi lead", () => {
     renderLead();
+    fireEvent.click(screen.getByRole("button", { name: COPY.leadButton }));
+    expect(screen.getByText("Cần tick đồng ý nhận ưu đãi thì tụi mình mới lưu số nhé")).toBeTruthy();
+    expect(apiSend).not.toHaveBeenCalled();
+  });
+});
+
+describe("LeadPromptModal — popup không có trong design", () => {
+  it("dựng trong khung popup chuẩn và chặn gửi khi chưa tick đồng ý", () => {
+    const { container } = render(
+      <LeadPromptModal me={null} content={siteContent()} onClose={vi.fn()} showToast={vi.fn()} />
+    );
+    // dùng chung khung Modal 700px + sọc đáy như 4 popup có design
+    expect(screen.getByRole("dialog").className).toContain("sm:max-w-[700px]");
+    expect(container.querySelector(".kp-stripe-b")).toBeTruthy();
+    expect(container.querySelector(".kp-input-lg")).toBeTruthy();
+
     fireEvent.click(screen.getByRole("button", { name: COPY.leadButton }));
     expect(screen.getByText("Cần tick đồng ý nhận ưu đãi thì tụi mình mới lưu số nhé")).toBeTruthy();
     expect(apiSend).not.toHaveBeenCalled();

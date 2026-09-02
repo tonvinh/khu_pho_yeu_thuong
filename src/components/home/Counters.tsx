@@ -15,7 +15,9 @@ export default function Counters({ counters }: { counters: CounterData }) {
   // Mobile (quy chuẩn 2/9): GIỮ 1 HÀNG 3 CỘT, số trên — nhãn dưới; bản cũ dùng
   // flex-wrap nên vỡ thành 2 dòng lệch tâm ở khổ 390px.
   return (
-    <div className="mx-auto grid max-w-[1312px] grid-cols-3 items-center gap-x-3 px-4 pb-8 pt-6 sm:w-[800px] sm:gap-x-6 sm:px-0 sm:pb-[22px] sm:pt-[25px]">
+    <div /* .fig: khối 800px canh giữa. Dùng max-w chứ KHÔNG ghim w-[800px]: khổ
+          tablet 768 hẹp hơn 800 nên bản cũ đẩy cả trang tràn ngang. */
+      className="mx-auto grid w-full max-w-[1312px] grid-cols-3 items-center gap-x-3 px-4 pb-8 pt-6 sm:max-w-[800px] sm:gap-x-6 sm:px-0 sm:pb-[22px] sm:pt-[25px]">
       {items.map((it) => (
         <div
           key={it.label}

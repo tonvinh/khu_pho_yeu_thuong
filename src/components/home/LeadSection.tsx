@@ -8,7 +8,7 @@ import type { Me, SiteContentData } from "./types";
 import { apiGet, apiSend } from "../client-api";
 import { COPY } from "@/lib/copy";
 import { INTERESTS } from "@/lib/taxonomy";
-import { Field } from "./ui";
+import { Field, IconChevronDown } from "./ui";
 
 interface GeoUnit { code: string; name: string }
 
@@ -109,16 +109,20 @@ export default function LeadSection({
                 />
               </Field>
               <Field label="Tỉnh thành">
-                <select
-                  value={province}
-                  onChange={(e) => setProvince(e.target.value)}
-                  className="kp-input tap"
-                >
-                  <option value="">Lựa chọn</option>
-                  {provinces.map((p) => (
-                    <option key={p.code} value={p.name}>{p.name}</option>
-                  ))}
-                </select>
+                {/* .fig Frame 193: mũi tên là icon 24px, không phải mũi tên native */}
+                <span className="relative block">
+                  <select
+                    value={province}
+                    onChange={(e) => setProvince(e.target.value)}
+                    className="kp-input tap appearance-none pr-12"
+                  >
+                    <option value="">Lựa chọn</option>
+                    {provinces.map((p) => (
+                      <option key={p.code} value={p.name}>{p.name}</option>
+                    ))}
+                  </select>
+                  <IconChevronDown className="pointer-events-none absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-ink" />
+                </span>
               </Field>
               <Field label="Địa chỉ">
                 <input

@@ -144,7 +144,9 @@ export default function ProposeModal({
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[15px] font-bold leading-tight sm:text-[16px] sm:leading-[21px]">{c.label}</span>
-                      <span className={`block truncate text-[13px] font-light leading-snug sm:text-[14px] sm:leading-[18px] ${on ? "text-white/80" : "text-ink-soft"}`}>
+                      {/* Mobile hẹp hơn 636 của .fig nên mô tả xuống 2 dòng thay vì bị cắt cụt;
+                          từ sm mới ép 1 dòng đúng thẻ 54px của design. */}
+                      <span className={`block line-clamp-2 text-[13px] font-light leading-snug sm:truncate sm:text-[14px] sm:leading-[18px] ${on ? "text-white/80" : "text-ink-soft"}`}>
                         {c.desc}
                       </span>
                     </span>
