@@ -23,6 +23,14 @@ import VoteModal from "./VoteModal";
 import LeadPromptModal from "./LeadPromptModal";
 import NeighborhoodModal from "./NeighborhoodModal";
 
+/** .fig in ĐẬM số tổng đài trong dòng hỗ trợ chân trang. Text do admin sửa được nên
+ *  không khớp mẫu thì trả nguyên văn. */
+function boldHotline(line: string) {
+  const parts = line.split(/(\d{4}[.\s]\d{4})/);
+  if (parts.length === 1) return line;
+  return parts.map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p));
+}
+
 export default function HomeShell({ initial }: { initial: HomeData }) {
   const [data, setData] = useState<HomeData>(initial);
   const [me, setMe] = useState<Me | null>(null);
@@ -190,15 +198,15 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           {/* Logo lockup Frame 166: pill trắng 192×96 (r hết cỡ) + pill trong viền #FF7B00
               1.4px + hình logo 132.9×71.2 (docs/lp/logo.svg → public/brand). */}
           <div className="pointer-events-none absolute -top-[22px] left-1/2 z-10 flex -translate-x-1/2 justify-center">
-            <span className="pointer-events-auto grid h-[76px] w-[168px] place-items-center rounded-full bg-white sm:h-[96px] sm:w-[192px]">
-              <span className="grid h-[68px] w-[160px] place-items-center rounded-full border-[1.4px] border-[#FF7B00] bg-white sm:h-[87px] sm:w-[183px]">
+            <span className="pointer-events-auto grid h-[62px] w-[136px] place-items-center rounded-full bg-white sm:h-[96px] sm:w-[192px]">
+              <span className="grid h-[55px] w-[129px] place-items-center rounded-full border-[1.4px] border-[#FF7B00] bg-white sm:h-[87px] sm:w-[183px]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/brand/logo-khu-pho.svg"
                   alt="Khu phố biết thương"
                   width={133}
                   height={71}
-                  className="h-auto w-[116px] sm:w-[133px]"
+                  className="h-auto w-[94px] sm:w-[133px]"
                 />
               </span>
             </span>
@@ -207,9 +215,13 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           <div className="relative ml-auto flex items-center gap-4">
             <button
               onClick={openPropose}
-              className="tap tap-sm-auto h-[44px] cursor-pointer whitespace-nowrap rounded-full border-[1.5px] border-white px-4 sm:h-[35px] text-[13px] text-white transition hover:bg-white hover:text-brick sm:px-[22px] sm:text-[15px]"
+              aria-label="Đề xuất góc phố mới"
+              /* Mobile (quy chuẩn 2/9): nhãn rút gọn — khổ 375px không đủ chỗ cho pill
+                 logo + nhãn đầy đủ nên nút bị logo đè lên. Desktop giữ nguyên .fig. */
+              className="tap tap-sm-auto h-[44px] cursor-pointer whitespace-nowrap rounded-full border-[1.5px] border-white px-3.5 text-[13px] text-white transition hover:bg-white hover:text-brick sm:h-[35px] sm:px-[22px] sm:text-[15px]"
             >
-              + Đề xuất góc phố mới
+              <span className="sm:hidden">+ Đề xuất</span>
+              <span className="hidden sm:inline">+ Đề xuất góc phố mới</span>
             </button>
             {meLoaded && me && (
               <span
@@ -416,7 +428,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         <div className="mx-auto max-w-[697px] px-5 pb-10 pt-6 text-center text-[14px] leading-relaxed text-ink sm:text-[16px]">
           <div>{data.content.footer_line1}</div>
           <div>{data.content.footer_line2}</div>
-          <div>{data.content.footer_support}</div>
+          <div>{boldHotline(data.content.footer_support)}</div>
           <div className="mt-1">
             <a href={`${BASE}/chinh-sach-du-lieu`} className="underline hover:text-brick-dark">
               Chính sách dữ liệu

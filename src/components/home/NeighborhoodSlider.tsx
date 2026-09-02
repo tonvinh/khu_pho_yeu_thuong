@@ -106,7 +106,7 @@ export default function NeighborhoodSlider({
           viền #DBE9FF 3.3px, chữ Bold 18px, NGHIÊNG -2° (đo trên lp1.png: mép trên đi
           từ y=289 ở x=300 xuống y=281 ở x=470). Hộp chưa xoay đặt ở (284.7, 281.7)
           khổ 1440 → cách mép trái khối slider 24px, cách mép trên khung ảnh 11px. */}
-      <span className="absolute -top-[10px] left-2 z-10 grid h-[44px] -rotate-2 place-items-center rounded-full border-[3.3px] border-accent-blue-light bg-accent-blue px-5 font-display text-[13px] font-bold uppercase tracking-[-0.02em] text-white shadow-kp sm:-top-[11px] sm:left-[24.7px] sm:h-[55px] sm:w-[213px] sm:px-0 sm:text-[18px] sm:shadow-none">
+      <span className="absolute -top-[10px] left-4 z-10 grid h-[44px] -rotate-2 place-items-center rounded-full border-[3.3px] border-accent-blue-light bg-accent-blue px-5 font-display text-[13px] font-bold uppercase tracking-[-0.02em] text-white shadow-kp sm:-top-[11px] sm:left-[24.7px] sm:h-[55px] sm:w-[213px] sm:px-0 sm:text-[18px] sm:shadow-none">
         Khu phố tiêu biểu
       </span>
 
@@ -144,7 +144,9 @@ export default function NeighborhoodSlider({
             type="button"
             onClick={prev}
             aria-label="Khu phố trước"
-            className="absolute left-0 top-1/2 grid h-10 w-10 -translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:top-[53.2%]"
+            /* Mobile: mũi tên nằm TRONG khung (bản cũ -translate-x-1/2 làm nửa nút
+               lọt ra ngoài mép màn hình 375px) — desktop giữ nguyên tâm x=260 của .fig */
+            className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:left-0 sm:h-10 sm:w-10 sm:-translate-x-1/2 sm:top-[53.2%]"
           >
             <IconChevron className="rotate-180" />
           </button>
@@ -152,7 +154,7 @@ export default function NeighborhoodSlider({
             type="button"
             onClick={next}
             aria-label="Khu phố sau"
-            className="absolute right-0 top-1/2 grid h-10 w-10 translate-x-1/2 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:top-[53.2%]"
+            className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:right-0 sm:h-10 sm:w-10 sm:translate-x-1/2 sm:top-[53.2%]"
           >
             <IconChevron />
           </button>
