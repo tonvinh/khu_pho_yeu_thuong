@@ -82,12 +82,6 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
             <NeighborhoodView
               hero
               nb={nb}
-              promo={{
-                line1: content.sign_promo_line1,
-                line2: content.sign_promo_line2,
-                sale_phone: content.sign_sale_phone,
-                hotline: content.sign_hotline,
-              }}
               footer={
                 <a href={withBase("/")} className="kp-btn kp-btn-solid tap px-5 py-2.5">
                   Viết lời nhắc cho xóm mình

@@ -101,10 +101,6 @@ export interface SiteContentData {
   board_title: string;
   board_hint: string;
   signs_title: string;
-  sign_promo_line1: string;
-  sign_promo_line2: string;
-  sign_sale_phone: string;
-  sign_hotline: string;
   lead_title: string;
   lead_body: string;
   lead_privacy: string;

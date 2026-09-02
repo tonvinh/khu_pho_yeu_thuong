@@ -17,8 +17,6 @@ vi.mock("@/components/client-api", () => ({
   BASE: "",
 }));
 
-const PROMO = { line1: "l1", line2: "l2", sale_phone: "0123", hotline: "1900" };
-
 const note = (over: Partial<NeighborhoodNote> = {}): NeighborhoodNote => ({
   id: "s1",
   content: "Đi chậm chút nha, có trẻ con đang chơi",
@@ -56,7 +54,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 const view = (over: Partial<Parameters<typeof NeighborhoodView>[0]> = {}) =>
-  render(<NeighborhoodView nb={detail()} promo={PROMO} {...over} />);
+  render(<NeighborhoodView nb={detail()} {...over} />);
 
 describe("NeighborhoodView · B9 — ruột theo design mới", () => {
   it("hiện tên khu phố, dòng địa chỉ và dòng mời", () => {

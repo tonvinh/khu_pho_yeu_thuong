@@ -5,6 +5,8 @@
 //  · Cố định lưới 3 × 2 = 6 biển MỚI NHẤT theo ngày duyệt (server đã LIMIT 6)
 //  · Mỗi biển render bằng template thương hiệu (SignCard) thay cho ảnh upload;
 //    dưới biển là dòng meta: chủ đề · phường · người viết.
+//  · Figma 2/9: biển xuống 404×199 và bỏ dải khuyến mãi ở đáy ⇒ SignCard không còn
+//    nhận `promo`. Ô = biển 199 + gap 16 + caption 46 = 262 (Frame 226).
 // Chưa đủ 6 biển thật thì bù ví dụ minh hoạ để khối không trống trải.
 import type { ApprovedSign, SiteContentData } from "./types";
 import { EXAMPLE_SIGNS } from "@/lib/examples";
@@ -21,13 +23,6 @@ export default function SignGallery({
   signs: ApprovedSign[];
   content: SiteContentData;
 }) {
-  const promo = {
-    line1: content.sign_promo_line1,
-    line2: content.sign_promo_line2,
-    sale_phone: content.sign_sale_phone,
-    hotline: content.sign_hotline,
-  };
-
   const real = signs.slice(0, SLOTS);
   const fillers = EXAMPLE_SIGNS.filter(
     (e) => !real.some((s) => s.content === e.quote)
@@ -41,7 +36,7 @@ export default function SignGallery({
       <div className="grid grid-cols-1 gap-8 sm:mt-10 sm:grid-cols-2 lg:grid-cols-3">
         {real.map((s) => (
           <figure key={s.id} className="kp-sign m-0">
-            <SignCard content={s.content} promo={promo} />
+            <SignCard content={s.content} />
             {/* .fig Frame 225: dòng chủ đề 16px cao 21px, cách 8px tới hàng meta 14px cao 17px */}
             <figcaption className="mt-4 font-light text-[13px] leading-relaxed text-ink sm:text-[14px] sm:leading-[17px]">
               <span className="block text-ink sm:text-[16px] sm:leading-[21px]">
@@ -63,7 +58,7 @@ export default function SignGallery({
 
         {fillers.map((e) => (
           <figure key={e.quote} className="kp-sign m-0 opacity-90">
-            <SignCard content={e.quote} promo={promo} />
+            <SignCard content={e.quote} />
             {/* .fig Frame 225: dòng chủ đề 16px cao 21px, cách 8px tới hàng meta 14px cao 17px */}
             <figcaption className="mt-4 font-light text-[13px] leading-relaxed text-ink sm:text-[14px] sm:leading-[17px]">
               <span className="block text-ink sm:text-[16px] sm:leading-[21px]">Biển minh hoạ</span>

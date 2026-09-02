@@ -15,7 +15,7 @@ import SignsPanel from "@/components/admin/SignsPanel";
 import { NbSelect } from "@/components/admin/IssuesPanel";
 import { Pager, SearchBox, Tabs, Th, useUrlState } from "@/components/admin/table-tools";
 import { CATEGORIES, CATEGORY_CODES, categoryIcon, categoryLabel } from "@/lib/taxonomy";
-import SignCard, { type SignPromo } from "@/components/home/SignCard";
+import SignCard from "@/components/home/SignCard";
 import { SITE_CONTENT_DEFAULTS } from "@/lib/site-content-defaults";
 
 interface Sugg {
@@ -84,25 +84,6 @@ export default function SuggestionsTablePage() {
   const [rejecting, setRejecting] = useState<Sugg | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
-
-  // Text banner khuyến mãi in trên biển — lấy đúng bản admin đang ghi đè ở /admin/noi-dung
-  // để preview khớp biển thật trên trang chủ (rỗng → dùng mặc định).
-  const [promo, setPromo] = useState<SignPromo>({
-    line1: SITE_CONTENT_DEFAULTS.sign_promo_line1,
-    line2: SITE_CONTENT_DEFAULTS.sign_promo_line2,
-    sale_phone: SITE_CONTENT_DEFAULTS.sign_sale_phone,
-    hotline: SITE_CONTENT_DEFAULTS.sign_hotline,
-  });
-  useEffect(() => {
-    apiGet<{ overrides: Record<string, string> }>("/api/admin/site-content")
-      .then((r) => setPromo({
-        line1: r.overrides.sign_promo_line1 || SITE_CONTENT_DEFAULTS.sign_promo_line1,
-        line2: r.overrides.sign_promo_line2 || SITE_CONTENT_DEFAULTS.sign_promo_line2,
-        sale_phone: r.overrides.sign_sale_phone || SITE_CONTENT_DEFAULTS.sign_sale_phone,
-        hotline: r.overrides.sign_hotline || SITE_CONTENT_DEFAULTS.sign_hotline,
-      }))
-      .catch(() => {});
-  }, []);
 
   // Drawer sửa
   const [editing, setEditing] = useState<Sugg | null>(null);
@@ -366,7 +347,7 @@ export default function SuggestionsTablePage() {
           <div className="mt-3 rounded-xl border border-cream-dark bg-cream p-3">
             <span className="text-[11px] font-bold text-ink-soft">Xem trước biển trên trang chủ</span>
             <div className="mx-auto mt-2 max-w-sm">
-              <SignCard content={approving.content} promo={promo} />
+              <SignCard content={approving.content} />
             </div>
           </div>
           <FourNChecklist checks={checks} setChecks={setChecks} />

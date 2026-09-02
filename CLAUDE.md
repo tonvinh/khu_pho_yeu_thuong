@@ -287,13 +287,32 @@ Toàn bộ mục A, B1–B10, C1–C5 của `docs/22` đã làm. 7 câu chặn �
 - `wardAddress()` trong `address.ts`: dạng "Phường Bàn Cờ, TP. Hồ Chí Minh" mà .fig dùng ở
   B3a/B9/B10 (khác `shortAddress` — không rút "Phường"→"P.", không bỏ phần trùng tên khu).
 
+### Khối biển: bản 2/9 BỎ dải khuyến mãi (docs/22 §B5 ghi thiếu)
+
+§B5 kết luận "khớp, không cần sửa" nhưng chỉ đối chiếu TOẠ ĐỘ y=2186, không đối chiếu
+chiều cao — đo ra khối biển cao 872 vs 648. Đọc lại `.fig`: `INT - EPL-01 1` xuống
+**404×199** (cũ 404×269), và ảnh export cho thấy panel trắng nở ra chiếm ~95% chiều cao,
+**dải khuyến mãi ở đáy biến mất** (ô QR fpt.vn · 2 dòng banner · 2 chip số · artwork
+FPT Play), chỉ sót một mảng vàng cụt ở góc phải dưới — tàn dư crop của Design.
+
+Quyết định 3/9: bỏ hẳn dải khuyến mãi, **gỡ luôn 4 khoá site_content** đổ vào nó
+(`sign_promo_line1/2`, `sign_sale_phone`, `sign_hotline`) để không để lại trường chết ở
+`/admin/noi-dung`. `SITE_TEXT_KEYS` sinh từ `SITE_CONTENT_DEFAULTS` nên API admin tự bỏ
+4 khoá này; hàng cũ trong bảng `site_content` (nếu có) chỉ bị lơ đi, không cần migration.
+`SignCard` mất prop `promo` ⇒ `NeighborhoodView` cũng bỏ theo.
+
+- **Cỡ chữ câu nhắc phải co theo độ dài** (`fontSizeFor`): design chỉ vẽ câu 2 dòng nên
+  chữ rất to (~9.6cqw), câu thật tới 120 ký tự sẽ tràn khỏi panel thấp 199 — đo trên
+  Chrome thấy câu 3–4 dòng bị cắt cụt đáy. Ba bậc 9.6 / 7.4 / 6.2 cqw.
+- `public/brand/sign-fptplay.webp` (21KB) giờ **mồ côi** — giữ lại phòng Design khôi phục
+  dải khuyến mãi; xoá được nếu chốt là bỏ hẳn.
+- Sau khi sửa: biển 403×198 (Figma 404×199), ô 260 (262), lưới 553 (556), **trang 3853 vs
+  3780 — còn dư 73px** (đầu phiên là 887).
+
 ### CÒN TREO — phải hỏi Design/BA
 
-1. **Khối biển cao 872 vs Figma 648 (+224px)** — mỗi ô biển 330 vs 262. docs/22 §B5 ghi
-   "khớp, không cần sửa" nhưng chỉ đối chiếu toạ độ y, không đối chiếu chiều cao. Đây là
-   phần lớn trong 212px trang còn dư so với frame 3780.
-2. **Chân trang dài hơn design**: khối chữ 697×134 (5 dòng) vs .fig 697×84 (~3 dòng) — dòng
+1. **Chân trang dài hơn design**: khối chữ 697×134 (5 dòng) vs .fig 697×84 (~3 dòng) — dòng
    `footer_support` ("Đã là khách hàng của FPT…") chiếm 2 dòng. Design có bỏ dòng này không?
-3. **Dropdown tra cứu 1 kết quả**: design chỉ vẽ MỘT dòng mời ("Khu phố mình chưa có nhiều
+2. **Dropdown tra cứu 1 kết quả**: design chỉ vẽ MỘT dòng mời ("Khu phố mình chưa có nhiều
    lời nhắc…") nên khu ĐÃ đạt chuẩn 4N cũng đọc thấy câu đó. Cần câu riêng cho khu đạt chuẩn?
-4. Sáu frame popup trong .fig vẫn còn nhãn nav CŨ — chưa đồng bộ với `7217:1990`.
+3. Sáu frame popup trong .fig vẫn còn nhãn nav CŨ — chưa đồng bộ với `7217:1990`.

@@ -13,7 +13,6 @@
 // đó (docs/02 §6, §11) và ảnh OG dựng theo nó.
 import { useState } from "react";
 import type { NeighborhoodDetail, NeighborhoodNote } from "./types";
-import type { SignPromo } from "./SignCard";
 import { wardAddress } from "@/lib/address";
 import { apiSend } from "../client-api";
 import { IconHeartSolid, IconPin, IconUser } from "./ui";
@@ -89,14 +88,10 @@ function NoteCard({ note }: { note: NeighborhoodNote }) {
 
 export default function NeighborhoodView({
   nb,
-  promo: _promo,
   footer,
   hero = false,
 }: {
   nb: NeighborhoodDetail;
-  /** Giữ trong chữ ký để hai nơi gọi không phải đổi; design mới không còn dựng biển
-   *  bằng SignCard nên tạm chưa dùng tới. */
-  promo: SignPromo;
   /** Hàng nút ở đáy — popup và trang share có CTA khác nhau */
   footer?: React.ReactNode;
   /** Dựng thêm khối ảnh + badge 4N — chỉ trang share bật (quyết định Q5) */

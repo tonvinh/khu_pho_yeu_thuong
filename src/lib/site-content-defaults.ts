@@ -27,11 +27,6 @@ export const SITE_CONTENT_DEFAULTS = {
     "Câu được nhiều lượt “Thương” nhất sẽ được đưa lên biển treo tại khu phố",
   // Khối biển
   signs_title: "Lời nhắc khi lên biển trông như thế nào?",
-  // Banner khuyến mãi in trên biển (SignCard)
-  sign_promo_line1: "Đăng ký Internet nhanh",
-  sign_promo_line2: "Xem Ngoại Hạng Anh cùng FPT",
-  sign_sale_phone: "098.420.xxxx",
-  sign_hotline: "1900.6600",
   // Khối ưu đãi
   lead_title: COPY.leadTitle,
   lead_body: COPY.leadBody,

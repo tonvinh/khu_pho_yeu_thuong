@@ -14,7 +14,7 @@ import SignCard from "@/components/home/SignCard";
 type TextKey =
   | "hero_title" | "hero_body" | "hero_search_placeholder"
   | "board_title" | "board_hint"
-  | "signs_title" | "sign_promo_line1" | "sign_promo_line2" | "sign_sale_phone" | "sign_hotline"
+  | "signs_title"
   | "lead_title" | "lead_body" | "lead_privacy"
   | "footer_line1" | "footer_line2" | "footer_support" | "footer_tagline"
   | "campaign_title" | "campaign_hint" | "campaign_youtube_ids";
@@ -161,24 +161,12 @@ export default function SiteContentPage() {
 
       <Card title="Khối “Biển mới của khu phố”">
         {field("signs_title", "Tiêu đề khối")}
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {field("sign_promo_line1", "Banner khuyến mãi — dòng 1")}
-          {field("sign_promo_line2", "Banner khuyến mãi — dòng 2")}
-          {field("sign_sale_phone", "Số tổng đài bán hàng in trên biển")}
-          {field("sign_hotline", "Hotline chăm sóc khách hàng in trên biển")}
-        </div>
+        {/* Figma 2/9: biển bỏ dải khuyến mãi ở đáy nên 4 ô nhập banner/tổng đài/hotline
+            đã gỡ khỏi đây (và khỏi site_content) — biển chỉ còn logo + câu nhắc. */}
         <div className="mt-4 rounded-xl border border-cream-dark p-3">
           <span className="text-xs font-bold">Xem trước biển</span>
           <div className="mt-2 max-w-sm">
-            <SignCard
-              content="Đi chậm chút nha, trong hẻm có đứa nhỏ đang chơi."
-              promo={{
-                line1: val("sign_promo_line1"),
-                line2: val("sign_promo_line2"),
-                sale_phone: val("sign_sale_phone"),
-                hotline: val("sign_hotline"),
-              }}
-            />
+            <SignCard content="Đi chậm chút nha, trong hẻm có đứa nhỏ đang chơi." />
           </div>
           <span className="mt-2 block text-[11px] text-ink-soft">
             6 biển trên trang chủ lấy 6 câu ĐÃ DUYỆT mới nhất theo ngày duyệt.
