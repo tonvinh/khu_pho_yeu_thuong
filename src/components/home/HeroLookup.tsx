@@ -97,7 +97,7 @@ export default function HeroLookup({
 
       {picked && (
         <div
-          className={`mt-3 flex flex-col items-center gap-2.5 rounded-2xl px-5 py-3.5 text-[14px] font-semibold sm:flex-row sm:justify-between sm:text-left ${
+          className={`mt-3 flex flex-col items-center gap-2.5 rounded-2xl px-5 py-3.5 text-[14px] font-bold sm:flex-row sm:justify-between sm:text-left ${
             picked.certified_4n
               ? "bg-status-signed-bg text-status-signed"
               : "bg-white text-brick-dark shadow-kp-s"

@@ -122,7 +122,7 @@ export default function NeighborhoodView({
 
       {/* ===== Trạng thái 4N ===== */}
       {nb.certified_4n ? (
-        <p className="mt-4 flex items-start gap-2 rounded-2xl bg-status-signed-bg px-4 py-3 text-[14px] font-semibold leading-snug text-status-signed">
+        <p className="mt-4 flex items-start gap-2 rounded-2xl bg-status-signed-bg px-4 py-3 text-[14px] font-bold leading-snug text-status-signed">
           <IconHeartSolid className="mt-0.5 h-4 w-4" />
           <span>
             {nb.name} đã chính thức là “Khu phố biết thương” chuẩn 4N

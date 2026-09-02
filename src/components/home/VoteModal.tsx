@@ -91,7 +91,7 @@ export default function VoteModal({
         <>
           <div className="rounded-2xl border border-[#CFE2D5] bg-[#E9F1EB] p-5 text-center">
             <div className="mb-2.5 text-[12.5px] text-ink-soft">{COPY.panelSignTitle}</div>
-            <div className="inline-block rounded-xl border-[1.5px] border-olive bg-white px-5 py-3.5 font-display text-[17px] font-semibold shadow-kp-s">
+            <div className="inline-block rounded-xl border-[1.5px] border-olive bg-white px-5 py-3.5 font-display text-[17px] font-bold shadow-kp-s">
               {installed.content}
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function VoteModal({
                   {s.content}
                   <div className="mt-1 text-[11.5px] text-ink-soft">
                     — {s.author_name}
-                    <span className="ml-2 rounded-full bg-status-signed-bg px-2 py-0.5 font-semibold text-status-signed">
+                    <span className="ml-2 rounded-full bg-status-signed-bg px-2 py-0.5 font-bold text-status-signed">
                       ✓ Đạt chuẩn 4N
                     </span>
                   </div>

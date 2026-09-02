@@ -64,7 +64,7 @@ export default async function SignPage({ params }: { params: Promise<{ id: strin
         <div className="inline-block rounded-full bg-status-signed px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
           {COPY.panelSignTitle}
         </div>
-        <h1 className="mt-4 text-2xl font-extrabold leading-snug">“{s.content}”</h1>
+        <h1 className="mt-4 text-2xl font-bold leading-snug">“{s.content}”</h1>
         <p className="mt-2 text-sm text-ink-soft">
           — {s.author_name} · {s.location_text}, {s.neighborhood_name}
         </p>

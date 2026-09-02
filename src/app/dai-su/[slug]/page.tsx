@@ -62,7 +62,7 @@ export default async function AmbassadorPage({ params }: { params: Promise<{ slu
         <div className="mt-3 inline-block rounded-full bg-brick px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
           Cây bút của khu phố
         </div>
-        <h1 className="mt-3 text-2xl font-extrabold">{p.display_name}</h1>
+        <h1 className="mt-3 text-2xl font-bold">{p.display_name}</h1>
         {p.neighborhood_name && <p className="text-sm text-ink-soft">{p.neighborhood_name}</p>}
         <div className="mt-5 grid grid-cols-3 gap-2 text-center">
           <Stat value={p.signs_installed} label="câu được treo" />
@@ -84,7 +84,7 @@ export default async function AmbassadorPage({ params }: { params: Promise<{ slu
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div className="rounded-2xl bg-cream p-3">
-      <div className="text-2xl font-extrabold text-brick">{value}</div>
+      <div className="text-2xl font-bold text-brick">{value}</div>
       <div className="text-[11px] font-medium text-ink-soft">{label}</div>
     </div>
   );

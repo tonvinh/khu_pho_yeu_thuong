@@ -246,7 +246,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
                 : n.payload.location_text || null;
               return (
                 <div key={n.id} className="mb-3 rounded-2xl bg-white p-4 shadow-kp-s">
-                  <p className="m-0 font-semibold">
+                  <p className="m-0 font-bold">
                     {n.type === "sign_installed"
                       ? COPY.bannerGoodNews(n.payload.location_text || "xóm mình")
                       : rejected

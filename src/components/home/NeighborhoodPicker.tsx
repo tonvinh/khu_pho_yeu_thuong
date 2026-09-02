@@ -83,7 +83,7 @@ export default function NeighborhoodPicker({
                 setOpen(false);
               }}
               className={`block w-full cursor-pointer px-4 py-2.5 text-left text-[13.5px] hover:bg-cream ${
-                n.id === valueId ? "bg-cream font-semibold" : ""
+                n.id === valueId ? "bg-cream font-bold" : ""
               }`}
             >
               {n.name}
