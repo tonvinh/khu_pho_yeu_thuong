@@ -15,7 +15,7 @@ export const SITE_KV_KEY = "campaign_kv_key";
 
 export const SITE_CONTENT_DEFAULTS = {
   // Hero
-  hero_title: "Hãy gửi một lời thương cho xóm mình!",
+  hero_title: "Hãy gửi một lời thương cho xóm mình nhé!",
   hero_body: COPY.heroBody,
   hero_search_placeholder: "Tìm kiếm khu phố của bạn tại đây",
   // Khối đóng góp

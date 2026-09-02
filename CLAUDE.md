@@ -151,3 +151,36 @@ Từ nay đối chiếu giao diện trang chủ với FILE FIGMA, không đo b�
   top bar (133×71 trong pill) và footer (rộng 23% khối KV, `margin-top: -9.16%` để đè lên
   đáy KV đúng tỷ lệ .fig: logo 286.5×153.2 thò xuống 39.2px).
   `public/brand/sign-logos.webp` vẫn dùng bản cắt từ artwork nên không cần đổi.
+
+## Điều chỉnh 2/9 — bám Figma 100% + quy chuẩn mobile
+
+Link design chuẩn: `figma.com/design/FMiW4tzQvKgi8qomzYFlff/...?node-id=7217-1989`.
+**`7217:1989` là một PAGE, không phải frame** — trong đó section "Design" có 6 frame:
+`7217:1990` + `7458:38738` (landing 1440×4450, khác nhau ở tab đang chọn) và 4 frame
+1440×1024 chứa popup: `7458:40650` (đề xuất 1/2) · `7458:41331` (đề xuất 2/2) ·
+`7458:41901` (gửi câu nhắc) · `7502:831` (định danh/ưu đãi).
+
+- **Đọc lại `.fig`**: `python3 scripts/figma/parse.py` (sinh `nodes.pkl`, ~40s) rồi
+  `python3 scripts/figma/dump.py <node-id> [maxdepth]`. `parse.py` mới bổ sung: chunk
+  SCHEMA nén **raw deflate**, chunk DATA nén **zstd** — nhầm cái nào cũng vỡ stream.
+- **`dump.py` KHÔNG lọc `visible=false`**: dải con số ở hero có node ẩn "+300 Người đóng
+  góp" — design thật chỉ 3 ô (`Biển đã treo · Góc phố đang chờ · Khu phố tham gia`).
+- **Quyết định: DESIGN THẮNG SPEC** (chi tiết + danh sách 4 khối chữ bị gỡ:
+  `docs/20` §2.1). Chuỗi bị gỡ vẫn nằm trong `copy.ts` để bật lại được.
+- **Khung modal** (`ui.tsx`): mọi popup rộng **700**, viền **2px #FF8206**, lề trong 32,
+  tiêu đề **25px Regular** (KHÔNG bold), nút ‹/× 35×35 dạng icon, dải sọc `.kp-stripe-b`
+  cao 12 nằm TRONG khung. Prop `wide` đã bỏ.
+- **Hai cỡ ô nhập**: `.kp-input` (cao 40, chữ 14 — khối ưu đãi) và `.kp-input-lg`
+  (cao 50 / textarea 90, chữ 16 — trong popup). `Field size="lg"` cho nhãn 16px Bold.
+- **Quy chuẩn mobile** (design KHÔNG có frame mobile, team dev tự đặt):
+  breakpoint `sm=640` · lề ngang 16px, **không phần tử nào chạm mép** · ô nhập 16px
+  (chống iOS auto-zoom) · vùng chạm ≥44px · modal = bottom sheet bo trên 24 có tay nắm,
+  ẩn dải sọc · mũi tên slider nằm trong khung · dải con số 1 hàng 3 cột (số trên, nhãn
+  dưới) · top bar rút gọn nhãn CTA còn "+ Đề xuất" và thu nhỏ pill logo để không đè nhau.
+- **Test giao diện**: `tests/ui/*.test.tsx` chạy jsdom (`@vitest-environment jsdom` ở
+  đầu file; bộ test logic cũ vẫn môi trường `node`). Dev-dep mới: `jsdom`,
+  `@testing-library/react`, `@testing-library/dom`. jsdom KHÔNG tính layout/media query
+  → số đo mobile & popup phải đo bằng DOM thật trong trình duyệt, đừng tin test suông.
+- Đã xoá: `CampaignMedia.tsx` (khối TVC bỏ khỏi trang chủ từ 18/8, 0 tham chiếu) và 10
+  class CSS chết trong `globals.css` (`kp-drawer`, `kp-scrim`, `kp-quote`, `kp-pin`,
+  `kp-pin-sign`, `kp-kicker`, `kp-card`, `kp-card-3`, `kp-sway`, `floaty`).

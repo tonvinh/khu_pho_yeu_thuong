@@ -30,6 +30,28 @@
 | **Import ghi DB trước, upload ảnh sau** | Lỗi upload MinIO không được phép phá vỡ tính all-or-nothing của dữ liệu | Có thể tồn tại bản ghi trỏ tới ảnh chưa upload được; API trả `upload_errors` để admin biết mà bổ sung |
 | **Scripts giữ `.mjs` thuần, không TypeScript** | Chạy được trực tiếp trong image production (không có tsx/ts-node ở runner) | Không có kiểm kiểu ở scripts |
 | **Bulk import đưa issue thẳng vào `waiting`** | Dữ liệu do admin nhập ⇒ coi như đã duyệt | Không sinh điểm cho ai (không có `proposed_by`) — đúng ý đồ |
+| **DESIGN 18/8 THẮNG SPEC 02/06 (chốt 2/9)** — xem §2.1 | PM chốt "bám thiết kế đã duyệt 100%" | 4 khối copy bắt buộc trong đặc tả gốc bị gỡ khỏi giao diện |
+
+### 2.1 Quyết định 2/9 — Figma thắng đặc tả copy
+
+Đối chiếu 4 frame popup trong `docs/lp/LandingpageFCM.fig` (page `7217:1989`) với giao diện
+đang chạy, 4 khối chữ sau **có trong đặc tả nhưng KHÔNG có trong design**. PM chốt bỏ theo
+design; đặc tả gốc (00–07) **chưa** được sửa nên bảng này là nguồn giải thích:
+
+| Khối chữ bị gỡ | Đặc tả bắt buộc | Nơi từng hiển thị |
+|---|---|---|
+| ⚠️ "Khu Phố Của Tôi tiếp nhận những góp ý về an toàn và nếp sống khu phố…" | `02 §62`, `06 §43` | `ProposeModal` bước 2/2 |
+| 💛 "Giữ cho dễ thương: gọi tên một việc tốt cụ thể…" | `02 §72`, `06 §27` | `SuggestModal` |
+| Chip 4N + bộ đếm ký tự ở popup **Đề xuất** | `02 §70` (chip 4N ở form viết câu) | `ProposeModal` bước 2/2 |
+| "Bạn sẽ xác thực số điện thoại một lần trước khi gửi…" | `06 §65` | `LeadSection` |
+
+Vẫn **giữ** (design có vẽ): ghi chú 4N `COPY.note4N`, 4 chip 4N trong `SuggestModal`,
+checkbox đồng ý + ghi chú tuỳ chọn, ô SĐT hiện khi tick nhận ưu đãi (design chỉ vẽ trạng
+thái chưa tick nên không mâu thuẫn). Các chuỗi bị gỡ vẫn còn trong `src/lib/copy.ts` để
+bật lại được nếu PM đổi ý.
+
+**Mobile**: file design không có frame mobile nào → quy chuẩn mobile do team dev tự đặt,
+ghi trong `CLAUDE.md` §"Quy chuẩn mobile".
 
 ## 3. Nợ kỹ thuật & giới hạn đã biết
 
