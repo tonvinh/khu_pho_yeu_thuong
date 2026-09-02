@@ -77,7 +77,10 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
         <div className="relative mt-5">
           <div aria-hidden className="kp-stripe absolute inset-x-6 -bottom-2 hidden rounded-b-xl sm:block" />
           <div className="relative rounded-3xl border border-brick/40 bg-white px-4 py-5 shadow-kp sm:px-8 sm:py-7">
+            {/* hero: trang share GIỮ khối ảnh + badge 4N (quyết định Q5) — popup ở
+                trang chủ thì không, đúng frame 7756:2954. */}
             <NeighborhoodView
+              hero
               nb={nb}
               promo={{
                 line1: content.sign_promo_line1,

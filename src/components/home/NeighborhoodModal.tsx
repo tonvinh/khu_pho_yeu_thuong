@@ -7,7 +7,6 @@ import type { NeighborhoodDetail, SiteContentData } from "./types";
 import { apiGet } from "../client-api";
 import { Modal } from "./ui";
 import NeighborhoodView from "./NeighborhoodView";
-import { shortAddress } from "@/lib/address";
 
 export default function NeighborhoodModal({
   slug,
@@ -35,33 +34,19 @@ export default function NeighborhoodModal({
     };
   }, [slug]);
 
-  const addr = nb ? shortAddress(nb.ward, nb.city, nb.name) : "";
-
   return (
-    <Modal
-      onClose={onClose}
-      title={
-        nb ? (
-          <>
-            {nb.name}
-            {addr && (
-              <span className="mt-0.5 block font-sans text-[13px] font-light text-ink-soft">
-                {addr}
-              </span>
-            )}
-          </>
-        ) : (
-          "Khu phố"
-        )
-      }
-    >
+    /* Figma bản 2/9 · B9 (7756:2954): tiêu đề popup là "Thông tin khu phố" 25px
+       Regular — tên khu phố và địa chỉ chuyển xuống THÂN popup (NeighborhoodView),
+       không còn nhét vào thanh tiêu đề như bản 18/8. */
+    <Modal onClose={onClose} title="Thông tin khu phố">
       {missing ? (
         <p className="py-8 text-center text-[14px] text-ink-soft">Không tìm thấy khu phố này.</p>
       ) : !nb ? (
-        // Khung xám giữ đúng chiều cao khung ảnh để popup không giật khi có dữ liệu
+        /* Khung xám giữ chỗ cho tiêu đề + 2 thẻ câu nhắc để popup không giật */
         <div className="animate-pulse">
-          <div className="aspect-[840/430] w-full rounded-[24px] bg-cream" />
-          <div className="mt-4 h-16 w-full rounded-2xl bg-cream" />
+          <div className="h-8 w-2/3 rounded-lg bg-cream" />
+          <div className="mt-4 h-[73px] w-full rounded-2xl bg-cream" />
+          <div className="mt-3 h-[73px] w-full rounded-2xl bg-cream" />
         </div>
       ) : (
         <NeighborhoodView

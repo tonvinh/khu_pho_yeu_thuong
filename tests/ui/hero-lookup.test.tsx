@@ -51,8 +51,8 @@ describe("HeroLookup · B3(a) — nhiều kết quả", () => {
     lookup();
     type("xóm");
     const row = screen.getByText("Xóm Đình").closest("[role=option]")! as HTMLElement;
-    expect(row.textContent).toContain("Phường Bàn Cờ");
-    expect(row.textContent).toContain("Thành phố Hồ Chí Minh");
+    // wardAddress: giữ nguyên tên phường, viết tắt tỉnh — đúng dạng .fig vẽ
+    expect(row.textContent).toContain("Phường Bàn Cờ, TP. Hồ Chí Minh");
   });
 });
 

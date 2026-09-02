@@ -164,13 +164,23 @@ export interface HomeData {
   ambassadors: AmbassadorRow[];
 }
 
-/** Một biển đã duyệt/đã treo của khu phố — hiện trong popup khu phố */
-export interface NeighborhoodSign {
+/**
+ * Một câu nhắc của khu phố — hiện trong popup "Thông tin khu phố" (Figma 2/9 · B9).
+ * Thay `NeighborhoodSign` của bản 18/8: design mới không còn vẽ biển bằng SignCard
+ * mà liệt kê câu nhắc kèm PILL TRẠNG THÁI và nút bình chọn.
+ */
+export interface NeighborhoodNote {
   id: string;
   content: string;
+  /** approved → "Đang chờ bạn bình chọn" · selected/produced → "Chờ treo biển" ·
+   *  installed → "Đã lên biển" */
+  status: "approved" | "selected" | "produced" | "installed";
   author_name: string;
-  location_text: string;
-  category: string;
+  votes: number;
+  /** Người xem đã thương câu này chưa (1 phiếu/câu, không rút — Q6) */
+  voted: boolean;
+  /** Câu của chính người xem → không được tự thương (quy tắc cứng 3) */
+  is_mine: boolean;
 }
 
 /**
@@ -196,5 +206,6 @@ export interface NeighborhoodDetail {
   /** Số câu nhắc đã duyệt của cả khu */
   suggestions_total: number;
   progress_pct: number;
-  signs: NeighborhoodSign[];
+  /** Câu nhắc của khu phố, mới nhất trước (Figma 2/9 · B9) */
+  notes: NeighborhoodNote[];
 }

@@ -4,7 +4,7 @@
 // full-width + nút tròn cam bên phải.
 import { useMemo, useRef, useState } from "react";
 import type { MapNeighborhood } from "./types";
-import { formatAddress } from "@/lib/address";
+import { wardAddress } from "@/lib/address";
 import { IconPin, IconSearch } from "./ui";
 
 /** Pill "Đạt chuẩn 4N" — .fig: w≈140 h=35 r=88.9 nền #2323FF, icon vuesax tick-circle
@@ -121,7 +121,7 @@ export default function HeroLookup({
                 {(n.ward || n.city) && (
                   <span className="mt-0.5 flex items-center gap-1.5 font-light text-[12px] text-ink-soft sm:text-[14px]">
                     <IconPin className="text-brick" />
-                    {formatAddress(n.ward, n.city)}
+                    {wardAddress(n.ward, n.city)}
                   </span>
                 )}
               </span>
@@ -146,7 +146,7 @@ export default function HeroLookup({
               {(single.ward || single.city) && (
                 <span className="mt-0.5 flex items-center gap-1.5 font-light text-[12px] text-ink-soft sm:text-[14px]">
                   <IconPin className="text-brick" />
-                  {formatAddress(single.ward, single.city)}
+                  {wardAddress(single.ward, single.city)}
                 </span>
               )}
             </span>
