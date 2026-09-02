@@ -1,5 +1,7 @@
-import pickle, sys
-SP="/private/tmp/claude-501/-Users-nct-Documents-Projects-khu-pho-yeu-thuong/a4b8a443-626d-4267-adf6-aa4028589f9b/scratchpad"
+import os, pickle, sys
+
+# nodes.pkl do parse.py sinh ra, nằm cạnh script này
+SP = os.path.dirname(os.path.abspath(__file__))
 
 def load():
     with open(SP+"/nodes.pkl","rb") as f: return pickle.load(f)

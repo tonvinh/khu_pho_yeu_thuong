@@ -39,4 +39,8 @@ Thumbs.db
 # rồi (docs/lp/figma-frame-7217-1990.txt được track). Giữ file .fig gốc ở Drive của
 # team Design, không đưa vào repo. Bộ giải mã: scripts/figma/.
 docs/lp/*.fig
+
+# Cache trung gian do scripts/figma/parse.py sinh ra từ .fig (67MB, tái tạo được)
+scripts/figma/nodes.pkl
+scripts/figma/__pycache__/
 docs/lp/font_FPT_songvui.zip

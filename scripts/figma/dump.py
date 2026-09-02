@@ -1,6 +1,7 @@
-import sys
-SP="/private/tmp/claude-501/-Users-nct-Documents-Projects-khu-pho-yeu-thuong/a4b8a443-626d-4267-adf6-aa4028589f9b/scratchpad"
-sys.path.insert(0,SP)
+import os, sys
+
+SP = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, SP)
 from tree import load, build, gid, hexcol, paints
 
 nc=load(); by,kids=build(nc)
