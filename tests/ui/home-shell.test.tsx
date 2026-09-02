@@ -6,7 +6,7 @@
 // jsdom KHÔNG tính layout/media query nên ở đây kiểm ĐIỂM DỪNG khai báo trong markup;
 // số đo chồng lấn thật đo bằng DOM trong trình duyệt (xem tests/e2e).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import HomeShell from "@/components/home/HomeShell";
 import type { Me, NotificationItem } from "@/components/home/types";
 import { homeData } from "./helpers";
@@ -85,25 +85,66 @@ describe("HomeShell · A1 — banner báo tin không bị nền hero phủ", () 
 describe("HomeShell · A3 — nav không chồng chữ ở dải 640–1169px", () => {
   it("hai link nav chỉ bật từ xl (1280), không phải sm (640)", () => {
     render(<HomeShell initial={homeData()} />);
-    // "Góc phố đang chờ" cũng là nhãn của dải 3 con số → lấy đúng cái nằm trong <button> nav
-    const link = screen
-      .getAllByText("Góc phố đang chờ")
-      .find((el) => el.tagName === "BUTTON")!;
+    const link = screen.getByRole("button", { name: "Đóng góp lời nhắc" });
     const nav = link.parentElement!;
     expect(nav.className).toContain("xl:flex");
     expect(nav.className).not.toContain("sm:flex");
     // link thứ hai nằm cùng khối nên cũng theo ngưỡng xl
-    expect(nav.textContent).toContain("Quà dành cho cư dân");
+    expect(nav.textContent).toContain("Đề xuất khu phố cần treo biển");
   });
 
   it("nhãn CTA đầy đủ chỉ bật từ lg (1024); dưới đó dùng nhãn rút gọn", () => {
     render(<HomeShell initial={homeData()} />);
-    const short = screen.getByText("+ Đề xuất");
-    const full = screen.getByText("+ Đề xuất góc phố mới", { selector: "span" });
+    const short = screen.getByText("Ưu đãi");
+    const full = screen.getByText("Ưu đãi dành cho cư dân", { selector: "span" });
     expect(short.className).toContain("lg:hidden");
     expect(short.className).not.toContain("sm:hidden");
     expect(full.className).toContain("hidden");
     expect(full.className).toContain("lg:inline");
+  });
+});
+
+// ── QC Figma mới 2/9 · B1 ───────────────────────────────────────────────────
+// Figma 7217:1990 đổi cả ba nhãn của thanh nav. Quan trọng hơn nhãn: CTA bên phải
+// không còn mở form đề xuất nữa mà cuộn xuống khối ưu đãi — cửa vào luồng đề xuất
+// chuyển sang LINK 2 "Đề xuất khu phố cần treo biển" (quyết định Q1, 2/9).
+describe("HomeShell · B1 — nhãn nav và cửa vào luồng đề xuất", () => {
+  const nav = () => screen.getByRole("button", { name: "Đóng góp lời nhắc" }).parentElement!;
+
+  it("ba nhãn mới thay ba nhãn cũ", () => {
+    render(<HomeShell initial={homeData()} />);
+    expect(screen.getByRole("button", { name: "Đóng góp lời nhắc" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Đề xuất khu phố cần treo biển" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Ưu đãi dành cho cư dân/ })).toBeTruthy();
+    expect(nav().textContent).not.toContain("Góc phố đang chờ");
+    expect(nav().textContent).not.toContain("Quà dành cho cư dân");
+  });
+
+  it("LINK 2 mở popup đề xuất (cửa vào luồng, Q1)", () => {
+    render(<HomeShell initial={homeData()} />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Đề xuất khu phố cần treo biển" }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByRole("dialog").textContent).toContain("Đề xuất góc phố");
+  });
+
+  it("CTA 'Ưu đãi dành cho cư dân' chỉ cuộn xuống khối ưu đãi, KHÔNG mở popup", () => {
+    render(<HomeShell initial={homeData()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Ưu đãi dành cho cư dân/ }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("LINK 1 'Đóng góp lời nhắc' cũng chỉ cuộn, không mở popup", () => {
+    render(<HomeShell initial={homeData()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Đóng góp lời nhắc" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("lề trái thanh nav 77px theo .fig (link 1 bắt đầu x=159 trên khối từ x=82)", () => {
+    const { container } = render(<HomeShell initial={homeData()} />);
+    const bar = container.querySelector(".max-w-\\[1276px\\]")!;
+    expect(bar.className).toContain("sm:pl-[77px]");
+    expect(bar.className).toContain("sm:pr-[14px]");
   });
 });
 

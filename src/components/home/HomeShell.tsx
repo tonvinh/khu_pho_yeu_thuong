@@ -163,10 +163,11 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       {/* ===== TOP BAR — Subtract trong .fig là HAI mảnh 543×60 ở y=39 (gộp lại là
            1276×60 từ x=82), nền trắng 10%, viền #FFEBB8 mờ dần về hai đầu, bị khoét
            một cung r=60 quanh pill logo; logo Frame 166 192×96 canh GIỮA thanh và nhô
-           lên (y=17 so với thanh y=39). Chữ trái bắt đầu ở x=189 → lề trái 107px,
-           lề phải 14px (nhóm nút x=1091.6…1343.6). ===== */}
+           lên (y=17 so với thanh y=39).
+           Figma bản 2/9 (B1): chữ trái bắt đầu x=159 trên khối từ x=82 → lề trái
+           77px (bản 18/8 là 107px vì nhãn cũ ngắn hơn); lề phải vẫn 14px. ===== */}
       <div className="relative px-4 pt-4 sm:px-6 sm:pt-[39px]">
-        <div className="relative mx-auto flex h-[60px] max-w-[1276px] items-center px-3 sm:pl-[107px] sm:pr-[14px]">
+        <div className="relative mx-auto flex h-[60px] max-w-[1276px] items-center px-3 sm:pl-[77px] sm:pr-[14px]">
           {/* nền trắng 10% — mask khoét cung tròn hai bên logo */}
           <span aria-hidden className="kp-nav-cut absolute inset-0 rounded-full bg-white/10" />
           {/* viền #FFEBB8: mask khoét cung + mờ dần về hai đầu bo tròn */}
@@ -187,18 +188,21 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           {/* QC 2/9 · A3: bố cục này lấy số đo Figma khổ 1440 nhưng trước đây bật ngay từ
               sm=640 → từ 640 đến ~1170px hai cụm chữ chồng lên pill logo 192px ở giữa.
               Đo thực: hai link nav an toàn từ 1200 (xl), nhãn CTA đầy đủ từ 1000 (lg). */}
+          {/* Figma bản 2/9 · B1 + quyết định Q1: CTA bên phải đổi sang "Ưu đãi dành cho
+              cư dân" nên nó KHÔNG còn mở form đề xuất nữa — cửa vào luồng đề xuất
+              chuyển hẳn sang LINK 2 dưới đây. */}
           <div className="relative hidden min-w-0 items-center gap-14 xl:flex">
             <button
               onClick={() => scrollTo("goc-xom")}
               className="cursor-pointer whitespace-nowrap text-[16px] text-white"
             >
-              Góc phố đang chờ
+              Đóng góp lời nhắc
             </button>
             <button
-              onClick={() => scrollTo("uu-dai")}
+              onClick={openPropose}
               className="cursor-pointer whitespace-nowrap text-[16px] text-white"
             >
-              Quà dành cho cư dân
+              Đề xuất khu phố cần treo biển
             </button>
           </div>
 
@@ -221,14 +225,15 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
           <div className="relative ml-auto flex items-center gap-4">
             <button
-              onClick={openPropose}
-              aria-label="Đề xuất góc phố mới"
+              onClick={() => scrollTo("uu-dai")}
+              aria-label="Ưu đãi dành cho cư dân"
               /* Mobile (quy chuẩn 2/9): nhãn rút gọn — khổ 375px không đủ chỗ cho pill
-                 logo + nhãn đầy đủ nên nút bị logo đè lên. Desktop giữ nguyên .fig. */
+                 logo + nhãn đầy đủ nên nút bị logo đè lên. Desktop giữ nguyên .fig
+                 (Frame 171 w=273, lề phải 95.4 ⇒ padding-right 14 của thanh). */
               className="tap tap-sm-auto h-[44px] cursor-pointer whitespace-nowrap rounded-full border-[1.5px] border-white px-3.5 text-[13px] text-white transition hover:bg-white hover:text-brick sm:h-[35px] sm:px-[22px] sm:text-[15px]"
             >
-              <span className="lg:hidden">+ Đề xuất</span>
-              <span className="hidden lg:inline">+ Đề xuất góc phố mới</span>
+              <span className="lg:hidden">Ưu đãi</span>
+              <span className="hidden lg:inline">Ưu đãi dành cho cư dân</span>
             </button>
             {meLoaded && me && (
               <UserMenu
