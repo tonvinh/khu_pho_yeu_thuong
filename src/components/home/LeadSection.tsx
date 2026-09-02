@@ -70,7 +70,8 @@ export default function LeadSection({
   // Rectangle 47: panel trắng full-bleed, CHỈ bo 40px hai góc trên; form rộng 906
   return (
     <div className="w-full rounded-t-[32px] bg-white px-5 py-9 shadow-kp sm:rounded-t-[40px] sm:px-10 sm:py-12">
-      <h2 className="kp-h2 kp-lead-title m-0 text-center text-[clamp(22px,4.4vw,40px)] tracking-[-0.02em] text-ink text-balance">
+      {/* .fig: tiêu đề canh TRÁI (x=167 w=910), không canh giữa như bản 18/8 */}
+      <h2 className="kp-h2 kp-lead-title mx-auto m-0 max-w-[910px] text-[clamp(22px,4.4vw,40px)] tracking-[-0.02em] text-ink text-balance">
         {content.lead_title}
       </h2>
       <p className="mx-auto mt-4 max-w-[907px] text-center font-light text-[14.5px] leading-relaxed tracking-[-0.02em] text-ink sm:text-[16px]">
@@ -136,7 +137,8 @@ export default function LeadSection({
 
             <div className="mt-5">
               <div className="mb-2 text-[14px] font-bold tracking-[-0.02em] sm:text-[16px]">Nhà mình đang muốn tìm hiểu dịch vụ nào?</div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {/* .fig: 6 ô 294.3×40 r=80, gap 12 ngang / 16 dọc — 2 hàng × 3 cột */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-x-3 sm:gap-y-4">
                 {Object.entries(INTERESTS).map(([k, label]) => (
                   <button
                     key={k}

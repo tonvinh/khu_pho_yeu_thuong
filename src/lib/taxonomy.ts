@@ -56,9 +56,16 @@ export const ISSUE_STATUS_LABEL: Record<string, string> = {
   rejected: "Từ chối",
 };
 
+// Figma bản 2/9 · B6: khối ưu đãi có 6 lựa chọn (lưới 3 cột × 2 hàng), nhãn đọc từ
+// `docs/lp/Landing page.png`. Quyết định Q3 (2/9): GIỮ NGUYÊN 4 MÃ cũ và chỉ đổi
+// nhãn hiển thị — `leads.interests` là text[] nên lead đã lưu không phải migrate;
+// đổi mã sẽ làm hỏng báo cáo của sale trên dữ liệu lịch sử.
+// Thứ tự khai báo = thứ tự hiện trên lưới.
 export const INTERESTS = {
-  internet: "Internet cho cả nhà",
-  internet_tv: "Internet + Truyền hình",
-  fpt_play: "Gói FPT Play",
+  internet: "FPT Internet",
+  camera: "FPT Camera",
+  fpt_play: "Truyền hình FPT Play",
+  internet_tv: "Internet + truyền hình",
   internet_camera: "Internet + Camera",
+  internet_tv_camera: "Internet + Truyền hình + Camera",
 } as const;
