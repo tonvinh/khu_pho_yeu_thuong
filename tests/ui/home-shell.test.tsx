@@ -47,7 +47,10 @@ function mockApi({ me = ME as Me | null, notifs = [] as NotificationItem[] } = {
   });
 }
 
+// jsdom không cài `scrollIntoView` — nav "Đóng góp lời nhắc"/"Ưu đãi dành cho cư dân"
+// gọi nó nên nếu không stub sẽ ném unhandled error, làm hỏng cả test khác cùng file.
 beforeEach(() => {
+  Element.prototype.scrollIntoView = vi.fn();
   apiGet.mockReset();
   apiSend.mockReset();
   apiSend.mockResolvedValue({ ok: true });

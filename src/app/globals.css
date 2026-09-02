@@ -402,6 +402,30 @@ select.kp-input[multiple] {
 
 /* Chip 4N tĩnh trong form viết câu — chỉ nhắc, KHÔNG chấm tự động (Q2).
    .fig Frame 243: 4 chip RỘNG BẰNG NHAU (147×37), viền 1.5px #3D3D3D, chữ 16px. */
+/* Kẻ ngăn giữa các dòng trong card "Đóng góp một câu" — .fig bản 2/9 vẽ LINE
+   1px #DEDEDE dashPattern [5,5]; bản 18/8 dùng viền LIỀN nên lệch design.
+   Dùng background thay `border-dashed` vì trình duyệt tự giãn nhịp gạch của border
+   theo bề rộng phần tử, không giữ đúng 5-5.
+   `.kp-row-sep` đặt trên MỌI dòng, chỉ vẽ khi có dòng đứng trước → dòng đầu không
+   có kẻ. `.kp-row-sep-b` thêm kẻ DƯỚI (tab 1 có kẻ cả sau dòng cuối). */
+.kp-row-sep + .kp-row-sep {
+  background-image: repeating-linear-gradient(90deg, #dedede 0 5px, transparent 5px 10px);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: top left;
+}
+.kp-row-sep-b {
+  background-image: repeating-linear-gradient(90deg, #dedede 0 5px, transparent 5px 10px);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: bottom left;
+}
+.kp-row-sep + .kp-row-sep.kp-row-sep-b {
+  background-image: repeating-linear-gradient(90deg, #dedede 0 5px, transparent 5px 10px), repeating-linear-gradient(90deg, #dedede 0 5px, transparent 5px 10px);
+  background-size: 100% 1px, 100% 1px;
+  background-position: top left, bottom left;
+}
+
 .kp-n4chip {
   display: inline-flex;
   align-items: center;

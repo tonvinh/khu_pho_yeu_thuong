@@ -17,6 +17,8 @@ export interface IssueCard {
   suggestion_count: number;
   top_votes: number;
   top_quote: string | null;
+  /** Tên người viết câu nhiều thương nhất — dòng meta tab 2 (Figma 2/9 · B4) */
+  top_author_name: string | null;
   /** Người xem (cookie kp_session) đã thương câu nào trong góc này chưa */
   voted: boolean;
 }
@@ -128,6 +130,8 @@ export interface AmbassadorRow {
   neighborhood_name: string | null;
   score: number;
   signs_installed: number;
+  /** Số câu ĐÃ DUYỆT — dòng meta tab 3 (Figma 2/9 · B4) */
+  suggestions_count: number;
   votes_received: number;
   week_points: number;
   /** Câu được thương nhất của cây bút (đã duyệt trở lên) */

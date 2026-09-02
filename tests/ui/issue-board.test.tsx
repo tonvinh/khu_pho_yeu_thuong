@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
-// QC 2/9 · A2 — tab "Cây bút của khu phố" phải liệt kê NGƯỜI, không phải góc phố.
-// Quyết định F3 (docs/21): "hàng = tên cây bút · khu phố · câu được thương nhất · điểm
-// · nút chia sẻ ↗". Trước khi sửa, cả ba tab cùng dựng từ `issues` nên TOP 1 là
-// "Trẻ con trong xóm · Hẻm 42 Lê Lợi" kèm nút "Bình chọn".
+// Khối "Đóng góp một câu" — QC Figma bản 2/9 · B4.
+//
+// Bản 18/8 dựng ba tab GẦN GIỐNG NHAU (cùng meta phường · số câu · lượt thương, nút
+// đổi theo số câu). Figma 7217:1990 tách hẳn ba tab thành ba cấu trúc dòng khác nhau:
+//
+//   tab 1 "Góc phố mới cần treo biển"  6 dòng · meta CHỈ "N câu đề xuất" · nút Gửi lời nhắc · KHÔNG có CTA đáy
+//   tab 2 "Lời nhắc chờ bạn bình chọn" 5 dòng · meta phường · người · N Bình chọn · nút Xem câu nhắc · CTA "+ Viết câu nhắc của riêng bạn"
+//   tab 3 "Cây bút của khu phố"        5 dòng · huy hiệu · meta N câu đóng góp · N Bình chọn · nút Bình chọn (xanh) · CTA "+ Đề xuất góc phố mới"
+//
+// A2 (quyết định F3) vẫn giữ: hai tab đầu là GÓC PHỐ, tab ba là NGƯỜI.
+// Q7 (2/9): tab 3 bỏ nút "Chia sẻ ↗", thay bằng "Bình chọn" mở popup Cây bút khu phố.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import IssueBoard from "@/components/home/IssueBoard";
@@ -17,17 +24,19 @@ vi.mock("@/components/client-api", () => ({
 afterEach(cleanup);
 
 const ISSUES = [
-  issue({ id: "i1", location_text: "Hẻm 42 Lê Lợi", suggestion_count: 3, top_votes: 28 }),
+  issue({
+    id: "i1", location_text: "Hẻm 42 Lê Lợi", suggestion_count: 3, top_votes: 28,
+    top_author_name: "Bà Liên",
+  }),
   issue({ id: "i2", location_text: "Ngõ 7 Trần Phú", suggestion_count: 0, top_votes: 0 }),
   issue({ id: "i3", location_text: "Đường Số 5", status: "signed", suggestion_count: 2, top_votes: 9 }),
 ];
 
 const AMBASSADORS = [
-  ambassador({ user_id: "u1", display_name: "Cô Bảy", score: 82, votes_received: 45 }),
+  ambassador({ user_id: "u1", display_name: "Cô Bảy", suggestions_count: 10, votes_received: 150 }),
   ambassador({
     user_id: "u2", display_name: "Chú Tám", share_slug: "chu-tam-xyz",
-    neighborhood_name: "Xóm Đình", score: 37, votes_received: 12,
-    top_quote: "Xóm mình nhớ nhắc nhau khoá cổng.",
+    neighborhood_name: "Xóm Đình", suggestions_count: 4, votes_received: 12,
   }),
 ];
 
@@ -41,94 +50,173 @@ function board(over: Partial<Parameters<typeof IssueBoard>[0]> = {}) {
       onWrite={vi.fn()}
       onVote={vi.fn()}
       onPropose={vi.fn()}
+      onOpenAmbassador={vi.fn()}
       {...over}
     />
   );
 }
 
-const openWriters = () => fireEvent.click(screen.getByText("Cây bút của khu phố"));
+const TAB1 = "Góc phố mới cần treo biển";
+const TAB2 = "Lời nhắc chờ bạn bình chọn";
+const TAB3 = "Cây bút của khu phố";
+const openTab = (label: string) => fireEvent.click(screen.getByText(label));
 
-describe("IssueBoard — hai tab góc phố", () => {
-  it("tab 'Mới nhất' bỏ góc phố đã treo biển, nút đổi theo số câu", () => {
+describe("IssueBoard · B4 — nhãn ba tab theo Figma", () => {
+  it("dùng ba nhãn mới, bỏ 'Mới nhất' và 'Chờ bạn bình chọn'", () => {
     board();
-    expect(screen.getByText(/Hẻm 42 Lê Lợi/)).toBeTruthy();
-    expect(screen.getByText(/Ngõ 7 Trần Phú/)).toBeTruthy();
-    expect(screen.queryByText(/Đường Số 5/)).toBeNull(); // status signed
-    expect(screen.getByText("Bình chọn")).toBeTruthy(); // i1 đã có câu
-    expect(screen.getByText("Gửi lời nhắc")).toBeTruthy(); // i2 chưa có câu
-  });
-
-  it("dòng góc phố KHÔNG còn huy hiệu hạng (hạng chỉ dành cho người)", () => {
-    board();
-    expect(screen.queryByText("Top")).toBeNull();
-  });
-
-  it("tab 'Chờ bạn bình chọn' chỉ giữ góc phố đã có câu", () => {
-    board();
-    fireEvent.click(screen.getByText("Chờ bạn bình chọn"));
-    expect(screen.getByText(/Hẻm 42 Lê Lợi/)).toBeTruthy();
-    expect(screen.queryByText(/Ngõ 7 Trần Phú/)).toBeNull();
+    expect(screen.getByText(TAB1)).toBeTruthy();
+    expect(screen.getByText(TAB2)).toBeTruthy();
+    expect(screen.getByText(TAB3)).toBeTruthy();
+    expect(screen.queryByText("Mới nhất")).toBeNull();
+    expect(screen.queryByText("Chờ bạn bình chọn")).toBeNull();
   });
 });
 
-describe("IssueBoard — tab 'Cây bút của khu phố' (A2)", () => {
-  it("liệt kê NGƯỜI kèm khu phố, lượt thương, điểm và câu được thương nhất", () => {
+describe("IssueBoard · B4 — tab 1 'Góc phố mới cần treo biển'", () => {
+  it("bỏ góc phố đã treo biển", () => {
     board();
-    openWriters();
-    expect(screen.getByText("Cô Bảy")).toBeTruthy();
-    expect(screen.getByText("Chú Tám")).toBeTruthy();
-    expect(screen.getByText("45 lượt thương")).toBeTruthy();
-    expect(screen.getByText("82đ")).toBeTruthy();
-    expect(screen.getByText(/Đi chậm chút nha/)).toBeTruthy();
+    expect(screen.getByText(/Hẻm 42 Lê Lợi/)).toBeTruthy();
+    expect(screen.queryByText(/Đường Số 5/)).toBeNull();
   });
 
-  it("không còn dòng góc phố và không còn nút 'Bình chọn' trong tab này", () => {
-    board();
-    openWriters();
-    expect(screen.queryByText(/Hẻm 42 Lê Lợi/)).toBeNull();
-    expect(screen.queryByText("Bình chọn")).toBeNull();
-    expect(screen.queryByText("Gửi lời nhắc")).toBeNull();
-  });
-
-  it("mỗi dòng có nút chia sẻ ↗ trỏ đúng /dai-su/{share_slug}", () => {
-    board();
-    openWriters();
-    const links = screen.getAllByText("Chia sẻ ↗") as HTMLAnchorElement[];
-    expect(links).toHaveLength(2);
-    expect(links[0].getAttribute("href")).toBe("/dai-su/co-bay-abc");
-    expect(links[1].getAttribute("href")).toBe("/dai-su/chu-tam-xyz");
-  });
-
-  it("huy hiệu hạng theo THỨ TỰ SERVER trả về, TOP 1 xanh dương / TOP 2 cam", () => {
+  it("meta CHỈ có số câu đề xuất — không phường, không lượt thương", () => {
     const { container } = board();
-    openWriters();
-    const badges = container.querySelectorAll(".rounded-\\[8px\\]");
-    expect(badges).toHaveLength(2);
-    expect(badges[0].className).toContain("bg-accent-blue");
-    expect(badges[1].className).toContain("bg-brick");
-    expect(within(badges[0] as HTMLElement).getByText("1")).toBeTruthy();
+    const row = screen.getByText(/Hẻm 42 Lê Lợi/).closest("[data-row]")! as HTMLElement;
+    expect(within(row).getByText("3 câu đề xuất")).toBeTruthy();
+    expect(row.textContent).not.toContain("Xóm Lò Gốm");
+    expect(row.textContent).not.toContain("lượt thương");
+    expect(container.textContent).not.toContain("28 lượt thương");
   });
 
-  it("chip số trên tab đếm theo số cây bút, không theo số góc phố", () => {
+  it("góc phố chưa có câu nào hiện 'Chưa có câu đề xuất'", () => {
     board();
-    const tab = screen.getByText("Cây bút của khu phố").closest("button")!;
-    expect(within(tab).getByText("2")).toBeTruthy();
+    const row = screen.getByText(/Ngõ 7 Trần Phú/).closest("[data-row]")! as HTMLElement;
+    expect(within(row).getByText("Chưa có câu đề xuất")).toBeTruthy();
   });
 
-  it("phân trang 5 dòng/trang tính trên danh sách người", () => {
+  it("nút LUÔN là 'Gửi lời nhắc' kể cả khi đã có câu, gọi onWrite", () => {
+    const onWrite = vi.fn();
+    board({ onWrite });
+    const buttons = screen.getAllByRole("button", { name: "Gửi lời nhắc" });
+    expect(buttons).toHaveLength(2); // cả i1 (3 câu) lẫn i2 (0 câu)
+    fireEvent.click(buttons[0]);
+    expect(onWrite).toHaveBeenCalledWith("i1");
+  });
+
+  it("KHÔNG có CTA ở đáy card (design tab 1 bỏ hẳn)", () => {
+    board();
+    expect(screen.queryByText("+ Đề xuất góc phố mới")).toBeNull();
+    expect(screen.queryByText("+ Viết câu nhắc của riêng bạn")).toBeNull();
+  });
+
+  it("phân trang 6 dòng/trang", () => {
+    const many = Array.from({ length: 8 }, (_, i) =>
+      issue({ id: `x${i}`, location_text: `Góc ${i}` })
+    );
+    board({ issues: many });
+    expect(screen.getByText(/Góc 5/)).toBeTruthy();
+    expect(screen.queryByText(/Góc 6/)).toBeNull();
+    expect(screen.getByText("Trang 1/2")).toBeTruthy();
+  });
+});
+
+describe("IssueBoard · B4 — tab 2 'Lời nhắc chờ bạn bình chọn'", () => {
+  it("chỉ giữ góc phố đã có câu", () => {
+    board();
+    openTab(TAB2);
+    expect(screen.getByText(/Hẻm 42 Lê Lợi/)).toBeTruthy();
+    expect(screen.queryByText(/Ngõ 7 Trần Phú/)).toBeNull();
+  });
+
+  it("meta ba mục đúng thứ tự: phường · người viết · số bình chọn", () => {
+    board();
+    openTab(TAB2);
+    const row = screen.getByText(/Hẻm 42 Lê Lợi/).closest("[data-row]")! as HTMLElement;
+    const metas = [...row.querySelectorAll("[data-meta]")].map((n) => n.textContent);
+    expect(metas).toEqual(["Xóm Lò Gốm", "Bà Liên", "28 Bình chọn"]);
+  });
+
+  it("biên: chưa có tên người viết thì bỏ mục đó, không render dòng trống", () => {
+    board({ issues: [issue({ id: "i9", suggestion_count: 2, top_votes: 5, top_author_name: null })] });
+    openTab(TAB2);
+    const row = screen.getByText(/Hẻm 42 Lê Lợi/).closest("[data-row]")! as HTMLElement;
+    const metas = [...row.querySelectorAll("[data-meta]")].map((n) => n.textContent);
+    expect(metas).toEqual(["Xóm Lò Gốm", "5 Bình chọn"]);
+  });
+
+  it("nút 'Xem câu nhắc' gọi onVote", () => {
+    const onVote = vi.fn();
+    board({ onVote });
+    openTab(TAB2);
+    fireEvent.click(screen.getByRole("button", { name: "Xem câu nhắc" }));
+    expect(onVote).toHaveBeenCalledWith("i1");
+  });
+
+  it("CTA đáy là '+ Viết câu nhắc của riêng bạn'", () => {
+    board();
+    openTab(TAB2);
+    expect(screen.getByText("+ Viết câu nhắc của riêng bạn")).toBeTruthy();
+    expect(screen.queryByText("+ Đề xuất góc phố mới")).toBeNull();
+  });
+});
+
+describe("IssueBoard · B4/Q7 — tab 3 'Cây bút của khu phố'", () => {
+  it("liệt kê NGƯỜI (A2), không phải góc phố", () => {
+    board();
+    openTab(TAB3);
+    expect(screen.getByText("Cô Bảy")).toBeTruthy();
+    expect(screen.queryByText(/Hẻm 42 Lê Lợi/)).toBeNull();
+  });
+
+  it("meta là 'N câu đóng góp' + 'N Bình chọn'; bỏ điểm và câu trích", () => {
+    board();
+    openTab(TAB3);
+    const row = screen.getByText("Cô Bảy").closest("[data-row]")! as HTMLElement;
+    const metas = [...row.querySelectorAll("[data-meta]")].map((n) => n.textContent);
+    expect(metas).toEqual(["10 câu đóng góp", "150 Bình chọn"]);
+    expect(row.textContent).not.toContain("82đ");
+    expect(row.textContent).not.toContain("Đi chậm chút nha");
+  });
+
+  it("nút 'Bình chọn' mở popup cây bút, KHÔNG còn 'Chia sẻ ↗'", () => {
+    const onOpenAmbassador = vi.fn();
+    board({ onOpenAmbassador });
+    openTab(TAB3);
+    expect(screen.queryByText("Chia sẻ ↗")).toBeNull();
+    fireEvent.click(screen.getAllByRole("button", { name: "Bình chọn" })[0]);
+    expect(onOpenAmbassador).toHaveBeenCalledWith("co-bay-abc");
+  });
+
+  it("huy hiệu hạng: TOP 1 xanh dương · TOP 2 cam, đếm tiếp sang trang sau", () => {
     const many = Array.from({ length: 7 }, (_, i) =>
       ambassador({ user_id: `u${i}`, display_name: `Cây bút ${i}`, share_slug: `s${i}` })
     );
-    board({ ambassadors: many });
-    openWriters();
-    expect(screen.getByText("Trang 1/2")).toBeTruthy();
-    expect(screen.getByText("Cây bút 0")).toBeTruthy();
-    expect(screen.queryByText("Cây bút 5")).toBeNull();
-
+    const { container } = board({ ambassadors: many });
+    openTab(TAB3);
+    const badges = container.querySelectorAll("[data-rank]");
+    expect(badges).toHaveLength(5); // 5 dòng/trang
+    expect(badges[0].className).toContain("bg-accent-blue");
+    expect(badges[1].className).toContain("bg-brick");
     fireEvent.click(screen.getByText("›"));
     expect(screen.getByText("Cây bút 5")).toBeTruthy();
-    // Hạng tiếp tục đếm sang trang 2 (dòng thứ 6 là hạng 6)
     expect(screen.getByText("6")).toBeTruthy();
+  });
+
+  it("CTA đáy là '+ Đề xuất góc phố mới'", () => {
+    const onPropose = vi.fn();
+    board({ onPropose });
+    openTab(TAB3);
+    fireEvent.click(screen.getByText("+ Đề xuất góc phố mới"));
+    expect(onPropose).toHaveBeenCalled();
+  });
+});
+
+describe("IssueBoard · B4 — kẻ ngăn dòng và biên", () => {
+  it("kẻ ngăn là NÉT ĐỨT (.kp-row-sep), không phải viền liền", () => {
+    const { container } = board();
+    const row = screen.getByText(/Hẻm 42 Lê Lợi/).closest("[data-row]")!;
+    expect(row.className).toContain("kp-row-sep");
+    expect(container.querySelector(".border-b.border-cream-dark")).toBeNull();
   });
 
   it("đổi tab thì quay về trang 1", () => {
@@ -136,28 +224,26 @@ describe("IssueBoard — tab 'Cây bút của khu phố' (A2)", () => {
       ambassador({ user_id: `u${i}`, display_name: `Cây bút ${i}`, share_slug: `s${i}` })
     );
     board({ ambassadors: many });
-    openWriters();
+    openTab(TAB3);
     fireEvent.click(screen.getByText("›"));
     expect(screen.getByText("Trang 2/2")).toBeTruthy();
-    fireEvent.click(screen.getByText("Mới nhất"));
-    openWriters();
+    openTab(TAB1);
+    openTab(TAB3);
     expect(screen.getByText("Trang 1/2")).toBeTruthy();
   });
 
-  it("chưa có cây bút nào → dùng đúng câu rỗng của NGƯỜI, không nói về góc phố", () => {
-    board({ ambassadors: [] });
-    openWriters();
-    expect(
-      screen.getByText("Chưa có cây bút nào được vinh danh — viết câu đầu tiên cho xóm mình nhé!")
-    ).toBeTruthy();
+  it("biên: mỗi tab rỗng dùng đúng câu rỗng của nó", () => {
+    board({ issues: [], ambassadors: [] });
+    expect(screen.getByText(/Chưa có góc phố nào đang mở/)).toBeTruthy();
+    openTab(TAB3);
+    expect(screen.getByText(/Chưa có cây bút nào được vinh danh/)).toBeTruthy();
   });
 
-  it("cây bút chưa gắn khu phố / chưa có câu nào thì vẫn render được", () => {
-    board({
-      ambassadors: [ambassador({ neighborhood_name: null, top_quote: null, votes_received: 0 })],
-    });
-    openWriters();
-    expect(screen.getByText("Cô Bảy")).toBeTruthy();
-    expect(screen.getByText("0 lượt thương")).toBeTruthy();
+  it("biên: cây bút chưa có câu / chưa có lượt thương vẫn render", () => {
+    board({ ambassadors: [ambassador({ suggestions_count: 0, votes_received: 0 })] });
+    openTab(TAB3);
+    const row = screen.getByText("Cô Bảy").closest("[data-row]")! as HTMLElement;
+    expect(within(row).getByText("0 câu đóng góp")).toBeTruthy();
+    expect(within(row).getByText("0 Bình chọn")).toBeTruthy();
   });
 });

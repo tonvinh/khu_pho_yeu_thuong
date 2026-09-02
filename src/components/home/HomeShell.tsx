@@ -46,6 +46,8 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   const [leadPromptOpen, setLeadPromptOpen] = useState(false);
   // Hồ sơ khu phố mở dạng POPUP (18/8) thay vì rời trang sang /khu-pho/[slug]
   const [nbSlug, setNbSlug] = useState<string | null>(null);
+  // Popup "Cây bút khu phố" mở từ nút Bình chọn ở tab 3 (Figma 2/9 · B10)
+  const [ambassadorSlug, setAmbassadorSlug] = useState<string | null>(null);
 
   // Popup "Tôi muốn nhận ưu đãi" sau các luồng tương tác — tối đa 1 lần/thiết bị
   const maybeShowLeadPrompt = useCallback(() => {
@@ -409,6 +411,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         onWrite={(id) => setSuggestIssueId(id)}
         onVote={(id) => setVoteIssueId(id)}
         onPropose={openPropose}
+        onOpenAmbassador={(slug) => setAmbassadorSlug(slug)}
       />
 
       {/* ===== BIỂN MỚI CỦA KHU PHỐ ===== */}

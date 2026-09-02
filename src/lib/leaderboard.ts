@@ -8,6 +8,8 @@ export interface AmbassadorRow {
   neighborhood_name: string | null;
   score: number;
   signs_installed: number;
+  /** Số câu ĐÃ DUYỆT của cây bút — dòng meta tab 3 (Figma 2/9 · B4) */
+  suggestions_count: number;
   votes_received: number;
   /** Điểm ghi trong 7 ngày gần nhất — tab "Tuần này" + tính hạng tuần trước */
   week_points: number;
@@ -23,6 +25,7 @@ export async function getAmbassadors(limit = 10): Promise<AmbassadorRow[]> {
     `SELECT u.id AS user_id, u.display_name, u.share_slug, n.name AS neighborhood_name,
        COALESCE(se.score, 0)::int AS score,
        COALESCE(si.n, 0)::int AS signs_installed,
+       COALESCE(sc.n, 0)::int AS suggestions_count,
        COALESCE(vr.n, 0)::int AS votes_received,
        COALESCE(wk.p, 0)::int AS week_points,
        tq.content AS top_quote,
@@ -34,6 +37,9 @@ export async function getAmbassadors(limit = 10): Promise<AmbassadorRow[]> {
                    WHERE user_id = u.id AND is_valid) se ON true
      LEFT JOIN LATERAL (SELECT count(*) AS n FROM suggestions
                         WHERE author_id = u.id AND status = 'installed') si ON true
+     LEFT JOIN LATERAL (SELECT count(*) AS n FROM suggestions
+                        WHERE author_id = u.id
+                          AND status IN ('approved','selected','produced','installed')) sc ON true
      LEFT JOIN LATERAL (SELECT count(*) AS n FROM votes v
                         JOIN suggestions s ON s.id = v.suggestion_id
                         WHERE s.author_id = u.id AND v.is_valid) vr ON true

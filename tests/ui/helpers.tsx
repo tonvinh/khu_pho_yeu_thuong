@@ -51,6 +51,7 @@ export function issue(over: Partial<IssueCard> = {}): IssueCard {
     suggestion_count: 0,
     top_votes: 0,
     top_quote: null,
+    top_author_name: null,
     voted: false,
     ...over,
   };
@@ -64,6 +65,7 @@ export function ambassador(over: Partial<AmbassadorRow> = {}): AmbassadorRow {
     neighborhood_name: "Xóm Lò Gốm",
     score: 82,
     signs_installed: 1,
+    suggestions_count: 10,
     votes_received: 45,
     week_points: 5,
     top_quote: "Đi chậm chút nha, có trẻ con đang chơi.",

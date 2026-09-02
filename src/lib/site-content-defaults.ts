@@ -20,7 +20,11 @@ export const SITE_CONTENT_DEFAULTS = {
   hero_search_placeholder: "Tìm kiếm khu phố của bạn tại đây",
   // Khối đóng góp
   board_title: "Đóng góp một câu cho khu phố mình nhé",
-  board_hint: "Chọn một góc phố, để lại lời nhắn dễ thương và bình chọn cho lời thương ấm áp nhất",
+  // Figma bản 2/9 · B4: mô tả dài thành 2 dòng (x=296 y=1417 w=848 h=48) — bản 18/8
+  // mới có vế đầu nên card danh sách bị đẩy lên 64px so với design.
+  board_hint:
+    "Chọn một góc phố, để lại lời nhắn dễ thương và bình chọn cho lời thương ấm áp nhất. " +
+    "Câu được nhiều lượt “Thương” nhất sẽ được đưa lên biển treo tại khu phố",
   // Khối biển
   signs_title: "Lời nhắc khi lên biển trông như thế nào?",
   // Banner khuyến mãi in trên biển (SignCard)
