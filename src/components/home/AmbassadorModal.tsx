@@ -84,7 +84,10 @@ function NoteCard({
         <button
           onClick={vote}
           disabled={voted}
-          className={`tap tap-sm-auto inline-flex h-[44px] flex-none items-center justify-center gap-2 rounded-full bg-brick px-4 text-[15px] text-white transition sm:h-[43px] sm:w-[156px] sm:text-[16px] ${
+          /* .fig cho nút 156px, nhưng số 3–4 chữ số + "lượt thương" ở 16px vượt 156
+             nên chốt `w-` là chữ bị bẻ hai dòng (đo trên Chrome). Dùng min-w + nowrap:
+             đúng 156 với số ngắn, tự nới khi số dài. */
+          className={`tap tap-sm-auto inline-flex h-[44px] flex-none items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brick px-4 text-[15px] text-white transition sm:h-[43px] sm:min-w-[156px] sm:text-[16px] ${
             voted ? "cursor-default opacity-75" : "cursor-pointer hover:bg-brick-dark"
           }`}
         >

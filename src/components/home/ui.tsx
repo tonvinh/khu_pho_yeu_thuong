@@ -252,7 +252,12 @@ function unlockScroll() {
   body.style.top = "";
   body.style.width = "";
   body.style.paddingRight = "";
-  window.scrollTo(0, lockedAt);
+  // QC 2/9 · C3 — PHẢI là `behavior: "instant"`. Trang khai `scroll-behavior: smooth`
+  // toàn cục (globals.css) nên dạng `scrollTo(0, y)` biến thành cuộn MƯỢT: lệnh khôi
+  // phục bị cuộn kế tiếp (hoặc một focus()) cắt ngang và dừng giữa đường — đúng triệu
+  // chứng "scrollTo(0,0) dừng ở y=88 / 172.5" mà QC quan sát được.
+  // Đo trên Chrome thật: dùng dạng 2 tham số thì đóng popup ở y=1600 rơi về 0.
+  window.scrollTo({ top: lockedAt, behavior: "instant" });
 }
 
 /**

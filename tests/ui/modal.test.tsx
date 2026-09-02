@@ -115,7 +115,9 @@ describe("Modal · C2/C3 — khoá cuộn trang nền", () => {
     unmount();
     expect(document.body.style.position).toBe("");
     expect(document.body.style.top).toBe("");
-    expect(scrollTo).toHaveBeenCalledWith(0, 1600);
+    // behavior "instant": trang khai scroll-behavior:smooth nên dạng scrollTo(0,y)
+    // bị cuộn mượt và bị cắt ngang giữa đường (C3) — đo trên Chrome thật.
+    expect(scrollTo).toHaveBeenCalledWith({ top: 1600, behavior: "instant" });
   });
 
   it("hai modal chồng nhau: đóng cái TRÊN chưa được nhả khoá", () => {
@@ -127,7 +129,7 @@ describe("Modal · C2/C3 — khoá cuộn trang nền", () => {
     expect(document.body.style.position).toBe("fixed"); // A còn mở
     a.unmount();
     expect(document.body.style.position).toBe("");
-    expect(scrollTo).toHaveBeenCalledWith(0, 500);
+    expect(scrollTo).toHaveBeenCalledWith({ top: 500, behavior: "instant" });
   });
 
   it("biên: mở ở đầu trang (scrollY=0) thì đóng lại vẫn ở đầu trang", () => {
@@ -135,6 +137,6 @@ describe("Modal · C2/C3 — khoá cuộn trang nền", () => {
     const { unmount } = render(<Modal title="X" onClose={() => {}}><p>nội dung</p></Modal>);
     expect(document.body.style.top).toBe("0px"); // trình duyệt chuẩn hoá "-0px"
     unmount();
-    expect(scrollTo).toHaveBeenCalledWith(0, 0);
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "instant" });
   });
 });
