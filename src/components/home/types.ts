@@ -33,6 +33,8 @@ export interface MapNeighborhood {
   certified_at: string | null;
   /** Bật ở admin → xuất hiện trong block "Khu phố tiêu biểu" đầu trang chủ */
   is_featured: boolean;
+  /** Số câu nhắc ĐÃ DUYỆT của khu — quyết định câu mời trong ô tra cứu (4/9) */
+  notes_count: number;
   map_url: string | null;
   /** Ảnh bảng chứng nhận 4N (admin upload) — hiện ở trang /khu-pho/[slug] */
   certificate_url: string | null;

@@ -154,10 +154,12 @@ export default function HeroLookup({
           </div>
           <div className="mt-3 flex flex-col items-center gap-2.5 text-center sm:flex-row sm:justify-between sm:text-left">
             <span className="font-light text-[13px] text-ink sm:text-[14px]">
-              {/* Design chỉ vẽ MỘT dòng cho trạng thái này, không phân biệt khu đã đạt
-                  chuẩn 4N hay chưa. Giữ nguyên văn theo design (quyết định "design
-                  thắng spec", docs/20 §2.1) — đã ghi vào danh sách hỏi lại Design. */}
-              Khu phố mình chưa có nhiều lời nhắc, bạn viết câu đầu tiên nhé?
+              {/* Design chỉ vẽ MỘT dòng cho ô này. Chốt 4/9: khu ĐÃ CÓ lời nhắc thì
+                  câu "viết câu đầu tiên" sai (khu đạt chuẩn 4N vẫn đọc thấy) → tách
+                  hai câu theo `notes_count` (số câu đã duyệt của khu). */}
+              {single.notes_count > 0
+                ? "Bạn viết lời nhắc cho khu phố nhé!"
+                : "Khu phố mình chưa có nhiều lời nhắc, bạn viết câu đầu tiên nhé?"}
             </span>
             <button
               onClick={() => onOpenNeighborhood(single.slug)}

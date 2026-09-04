@@ -21,6 +21,7 @@ export function nb(over: Partial<MapNeighborhood> = {}): MapNeighborhood {
     certified_4n: false,
     certified_at: null,
     is_featured: false,
+    notes_count: 0,
     map_url: null,
     certificate_url: null,
     photo_urls: [],

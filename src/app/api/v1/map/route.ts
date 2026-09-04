@@ -10,6 +10,9 @@ export async function GET() {
   const neighborhoods = await q(
     `SELECT n.id, n.name, n.ward, n.city, n.slug, n.certified_4n, n.certified_at,
        n.is_featured, n.map_stylized_key, n.certificate_photo_key,
+       (SELECT count(*)::int FROM suggestions s JOIN issues i ON i.id = s.issue_id
+          WHERE i.neighborhood_id = n.id
+            AND s.status IN ('approved','selected','produced','installed')) AS notes_count,
        COALESCE((SELECT json_agg(p.photo_key ORDER BY p.position)
          FROM neighborhood_photos p WHERE p.neighborhood_id = n.id), '[]'::json) AS photo_keys
      FROM neighborhoods n WHERE NOT n.hidden
@@ -30,6 +33,7 @@ export async function GET() {
       certified_4n: n.certified_4n,
       certified_at: n.certified_at,
       is_featured: n.is_featured,
+      notes_count: n.notes_count,
       map_url: imgUrl(n.map_stylized_key as string | null),
       certificate_url: imgUrl(n.certificate_photo_key as string | null),
       photo_urls: (n.photo_keys as string[]).map((k) => imgUrl(k)!),
