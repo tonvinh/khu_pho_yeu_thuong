@@ -46,15 +46,18 @@ describe("SpotPickerModal — chọn góc phố trước khi viết câu", () =>
   it("tìm kiếm lọc theo tên góc phố, bỏ dấu vẫn ra", () => {
     picker();
     fireEvent.change(screen.getByLabelText("Tìm góc phố"), { target: { value: "hem 42" } });
-    expect(screen.getByText(/Hẻm 42 Lê Lợi/)).toBeTruthy();
-    expect(screen.queryByText(/Ngõ 7 Trần Phú/)).toBeNull();
+    // tiêu đề dòng bị <mark> cắt thành nhiều node → so bằng textContent của dòng
+    const rows = [...document.querySelectorAll("[data-spot]")].map((r) => r.textContent || "");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toContain("Hẻm 42 Lê Lợi");
   });
 
   it("tìm theo tên khu phố cũng ra", () => {
     picker();
     fireEvent.change(screen.getByLabelText("Tìm góc phố"), { target: { value: "xóm đình" } });
-    expect(screen.getByText(/Ngõ 7 Trần Phú/)).toBeTruthy();
-    expect(screen.queryByText(/Hẻm 42 Lê Lợi/)).toBeNull();
+    const rows = [...document.querySelectorAll("[data-spot]")].map((r) => r.textContent || "");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toContain("Ngõ 7 Trần Phú");
   });
 
   it("không khớp gì thì mời đề xuất góc phố mới", () => {
@@ -68,6 +71,52 @@ describe("SpotPickerModal — chọn góc phố trước khi viết câu", () =>
 
   it("danh sách rỗng vẫn còn lối đề xuất góc phố mới", () => {
     picker({ issues: [] });
+    expect(screen.getByText("+ Đề xuất góc phố mới")).toBeTruthy();
+    expect(screen.getByText(/Chưa có góc phố nào đang mở/)).toBeTruthy();
+  });
+});
+
+describe("SpotPickerModal — thiết kế tự dựng (chốt 5/9)", () => {
+  it("góc phố CÙNG khu phố của người dùng xếp lên nhóm đầu", () => {
+    picker({ myNeighborhood: "Xóm Đình" });
+    const groups = [...document.querySelectorAll("[data-group]")].map((g) => g.textContent);
+    expect(groups[0]).toContain("Góc phố ở Xóm Đình");
+    expect(groups[1]).toContain("khu phố khác");
+    // dòng đầu tiên phải là góc phố của Xóm Đình (i2), không phải i1
+    const rows = [...document.querySelectorAll("[data-spot]")];
+    expect(rows[0].textContent).toContain("Ngõ 7 Trần Phú");
+  });
+
+  it("chưa định danh thì KHÔNG hiện tiêu đề nhóm", () => {
+    picker();
+    expect(document.querySelectorAll("[data-group]")).toHaveLength(0);
+  });
+
+  it("đếm số góc phố, đổi theo từ khoá", () => {
+    picker();
+    expect(screen.getByText("2 góc phố đang chờ lời nhắc")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Tìm góc phố"), { target: { value: "hem 42" } });
+    expect(screen.getByText(/1 góc phố khớp/)).toBeTruthy();
+  });
+
+  it("tô đậm đúng đoạn khớp (bỏ dấu vẫn khớp đúng vị trí)", () => {
+    picker();
+    fireEvent.change(screen.getByLabelText("Tìm góc phố"), { target: { value: "hem 42" } });
+    const mark = document.querySelector("mark");
+    expect(mark?.textContent).toBe("Hẻm 42");
+  });
+
+  it("Enter chọn góc phố đầu tiên đang hiện", () => {
+    const onPick = vi.fn();
+    picker({ onPick, myNeighborhood: "Xóm Đình" });
+    fireEvent.keyDown(screen.getByLabelText("Tìm góc phố"), { key: "Enter" });
+    expect(onPick).toHaveBeenCalledWith("i2"); // góc phố của xóm mình
+  });
+
+  it("không khớp gì thì mời đổi từ khoá / đề xuất góc mới", () => {
+    picker();
+    fireEvent.change(screen.getByLabelText("Tìm góc phố"), { target: { value: "zzz" } });
+    expect(screen.getByText(/Không thấy góc phố nào khớp/)).toBeTruthy();
     expect(screen.getByText("+ Đề xuất góc phố mới")).toBeTruthy();
   });
 });

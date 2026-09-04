@@ -558,6 +558,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       {spotPickerOpen && (
         <SpotPickerModal
           issues={data.issues.filter((it) => it.status !== "signed")}
+          myNeighborhood={me?.neighborhood_name ?? null}
           onPick={(id) => { setSpotPickerOpen(false); setSuggestIssueId(id); }}
           onPropose={() => { setSpotPickerOpen(false); openPropose(); }}
           onClose={() => setSpotPickerOpen(false)}
