@@ -5,11 +5,16 @@ import { decryptPhone } from "@/lib/crypto";
 
 export const dynamic = "force-dynamic";
 
+/** Id không phải uuid thì Postgres ném 22P02 và Next trả 500 kèm stack — QC 4/9 · D5.
+ *  Chặn sớm để trả 404 như mọi route [id] khác (ví dụ /api/v1/neighborhoods/abc). */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Bấm-để-hiện SĐT — có audit log (07 §2.1 PDPD)
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if ("error" in auth) return auth.error;
   const { id } = await ctx.params;
+  if (!UUID.test(id)) return jsonError(404, "Không tìm thấy lead");
   const lead = await one<{ id: string; phone_encrypted: Buffer }>(
     `SELECT id, phone_encrypted FROM leads WHERE id = $1 AND opted_in`,
     [id]
@@ -26,6 +31,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const auth = await requireAdmin(req);
   if ("error" in auth) return auth.error;
   const { id } = await ctx.params;
+  if (!UUID.test(id)) return jsonError(404, "Không tìm thấy lead");
   const body = await req.json().catch(() => null);
   const status = body?.status as string;
   if (status && !["new", "contacted", "converted", "closed"].includes(status)) {

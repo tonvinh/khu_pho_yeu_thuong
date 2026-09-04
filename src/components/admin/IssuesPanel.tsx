@@ -131,7 +131,7 @@ export default function IssuesPanel({
           <select
             value={category}
             onChange={(e) => onChange({ category: e.target.value, page: "1" })}
-            className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
+            className="w-full min-w-0 rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
           >
             <option value="">Chủ đề: tất cả</option>
             {CATEGORY_CODES.map((c) => (
@@ -289,7 +289,7 @@ export function NbSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
+      className="w-full min-w-0 rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
     >
       <option value="">Khu phố: tất cả</option>
       {cities.map((c) => (

@@ -75,7 +75,9 @@ export function SearchBox({
       value={text}
       onChange={(e) => setText(e.target.value)}
       placeholder={placeholder}
-      className={`rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm ${className}`}
+      /* w-full + min-w-0: <input> có bề rộng nội tại (~363px) và ô lưới có
+         `min-width:auto` nên ở khổ 375 nó chọc ra ngoài mép — QC 4/9 · D3 */
+      className={`w-full min-w-0 rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm ${className}`}
     />
   );
 }

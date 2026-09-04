@@ -260,7 +260,7 @@ export default function NeighborhoodsPage() {
             <select
               value={ui.nb}
               onChange={(e) => setUi({ nb: e.target.value, page: "1" })}
-              className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
+              className="w-full min-w-0 rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
             >
               <option value="">Tỉnh/Thành phố: tất cả</option>
               {cities.map((c) => <option key={c} value={`city:${c}`}>{c}</option>)}

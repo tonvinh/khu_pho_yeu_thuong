@@ -215,7 +215,7 @@ export default function SuggestionsTablePage() {
           <select
             value={category}
             onChange={(e) => setUi({ category: e.target.value, page: "1" })}
-            className="rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
+            className="w-full min-w-0 rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
           >
             <option value="">Chủ đề: tất cả</option>
             {CATEGORY_CODES.map((c) => (
