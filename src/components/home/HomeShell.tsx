@@ -20,7 +20,6 @@ import LeadSection from "./LeadSection";
 import IdentifyModal from "./IdentifyModal";
 import ProposeModal from "./ProposeModal";
 import SuggestModal from "./SuggestModal";
-import VoteModal from "./VoteModal";
 import LeadPromptModal from "./LeadPromptModal";
 import NeighborhoodModal from "./NeighborhoodModal";
 import AmbassadorModal from "./AmbassadorModal";
@@ -43,7 +42,6 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   const pendingAction = useRef<(() => void) | null>(null);
   const [proposeOpen, setProposeOpen] = useState(false);
   const [suggestIssueId, setSuggestIssueId] = useState<string | null>(null);
-  const [voteIssueId, setVoteIssueId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [notifs, setNotifs] = useState<NotificationItem[]>([]);
   const [leadPromptOpen, setLeadPromptOpen] = useState(false);
@@ -68,9 +66,12 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [counters, issuesRes, mapRes, boardRes] = await Promise.all([
+      const [counters, issuesRes, notesRes, mapRes, boardRes] = await Promise.all([
         apiGet<HomeData["counters"]>("/api/v1/counters"),
         apiGet<{ issues: HomeData["issues"] }>("/api/v1/issues"),
+        // Tab 2 là danh sách CÂU NHẮC chờ bình chọn (Figma live 4/9) — cùng nguồn
+        // với SSR `getVotingNotes()`; quên một bên là dòng nhảy chữ sau 20s.
+        apiGet<{ notes: HomeData["notes"] }>("/api/v1/notes"),
         apiGet<HomeData["map"]>("/api/v1/map"),
         // Tab "Cây bút" đổi theo lượt thương nên polling luôn cho tươi (A2)
         apiGet<{ ambassadors: HomeData["ambassadors"] }>("/api/v1/leaderboard"),
@@ -79,6 +80,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       setData((prev) => ({
         counters,
         issues: issuesRes.issues,
+        notes: notesRes.notes,
         map: mapRes,
         ambassadors: boardRes.ambassadors,
         approvedSigns: prev.approvedSigns,
@@ -148,6 +150,37 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       await apiSend("PATCH", `/api/v1/me/notifications/${id}`);
     } catch { /* bỏ qua */ }
   }, []);
+
+  /**
+   * Bình chọn một câu nhắc ngay tại dòng của tab 2 (Figma live 4/9 — trước đây phải
+   * mở popup VoteModal). Optimistic UI, lỗi thì trả lại số cũ; đã bình chọn là CHỐT
+   * (Q6) nên nút khoá luôn sau khi bấm.
+   */
+  const voteNote = useCallback(
+    (id: string) =>
+      requireIdentity(async () => {
+        const before = data.notes.find((n) => n.id === id);
+        if (!before || before.voted || before.is_mine) return;
+        setData((prev) => ({
+          ...prev,
+          notes: prev.notes.map((n) => (n.id === id ? { ...n, voted: true, votes: n.votes + 1 } : n)),
+        }));
+        try {
+          await apiSend("POST", `/api/v1/suggestions/${id}/vote`);
+          maybeShowLeadPrompt();
+          refresh();
+        } catch (e) {
+          setData((prev) => ({
+            ...prev,
+            notes: prev.notes.map((n) =>
+              n.id === id ? { ...n, voted: before.voted, votes: before.votes } : n
+            ),
+          }));
+          if (e instanceof Error) showToast(e.message);
+        }
+      }),
+    [data.notes, maybeShowLeadPrompt, refresh, requireIdentity, showToast]
+  );
 
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
@@ -413,9 +446,10 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         title={data.content.board_title}
         hint={data.content.board_hint}
         issues={data.issues}
+        notes={data.notes}
         ambassadors={data.ambassadors}
         onWrite={(id) => setSuggestIssueId(id)}
-        onVote={(id) => setVoteIssueId(id)}
+        onVoteNote={voteNote}
         onPropose={openPropose}
         onOpenAmbassador={(slug) => setAmbassadorSlug(slug)}
       />
@@ -500,17 +534,6 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
              mở từ deep-link không nằm trong danh sách → rơi về "Đang tải…". */
           initialTitle={suggestIssue ? categoryLabel(suggestIssue.category) : undefined}
           initialWard={suggestIssue?.neighborhood_name}
-        />
-      )}
-      {voteIssueId && (
-        <VoteModal
-          issueId={voteIssueId}
-          requireIdentity={requireIdentity}
-          onClose={() => setVoteIssueId(null)}
-          showToast={showToast}
-          onChanged={refresh}
-          onEngaged={maybeShowLeadPrompt}
-          onWrite={(id) => setSuggestIssueId(id)}
         />
       )}
       {nbSlug && (

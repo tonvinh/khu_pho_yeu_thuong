@@ -316,3 +316,50 @@ Quyết định 3/9: bỏ hẳn dải khuyến mãi, **gỡ luôn 4 khoá site_c
 2. **Dropdown tra cứu 1 kết quả**: design chỉ vẽ MỘT dòng mời ("Khu phố mình chưa có nhiều
    lời nhắc…") nên khu ĐÃ đạt chuẩn 4N cũng đọc thấy câu đó. Cần câu riêng cho khu đạt chuẩn?
 3. Sáu frame popup trong .fig vẫn còn nhãn nav CŨ — chưa đồng bộ với `7217:1990`.
+
+## Figma LIVE 4/9 — file trên figma.com ĐÃ ĐI TRƯỚC bản `.fig` trong repo
+
+`docs/lp/LandingpageFCM.fig` (bản 2/9) **không còn là nguồn chuẩn**: mở link design thật
+(`figma.com/design/FMiW4tzQvKgi8qomzYFlff/...?node-id=7217-1989`) ngày 4/9 thấy section
+Design đã có **12 frame Landing page** (bản 2/9 chỉ 5) và nội dung khác. Trước khi đo lại
+giao diện phải xin Design export `.fig` mới, hoặc đọc trực tiếp như dưới đây.
+
+**Cách đọc Figma live bằng Claude-in-Chrome** (đã chạy được, quyền figma.com có sẵn):
+- Canvas đọc rất khó (zoom bằng phím/nút không ăn khi focus ở panel). Dùng **chế độ
+  prototype**: `figma.com/proto/<file>?node-id=<a-b>&scaling=min-zoom&content-scaling=fixed`
+  → khung render ~1200px, chữ đọc được.
+- Prototype **không cuộn** bằng `computer.scroll`; phải bắn wheel vào canvas:
+  `document.querySelector('canvas').dispatchEvent(new WheelEvent('wheel',{deltaY:130,bubbles:true}))`.
+  Thêm `ctrlKey:true` là zoom (một nấc ≈ ×4.7 — rất nhạy).
+- **Đừng bấm vào panel phải ở góc %**: trúng tab Comments và bật công cụ bình luận;
+  bấm nhầm lên canvas lúc đó là tạo comment thật trong file của khách.
+
+### Ba khác biệt LIVE vs `.fig` 2/9 (đã áp code ngày 4/9)
+
+| Khối | .fig 2/9 | Figma live 4/9 |
+|---|---|---|
+| Tab 2 | dòng là **GÓC PHỐ**, nút `Xem câu nhắc` mở popup danh sách câu | dòng là **CÂU NHẮC**: tiêu đề = nội dung câu, meta `phường · tác giả · N Bình chọn`, nút **`Bình chọn`** viền xanh bấm thẳng tại dòng |
+| Tab 3 | nút `Bình chọn` viền xanh | nút **`Xem lời nhắc`** viền cam (vẫn mở popup Cây bút) |
+| Q6 | — | giữ nguyên: đã bình chọn là **chốt**, nút khoá thành `Đã bình chọn`, route trả 409 |
+
+- Dữ liệu tab 2 lấy từ `src/lib/notes.ts` (`getVotingNotes`) — câu `status='approved'` của
+  góc phố `waiting|voting`, xếp **chưa-bình-chọn trước → nhiều thương → mới nhất**.
+  **Không cần migration**: `suggestions + votes + users + issues + neighborhoods` đã đủ.
+- Route mới `GET /api/v1/notes`; SSR `page.tsx` và `refresh()` của `HomeShell` đều gọi
+  cùng hàm/route đó (quên một bên = dòng nhảy chữ sau 20s polling).
+- `VoteModal.tsx` **đã xoá** (cùng `tests/ui/vote-modal.test.tsx`): design bỏ nút
+  `Xem câu nhắc` nên popup không còn lối vào. Muốn xem toàn bộ câu của một khu thì vào
+  popup "Thông tin khu phố" (`NeighborhoodModal`).
+- CTA đáy tab 2 (`+ Viết câu nhắc của riêng bạn`) giờ mở form cho **góc phố mở đầu tiên**
+  (`open[0]`) vì dòng không còn là góc phố — chỗ này cần Design/BA chốt lại.
+
+### CÒN TREO sau phiên 4/9
+
+1. Ảnh hero `cart.webp` (gánh hàng rong) và `sweepers.webp` (ông cháu quét sân) nằm **cao
+   hơn** design — trong Figma cả hai đứng trên sàn gạch ngang chân KV. Nguyên nhân nghi:
+   `HomeShell.tsx` đặt `top-%` theo chiều cao div bọc (phụ thuộc tỉ lệ ảnh KV) chứ không
+   theo khổ 1440 của `.fig`.
+2. Ở frame tab 2 của Figma, **dòng đầu tiên có chữ màu cam** còn 4 dòng sau màu đậm —
+   chưa rõ là trạng thái gì (hover? đã bình chọn? câu dẫn đầu?). Đang render tất cả màu đậm.
+3. Toàn bộ số đo px của bản live chưa đo được (thiếu `.fig` mới) — mới đối chiếu được
+   nhãn/cấu trúc từ prototype.

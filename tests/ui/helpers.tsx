@@ -7,6 +7,7 @@ import type {
   IssueCard,
   MapNeighborhood,
   SiteContentData,
+  VotingNote,
 } from "@/components/home/types";
 import { SITE_CONTENT_DEFAULTS } from "@/lib/site-content-defaults";
 
@@ -57,6 +58,21 @@ export function issue(over: Partial<IssueCard> = {}): IssueCard {
   };
 }
 
+/** Một dòng của tab 2 — lời nhắc đang chờ bình chọn (Figma live 4/9) */
+export function note(over: Partial<VotingNote> = {}): VotingNote {
+  return {
+    id: "n-1",
+    content: "Đường sạch, ngõ xinh - Xin đừng vứt rác",
+    issue_id: "is-1",
+    ward_label: "Phường Bàn Cờ",
+    author_name: "Trà FPT",
+    votes: 150,
+    voted: false,
+    is_mine: false,
+    ...over,
+  };
+}
+
 export function ambassador(over: Partial<AmbassadorRow> = {}): AmbassadorRow {
   return {
     user_id: "u-1",
@@ -80,6 +96,7 @@ export function homeData(over: Partial<HomeData> = {}): HomeData {
   return {
     counters: { signs_installed: 3, neighborhoods_joined: 21, suggestions_total: 10 },
     issues: [],
+    notes: [],
     map: { neighborhoods: [], pins: [] },
     approvedSigns: [],
     content: siteContent(),

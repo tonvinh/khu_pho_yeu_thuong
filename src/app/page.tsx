@@ -4,6 +4,7 @@ import { q } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { getSiteContent } from "@/lib/site-content";
 import { getAmbassadors } from "@/lib/leaderboard";
+import { getVotingNotes } from "@/lib/notes";
 import { imgUrl } from "@/lib/storage";
 import HomeShell from "@/components/home/HomeShell";
 import type { HomeData } from "@/components/home/types";
@@ -20,7 +21,7 @@ async function loadHomeData(): Promise<HomeData> {
   // Người xem hiện tại (cookie kp_session) — để đánh dấu góc phố đã bình chọn hay chưa
   const viewer = await getSessionUser();
   const viewerId = viewer?.id ?? "00000000-0000-0000-0000-000000000000";
-  const [counters, issues, neighborhoods, pins, approvedSigns, content, ambassadors] =
+  const [counters, issues, notes, neighborhoods, pins, approvedSigns, content, ambassadors] =
     await Promise.all([
       getCounters(),
       q(`SELECT i.id, i.category, i.location_text, i.description, i.status,
@@ -47,6 +48,9 @@ async function loadHomeData(): Promise<HomeData> {
        WHERE i.status IN ('waiting','voting','signed')
        ORDER BY (i.status = 'signed'), i.approved_at DESC NULLS LAST`,
         [viewerId]),
+      // Tab 2 giờ liệt kê CÂU NHẮC chờ bình chọn (Figma live 4/9) — cùng hàm với
+      // GET /api/v1/notes để SSR và polling không lệch nhau.
+      getVotingNotes(viewer?.id ?? null),
       q(`SELECT n.id, n.name, n.ward, n.city, n.slug, n.certified_4n, n.certified_at,
          n.is_featured, n.map_stylized_key, n.certificate_photo_key,
          COALESCE((SELECT json_agg(p.photo_key ORDER BY p.position)
@@ -78,6 +82,7 @@ async function loadHomeData(): Promise<HomeData> {
   return {
     counters,
     issues: issues as HomeData["issues"],
+    notes,
     map: {
       neighborhoods: neighborhoods.map((n) => ({
         id: n.id as string,

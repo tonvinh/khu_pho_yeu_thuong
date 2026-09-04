@@ -150,9 +150,28 @@ export interface ApprovedSign {
   approved_at: string;
 }
 
+/**
+ * Một lời nhắc đang chờ bình chọn — hàng của tab 2 "Lời nhắc chờ bạn bình chọn".
+ * Hình dạng đúng bằng `VotingNote` của `src/lib/notes.ts` (khai lại ở đây để
+ * component client không phải import module có `pg`), giống cách làm của
+ * `AmbassadorRow`.
+ */
+export interface VotingNote {
+  id: string;
+  content: string;
+  issue_id: string;
+  ward_label: string;
+  author_name: string;
+  votes: number;
+  voted: boolean;
+  is_mine: boolean;
+}
+
 export interface HomeData {
   counters: CounterData;
   issues: IssueCard[];
+  /** Tab 2 của IssueBoard — hàng là CÂU NHẮC, không phải góc phố (Figma live 4/9) */
+  notes: VotingNote[];
   map: MapData;
   approvedSigns: ApprovedSign[];
   content: SiteContentData;

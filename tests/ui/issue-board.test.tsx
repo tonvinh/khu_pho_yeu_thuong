@@ -5,15 +5,16 @@
 // đổi theo số câu). Figma 7217:1990 tách hẳn ba tab thành ba cấu trúc dòng khác nhau:
 //
 //   tab 1 "Góc phố mới cần treo biển"  6 dòng · meta CHỈ "N câu đề xuất" · nút Gửi lời nhắc · KHÔNG có CTA đáy
-//   tab 2 "Lời nhắc chờ bạn bình chọn" 5 dòng · meta phường · người · N Bình chọn · nút Xem câu nhắc · CTA "+ Viết câu nhắc của riêng bạn"
-//   tab 3 "Cây bút của khu phố"        5 dòng · huy hiệu · meta N câu đóng góp · N Bình chọn · nút Bình chọn (xanh) · CTA "+ Đề xuất góc phố mới"
+//   tab 2 "Lời nhắc chờ bạn bình chọn" 5 dòng · hàng là CÂU NHẮC · meta phường · tác giả · N Bình chọn · nút Bình chọn/Đã bình chọn (xanh) · CTA "+ Viết câu nhắc của riêng bạn"
+//   tab 3 "Cây bút của khu phố"        5 dòng · huy hiệu · meta N câu đóng góp · N Bình chọn · nút Xem lời nhắc (cam) · CTA "+ Đề xuất góc phố mới"
 //
-// A2 (quyết định F3) vẫn giữ: hai tab đầu là GÓC PHỐ, tab ba là NGƯỜI.
-// Q7 (2/9): tab 3 bỏ nút "Chia sẻ ↗", thay bằng "Bình chọn" mở popup Cây bút khu phố.
+// Figma bản LIVE (4/9) đổi tiếp so với .fig 2/9: tab 2 hàng là CÂU NHẮC bấm bình chọn
+// thẳng tại dòng (bỏ popup "Xem câu nhắc"), tab 3 nút đổi thành "Xem lời nhắc" viền cam.
+// Bình chọn xong là chốt, không rút (Q6).
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import IssueBoard from "@/components/home/IssueBoard";
-import { ambassador, issue } from "./helpers";
+import { ambassador, issue, note } from "./helpers";
 
 vi.mock("@/components/client-api", () => ({
   apiGet: vi.fn(),
@@ -32,6 +33,13 @@ const ISSUES = [
   issue({ id: "i3", location_text: "Đường Số 5", status: "signed", suggestion_count: 2, top_votes: 9 }),
 ];
 
+const NOTES = [
+  note({ id: "n1", content: "Đường sạch, ngõ xinh - Xin đừng vứt rác", votes: 150 }),
+  note({ id: "n2", content: "Đi chậm chút nha, có trẻ con đang chơi", author_name: "Bà Liên", votes: 28 }),
+  note({ id: "n3", content: "Câu của chính mình", is_mine: true, votes: 3 }),
+  note({ id: "n4", content: "Câu đã bình chọn rồi", voted: true, votes: 9 }),
+];
+
 const AMBASSADORS = [
   ambassador({ user_id: "u1", display_name: "Cô Bảy", suggestions_count: 10, votes_received: 150 }),
   ambassador({
@@ -46,9 +54,10 @@ function board(over: Partial<Parameters<typeof IssueBoard>[0]> = {}) {
       title="Đóng góp một câu cho khu phố mình nhé"
       hint="Chọn một góc phố"
       issues={ISSUES}
+      notes={NOTES}
       ambassadors={AMBASSADORS}
       onWrite={vi.fn()}
-      onVote={vi.fn()}
+      onVoteNote={vi.fn()}
       onPropose={vi.fn()}
       onOpenAmbassador={vi.fn()}
       {...over}
@@ -120,36 +129,53 @@ describe("IssueBoard · B4 — tab 1 'Góc phố mới cần treo biển'", () =
   });
 });
 
-describe("IssueBoard · B4 — tab 2 'Lời nhắc chờ bạn bình chọn'", () => {
-  it("chỉ giữ góc phố đã có câu", () => {
+describe("IssueBoard — tab 2 'Lời nhắc chờ bạn bình chọn' (Figma live 4/9)", () => {
+  it("hàng là CÂU NHẮC, không phải góc phố", () => {
     board();
     openTab(TAB2);
-    expect(screen.getByText(/Hẻm 42 Lê Lợi/)).toBeTruthy();
-    expect(screen.queryByText(/Ngõ 7 Trần Phú/)).toBeNull();
+    expect(screen.getByText("Đường sạch, ngõ xinh - Xin đừng vứt rác")).toBeTruthy();
+    expect(screen.queryByText(/Hẻm 42 Lê Lợi/)).toBeNull();
   });
 
-  it("meta ba mục đúng thứ tự: phường · người viết · số bình chọn", () => {
+  it("meta ba mục đúng thứ tự: phường · tác giả · số bình chọn", () => {
     board();
     openTab(TAB2);
-    const row = screen.getByText(/Hẻm 42 Lê Lợi/).closest("[data-row]")! as HTMLElement;
+    const row = screen.getByText("Đường sạch, ngõ xinh - Xin đừng vứt rác").closest("[data-row]")! as HTMLElement;
     const metas = [...row.querySelectorAll("[data-meta]")].map((n) => n.textContent);
-    expect(metas).toEqual(["Xóm Lò Gốm", "Bà Liên", "28 Bình chọn"]);
+    expect(metas).toEqual(["Phường Bàn Cờ", "Trà FPT", "150 Bình chọn"]);
   });
 
-  it("biên: chưa có tên người viết thì bỏ mục đó, không render dòng trống", () => {
-    board({ issues: [issue({ id: "i9", suggestion_count: 2, top_votes: 5, top_author_name: null })] });
+  it("nút 'Bình chọn' gọi onVoteNote với id CÂU, không phải id góc phố", () => {
+    const onVoteNote = vi.fn();
+    board({ onVoteNote });
     openTab(TAB2);
-    const row = screen.getByText(/Hẻm 42 Lê Lợi/).closest("[data-row]")! as HTMLElement;
-    const metas = [...row.querySelectorAll("[data-meta]")].map((n) => n.textContent);
-    expect(metas).toEqual(["Xóm Lò Gốm", "5 Bình chọn"]);
+    const row = screen.getByText("Đường sạch, ngõ xinh - Xin đừng vứt rác").closest("[data-row]")! as HTMLElement;
+    fireEvent.click(within(row).getByRole("button", { name: "Bình chọn" }));
+    expect(onVoteNote).toHaveBeenCalledWith("n1");
   });
 
-  it("nút 'Xem câu nhắc' gọi onVote", () => {
-    const onVote = vi.fn();
-    board({ onVote });
+  it("câu đã bình chọn: nút đổi thành 'Đã bình chọn' và bị khoá (Q6 — không rút phiếu)", () => {
+    const onVoteNote = vi.fn();
+    board({ onVoteNote });
     openTab(TAB2);
-    fireEvent.click(screen.getByRole("button", { name: "Xem câu nhắc" }));
-    expect(onVote).toHaveBeenCalledWith("i1");
+    const btn = screen.getByRole("button", { name: "Đã bình chọn" }) as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+    fireEvent.click(btn);
+    expect(onVoteNote).not.toHaveBeenCalled();
+  });
+
+  it("câu của chính mình thì khoá nút (cấm tự thương)", () => {
+    board();
+    openTab(TAB2);
+    const row = screen.getByText("Câu của chính mình").closest("[data-row]")! as HTMLElement;
+    const btn = within(row).getByRole("button") as HTMLButtonElement;
+    expect(btn.disabled).toBe(true);
+  });
+
+  it("KHÔNG còn nút 'Xem câu nhắc' của bản 2/9", () => {
+    board();
+    openTab(TAB2);
+    expect(screen.queryByText("Xem câu nhắc")).toBeNull();
   });
 
   it("CTA đáy là '+ Viết câu nhắc của riêng bạn'", () => {
@@ -157,6 +183,15 @@ describe("IssueBoard · B4 — tab 2 'Lời nhắc chờ bạn bình chọn'", (
     openTab(TAB2);
     expect(screen.getByText("+ Viết câu nhắc của riêng bạn")).toBeTruthy();
     expect(screen.queryByText("+ Đề xuất góc phố mới")).toBeNull();
+  });
+
+  it("phân trang 5 dòng/trang theo số CÂU", () => {
+    const many = Array.from({ length: 7 }, (_, i) => note({ id: `n${i}`, content: `Câu ${i}` }));
+    board({ notes: many });
+    openTab(TAB2);
+    expect(screen.getByText("Câu 4")).toBeTruthy();
+    expect(screen.queryByText("Câu 5")).toBeNull();
+    expect(screen.getByText("Trang 1/2")).toBeTruthy();
   });
 });
 
@@ -178,12 +213,16 @@ describe("IssueBoard · B4/Q7 — tab 3 'Cây bút của khu phố'", () => {
     expect(row.textContent).not.toContain("Đi chậm chút nha");
   });
 
-  it("nút 'Bình chọn' mở popup cây bút, KHÔNG còn 'Chia sẻ ↗'", () => {
+  it("nút 'Xem lời nhắc' mở popup cây bút, KHÔNG còn 'Chia sẻ ↗' hay 'Bình chọn'", () => {
     const onOpenAmbassador = vi.fn();
     board({ onOpenAmbassador });
     openTab(TAB3);
     expect(screen.queryByText("Chia sẻ ↗")).toBeNull();
-    fireEvent.click(screen.getAllByRole("button", { name: "Bình chọn" })[0]);
+    expect(screen.queryByRole("button", { name: "Bình chọn" })).toBeNull();
+    const btns = screen.getAllByRole("button", { name: "Xem lời nhắc" });
+    // viền cam (kp-btn-primary), không còn xanh dương của bản 2/9
+    expect(btns[0].className).toContain("kp-btn-primary");
+    fireEvent.click(btns[0]);
     expect(onOpenAmbassador).toHaveBeenCalledWith("co-bay-abc");
   });
 
@@ -233,8 +272,10 @@ describe("IssueBoard · B4 — kẻ ngăn dòng và biên", () => {
   });
 
   it("biên: mỗi tab rỗng dùng đúng câu rỗng của nó", () => {
-    board({ issues: [], ambassadors: [] });
+    board({ issues: [], notes: [], ambassadors: [] });
     expect(screen.getByText(/Chưa có góc phố nào đang mở/)).toBeTruthy();
+    openTab(TAB2);
+    expect(screen.getByText(/Chưa có lời nhắc nào đang chờ bình chọn/)).toBeTruthy();
     openTab(TAB3);
     expect(screen.getByText(/Chưa có cây bút nào được vinh danh/)).toBeTruthy();
   });

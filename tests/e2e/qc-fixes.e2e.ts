@@ -440,6 +440,35 @@ d("B4 · dữ liệu dòng góc phố", () => {
 });
 
 // ===================================================================
+// Figma bản LIVE 4/9 — tab 2 là danh sách CÂU NHẮC chờ bình chọn
+// ===================================================================
+d("Tab 2 · GET /api/v1/notes", () => {
+  it("trả đủ trường một dòng câu nhắc: nội dung, phường, tác giả, số phiếu", async () => {
+    const { status, body } = await new Client().getJson<{ notes: any[] }>("/api/v1/notes");
+    expect(status).toBe(200);
+    expect(Array.isArray(body.notes)).toBe(true);
+    for (const n of body.notes) {
+      expect(typeof n.content).toBe("string");
+      expect(typeof n.ward_label).toBe("string");
+      expect(typeof n.author_name).toBe("string");
+      expect(typeof n.votes).toBe("number");
+      expect(typeof n.voted).toBe("boolean");
+      expect(typeof n.is_mine).toBe("boolean");
+      // KHÔNG lộ dữ liệu riêng tư của người viết
+      expect(JSON.stringify(n)).not.toMatch(/phone|sdt|email/i);
+    }
+  });
+
+  it("người chưa định danh thì mọi câu đều voted=false, is_mine=false", async () => {
+    const { body } = await new Client().getJson<{ notes: any[] }>("/api/v1/notes");
+    for (const n of body.notes) {
+      expect(n.voted).toBe(false);
+      expect(n.is_mine).toBe(false);
+    }
+  });
+});
+
+// ===================================================================
 // QC Figma 2/9 · B6 — 6 mã dịch vụ, mã lạ bị lọc
 // ===================================================================
 d("B6 · mã dịch vụ của lead", () => {

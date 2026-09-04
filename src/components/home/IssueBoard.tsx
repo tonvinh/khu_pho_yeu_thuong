@@ -5,15 +5,19 @@
 // lúc đó vẽ lorem không phân biệt được. Figma bản 2/9 (7217:1990) tách hẳn:
 //
 //   tab 1 "Góc phố mới cần treo biển"  6 dòng · meta CHỈ số câu · nút Gửi lời nhắc  · KHÔNG CTA đáy
-//   tab 2 "Lời nhắc chờ bạn bình chọn" 5 dòng · meta phường·người·bình chọn · Xem câu nhắc · CTA Viết câu
-//   tab 3 "Cây bút của khu phố"        5 dòng · huy hiệu · meta câu·bình chọn · Bình chọn (xanh) · CTA Đề xuất
+//   tab 2 "Lời nhắc chờ bạn bình chọn" 5 dòng · meta phường·người·bình chọn · CTA Viết câu
+//   tab 3 "Cây bút của khu phố"        5 dòng · huy hiệu · meta câu·bình chọn · CTA Đề xuất
 //
-// Giữ nguyên A2 (quyết định F3): hai tab đầu là GÓC PHỐ, tab ba là NGƯỜI — dữ liệu
-// người lấy từ `getAmbassadors()` (trang chủ SSR sẵn, cùng nguồn /api/v1/leaderboard).
-// Q7 (2/9): tab 3 bỏ nút "Chia sẻ ↗", thay bằng "Bình chọn" mở popup Cây bút khu phố;
-// trang /dai-su/[slug] vẫn sống, chỉ không còn lối vào từ đây.
+// **Figma bản LIVE (đọc 4/9 trên figma.com — mới hơn file .fig 2/9 trong docs/lp)**:
+//   · tab 2 mỗi dòng là MỘT CÂU NHẮC (tiêu đề = nội dung câu, meta phường · tác giả ·
+//     N Bình chọn) và nút "Bình chọn" viền XANH bấm thẳng tại dòng — bản 2/9 dòng còn
+//     là góc phố với nút "Xem câu nhắc" mở popup danh sách câu (popup đã bỏ).
+//   · tab 3 nút đổi từ "Bình chọn" (xanh) sang **"Xem lời nhắc"** viền CAM.
+//
+// Ba tab giờ là ba thực thể khác nhau: góc phố · câu nhắc · người viết.
+// Bình chọn xong là chốt, không rút lại (Q6) → nút khoá thành "Đã bình chọn".
 import { useState } from "react";
-import type { AmbassadorRow, IssueCard } from "./types";
+import type { AmbassadorRow, IssueCard, VotingNote } from "./types";
 import { categoryLabel } from "@/lib/taxonomy";
 import { FilterTabs, IconHeart, IconPencil, IconPin, IconUser, SectionHead, Stripe } from "./ui";
 
@@ -37,7 +41,7 @@ const TAB_SHORT: Record<TabKey, string> = {
 
 const EMPTY_HINT: Record<TabKey, string> = {
   latest: "Chưa có góc phố nào đang mở — bạn đề xuất góc đầu tiên nhé!",
-  to_vote: "Chưa có góc phố nào đủ câu để bình chọn — bạn viết câu mở hàng nhé!",
+  to_vote: "Chưa có lời nhắc nào đang chờ bình chọn — bạn viết câu mở hàng nhé!",
   writers: "Chưa có cây bút nào được vinh danh — viết câu đầu tiên cho xóm mình nhé!",
 };
 
@@ -71,40 +75,44 @@ export default function IssueBoard({
   title,
   hint,
   issues,
+  notes,
   ambassadors,
   onWrite,
-  onVote,
+  onVoteNote,
   onPropose,
   onOpenAmbassador,
 }: {
   title: string;
   hint: string;
   issues: IssueCard[];
+  /** Tab 2: câu nhắc đã duyệt của góc phố chưa treo biển (`getVotingNotes`) */
+  notes: VotingNote[];
   /** TOP cây bút cho tab thứ 3 — server đã xếp theo điểm và loại tài khoản shadow-ban */
   ambassadors: AmbassadorRow[];
   /** Tab 1: mở form viết câu nhắc cho góc phố */
   onWrite: (issueId: string) => void;
-  /** Tab 2: mở danh sách câu để bình chọn */
-  onVote: (issueId: string) => void;
+  /** Tab 2: bình chọn THẲNG một câu nhắc (1 phiếu/câu, không rút — Q6) */
+  onVoteNote: (noteId: string) => void;
   onPropose: () => void;
-  /** Tab 3: mở popup "Cây bút khu phố" của một người (Q7) */
+  /** Tab 3: mở popup "Cây bút khu phố" của một người */
   onOpenAmbassador: (shareSlug: string) => void;
 }) {
   const [tab, setTab] = useState<TabKey>("latest");
   const [page, setPage] = useState(0);
 
   const open = issues.filter((it) => it.status !== "signed");
-  const toVote = open.filter((it) => it.suggestion_count > 0);
 
   const isWriters = tab === "writers";
+  const isNotes = tab === "to_vote";
   const per = PAGE[tab];
-  const total = isWriters ? ambassadors.length : tab === "latest" ? open.length : toVote.length;
+  const total = isWriters ? ambassadors.length : isNotes ? notes.length : open.length;
   const pages = Math.max(1, Math.ceil(total / per));
   const safePage = Math.min(page, pages - 1);
   const from = safePage * per;
-  const spotRows = (tab === "latest" ? open : toVote).slice(from, from + per);
+  const spotRows = open.slice(from, from + per);
+  const noteRows = notes.slice(from, from + per);
   const writerRows = ambassadors.slice(from, from + per);
-  const empty = isWriters ? writerRows.length === 0 : spotRows.length === 0;
+  const empty = (isWriters ? writerRows : isNotes ? noteRows : spotRows).length === 0;
 
   const switchTab = (k: TabKey) => { setTab(k); setPage(0); };
 
@@ -127,7 +135,7 @@ export default function IssueBoard({
             key: k,
             label: TAB_LABEL[k],
             short: TAB_SHORT[k],
-            count: k === "latest" ? open.length : k === "to_vote" ? toVote.length : ambassadors.length,
+            count: k === "latest" ? open.length : k === "to_vote" ? notes.length : ambassadors.length,
           }))}
           active={tab}
           onChange={switchTab}
@@ -159,61 +167,66 @@ export default function IssueBoard({
                   </Meta>
                 </div>
               </div>
-              {/* .fig: 119×35 r=70 viền #2323FF 1px */}
+              {/* Figma live 4/9: nút đổi sang "Xem lời nhắc" viền CAM (bản 2/9 là
+                  "Bình chọn" viền xanh) — hành vi vẫn mở popup Cây bút khu phố */}
               <button
                 onClick={() => onOpenAmbassador(a.share_slug)}
-                className="kp-btn kp-btn-vote kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[35px] sm:w-[119px] sm:px-0"
+                className="kp-btn kp-btn-primary kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[35px] sm:w-[137px] sm:px-0"
               >
-                Bình chọn
+                Xem lời nhắc
               </button>
             </div>
           ))}
 
-          {/* ===== Tab 1 & 2 — hàng là GÓC PHỐ ===== */}
-          {!isWriters && spotRows.map((it, i) => (
+          {/* ===== Tab 2 — hàng là CÂU NHẮC (Figma live 4/9) ===== */}
+          {isNotes && noteRows.map((n, i) => (
+            <div key={n.id} data-row className={rowClass(i === noteRows.length - 1)}>
+              <div className="min-w-0 flex-1">
+                <div className={titleRow}>{n.content}</div>
+                <div className={metaRow}>
+                  <Meta icon={<IconPin className="text-brick" />}>{n.ward_label}</Meta>
+                  <Meta icon={<IconUser className="text-brick" />}>{n.author_name}</Meta>
+                  <Meta icon={<IconHeart className="text-brick" />}>
+                    {n.votes.toLocaleString("vi-VN")} Bình chọn
+                  </Meta>
+                </div>
+              </div>
+              {/* Bình chọn ngay tại dòng. Đã bấm là chốt (Q6) → khoá nút; câu của
+                  chính mình cũng khoá (cấm tự thương, quy tắc cứng 3). */}
+              <button
+                onClick={() => onVoteNote(n.id)}
+                disabled={n.voted || n.is_mine}
+                title={n.is_mine ? "Câu của mình thì để cả xóm thương nhé 💛" : undefined}
+                className="kp-btn kp-btn-vote kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 disabled:cursor-default disabled:opacity-60 sm:h-[35px] sm:min-w-[119px] sm:px-4"
+              >
+                {n.voted ? "Đã bình chọn" : "Bình chọn"}
+              </button>
+            </div>
+          ))}
+
+          {/* ===== Tab 1 — hàng là GÓC PHỐ ===== */}
+          {tab === "latest" && spotRows.map((it, i) => (
             <div key={it.id} data-row className={rowClass(i === spotRows.length - 1)}>
               <div className="min-w-0 flex-1">
                 <div className={titleRow}>
                   {categoryLabel(it.category)} · {it.location_text}
                 </div>
                 <div className={metaRow}>
-                  {tab === "latest" ? (
-                    /* .fig tab 1: node phường + lượt thương bị ẩn, chỉ còn số câu */
-                    <Meta icon={<IconPencil className="text-brick" />}>
-                      {it.suggestion_count > 0
-                        ? `${it.suggestion_count} câu đề xuất`
-                        : "Chưa có câu đề xuất"}
-                    </Meta>
-                  ) : (
-                    <>
-                      <Meta icon={<IconPin className="text-brick" />}>{it.neighborhood_name}</Meta>
-                      {it.top_author_name && (
-                        <Meta icon={<IconUser className="text-brick" />}>{it.top_author_name}</Meta>
-                      )}
-                      <Meta icon={<IconHeart className="text-brick" />}>
-                        {it.top_votes.toLocaleString("vi-VN")} Bình chọn
-                      </Meta>
-                    </>
-                  )}
+                  {/* .fig tab 1: node phường + lượt thương bị ẩn, chỉ còn số câu */}
+                  <Meta icon={<IconPencil className="text-brick" />}>
+                    {it.suggestion_count > 0
+                      ? `${it.suggestion_count} câu đề xuất`
+                      : "Chưa có câu đề xuất"}
+                  </Meta>
                 </div>
               </div>
-              {tab === "latest" ? (
-                /* .fig: 120×35 r=70 viền #FF8206 1px */
-                <button
-                  onClick={() => onWrite(it.id)}
-                  className="kp-btn kp-btn-primary kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[35px] sm:w-[120px] sm:px-0"
-                >
-                  Gửi lời nhắc
-                </button>
-              ) : (
-                /* .fig: 137×35.9 r=100 viền #FF8206 1.5px */
-                <button
-                  onClick={() => onVote(it.id)}
-                  className="kp-btn kp-btn-primary kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[36px] sm:w-[137px] sm:px-0"
-                >
-                  Xem câu nhắc
-                </button>
-              )}
+              {/* .fig: 120×35 r=70 viền #FF8206 1px */}
+              <button
+                onClick={() => onWrite(it.id)}
+                className="kp-btn kp-btn-primary kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[35px] sm:w-[120px] sm:px-0"
+              >
+                Gửi lời nhắc
+              </button>
             </div>
           ))}
 
@@ -241,11 +254,11 @@ export default function IssueBoard({
           )}
 
           {/* CTA đáy card đổi theo tab — .fig KHÔNG vẽ nút nào ở tab 1 */}
-          {tab === "to_vote" && (
+          {isNotes && (
             <div className="flex justify-center py-4 sm:pb-0 sm:pt-6">
               <button
-                onClick={() => onWrite(toVote[0]?.id ?? "")}
-                disabled={toVote.length === 0}
+                onClick={() => onWrite(open[0]?.id ?? "")}
+                disabled={open.length === 0}
                 className="kp-btn kp-btn-primary tap h-[50px] px-8 text-[16px] disabled:opacity-50 sm:min-w-[318px]"
               >
                 + Viết câu nhắc của riêng bạn
