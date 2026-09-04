@@ -204,7 +204,21 @@ export async function POST(req: NextRequest) {
         [issueId, userId, r.cau,
          JSON.stringify({ nhac: true, nho: true, nho2: true, nhe: true }), nbId, category]
       );
+
+      // Góc phố đã có câu duyệt thì đang ở vòng BÌNH CHỌN — đi cùng nhánh duyệt câu
+      // thủ công. QC 4/9: thiếu bước này nên góc phố import xong vẫn mang nhãn
+      // "Đã duyệt — đang chờ câu" dù đã có câu.
+      await c.query(
+        `UPDATE issues SET status = 'voting' WHERE id = $1 AND status = 'waiting'`,
+        [issueId]
+      );
     }
+
+    // Nhật ký: import là thao tác ghi hàng loạt, phải truy được ai nhập (QC 4/9)
+    await c.query(
+      `INSERT INTO audit_logs (admin_user_id, action, detail) VALUES ($1, 'suggestions_import', $2)`,
+      [auth.admin.id, JSON.stringify({ rows: rows.length })]
+    );
   });
 
   return NextResponse.json({

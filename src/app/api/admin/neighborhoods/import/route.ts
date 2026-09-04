@@ -119,6 +119,11 @@ export async function POST(req: NextRequest) {
         [r.ten, r.phuongxa, r.tinhthanh, slug]
       );
     }
+    // Nhật ký: import ghi hàng loạt, phải truy được ai nhập (QC 4/9)
+    await c.query(
+      `INSERT INTO audit_logs (admin_user_id, action, detail) VALUES ($1, 'neighborhoods_import', $2)`,
+      [auth.admin.id, JSON.stringify({ rows: rows.length })]
+    );
   });
 
   return NextResponse.json({
