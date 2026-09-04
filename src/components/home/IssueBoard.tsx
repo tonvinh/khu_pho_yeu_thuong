@@ -128,7 +128,7 @@ export default function IssueBoard({
   const titleRow = "text-[15px] font-bold leading-snug tracking-[-0.02em] sm:text-[18px]";
 
   return (
-    <section id="goc-xom" className="mx-auto max-w-[1312px] px-4 py-8 sm:px-5 sm:pb-[40px] sm:pt-12">
+    <section id="goc-xom" className="mx-auto max-w-[1312px] px-4 py-8 sm:px-[18px] sm:pb-[40px] sm:pt-12">
       <SectionHead title={title} hint={hint} signpost />
 
       {/* .fig: hint kết ở y=1465 → tab y=1490 → card y=1570 */}
@@ -150,7 +150,8 @@ export default function IssueBoard({
           thứ tự lớp .fig) — không có nó thì cột đè lên các dòng góc phố */}
       <div className="relative overflow-hidden rounded-[28px] border-[1.9px] border-brick bg-white shadow-kp-s sm:rounded-[40px]">
         <Stripe />
-        <div className="px-4 py-2 sm:px-[84px] sm:pb-[32px] sm:pt-[34px]">
+        {/* .fig: sọc trên 8 → lề trong 34 → danh sách → 24 → sọc dưới 8 (card 550) */}
+        <div className="px-4 py-2 sm:px-[84px] sm:pb-[24px] sm:pt-[34px]">
           {empty && (
             <p className="m-0 px-1 py-8 text-center text-[14px] text-ink-soft">{EMPTY_HINT[tab]}</p>
           )}

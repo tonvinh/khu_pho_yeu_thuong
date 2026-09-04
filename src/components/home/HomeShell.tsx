@@ -349,13 +349,16 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
            cung nét đứt y=689 · khối chữ 929 ở y=149 · slider 840×430 ở y=293 ·
            KV 1034×558 ở y=580 (ĐÈ LÊN đáy slider) ===== */}
       <header className="relative overflow-hidden pb-0 pt-8 sm:pt-[50px]">
-        {/* Artboard 2 1 — bóng skyline mờ, y=201 so với đỉnh trang (~102 so với header) */}
+        {/* Artboard 2 1 — bóng skyline mờ, y=201 so với đỉnh trang (~102 so với header).
+            .fig để node 1440×867 và ảnh ở chế độ FILL: ảnh (tỉ lệ 2.39) bị phóng cho
+            phủ kín rồi CẮT hai bên. Thả `w-full` trơn thì ảnh chỉ cao 602 → skyline
+            thấp hơn design 264px. Phải chốt tỉ lệ hộp + object-cover. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/brand/skyline.webp"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-[60px] w-full opacity-30 sm:top-[102px]"
+          className="pointer-events-none absolute inset-x-0 top-[60px] aspect-[1440/867] w-full object-cover opacity-30 sm:top-[102px]"
         />
 
         <div className="relative mx-auto max-w-[929px] px-4 text-center sm:px-0">
@@ -373,26 +376,36 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
 
         {/* KV khu phố đứng trên sàn gạch; -mt kéo KV đè lên đáy slider đúng như design */}
         <div className="relative -mt-10 sm:-mt-[143px]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/plaza.webp"
-            alt=""
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-[58%] w-full object-cover object-top"
-          />
-          {/* Frame 151 1 — cung nét đứt cam vắt ngang sau KV */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/brand/hero-arc.webp"
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute inset-x-[-4%] top-[18%] w-[108%]"
-          />
           {/* Khối KV + 3 hình rời quanh nó — toạ độ .fig (khổ 1440, KV "Khu phố 2 1"
               x=203 y=580 w=1034): biển "Ngõ Xóm" 06 2 (1135.2, 646, 176.8×308.6),
               ông cháu quét sân 02 2 (1238.2, 708, 160.5×187.5), gánh hàng rong 01 1
               (10, 739, 236×171). Cả ba nằm DƯỚI KV đúng thứ tự lớp trong .fig. */}
+          {/* QC 4/9: sàn gạch và cung nét đứt trước đây đặt theo % của khung ngoài
+              (`bottom-0 h-[58%]`, `top-[18%] w-[108%]`) nên đo ra sàn ở y=814 cao 324
+              thay vì y=704 cao 594 — mép sàn tụt xuống 110px làm gánh hàng rong và
+              ông cháu quét sân trông như LƠ LỬNG (đúng lỗi team khoanh đỏ). Nay đặt
+              trong CÙNG khung 1440 với KV, quy % theo chiều cao KV (558.5 ở khổ 1440)
+              nên mọi khổ màn hình giữ nguyên tỉ lệ .fig. */}
           <div className="relative mx-auto w-full max-w-[1440px]">
+            {/* 123123 1 — sàn gạch: .fig x=0 y=704 w=1440 h=594 (ảnh FILL, cắt hai bên).
+                top = (704−580)/558.5 = 22.2% · h = 594/558.5 = 106.36% */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/plaza.webp"
+              alt=""
+              aria-hidden
+              className="absolute inset-x-0 top-[22.2%] h-[106.36%] w-full object-cover"
+            />
+            {/* Frame 151 1 — cung nét đứt cam vắt ngang sau KV: .fig x=-54 y=689
+                w=1526 h=162 (đúng tỉ lệ ảnh gốc 3052×325 nên không cần cắt).
+                left = -54/1440 = -3.75% · w = 1526/1440 = 105.97% · top = 19.52% */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/hero-arc.webp"
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute left-[-3.75%] top-[19.52%] w-[105.97%] max-w-none"
+            />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/brand/signpost.webp"
@@ -464,7 +477,9 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       {/* ===== ƯU ĐÃI CƯ DÂN ===== */}
       {/* Rectangle 47 trong .fig chạy hết bề ngang trang (x=0 w=1440) nên section này
           KHÔNG có lề ngang ở desktop; cách khối biển 80px. */}
-      <section id="uu-dai" className="px-4 py-8 sm:px-0 sm:pb-12 sm:pt-[32px]">
+      {/* .fig: đáy nút form → khối chữ chân trang đúng 64px (3561 → 3625). Lề dưới
+          của section + lề trên footer cộng lại phải bằng 64, kể cả py-12 của panel. */}
+      <section id="uu-dai" className="px-4 py-8 sm:px-0 sm:pb-0 sm:pt-[32px]">
         <LeadSection me={me} content={data.content} requireIdentity={requireIdentity} showToast={showToast} />
       </section>
 
@@ -475,7 +490,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
            cả trang xuống ~673px khi tải xong (CLS). Logo GIỮ ở top bar.
            .fig: form ưu đãi → footer gap 64px, khối chữ w=697 canh giữa, 16px, #000,
            đáy trang chừa 71px. */}
-      <footer className="overflow-hidden pt-8 sm:pt-[64px]">
+      <footer className="overflow-hidden pt-8 sm:pt-[16px]">
         <div className="mx-auto max-w-[697px] px-5 pb-10 text-center text-[14px] leading-relaxed text-black sm:pb-[71px] sm:text-[16px]">
           <div>{data.content.footer_line1}</div>
           <div>{data.content.footer_line2}</div>

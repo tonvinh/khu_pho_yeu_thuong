@@ -29,7 +29,7 @@ export default function SignGallery({
   ).slice(0, SLOTS - real.length);
 
   return (
-    <section className="mx-auto max-w-[1312px] px-4 py-8 sm:px-5 sm:pb-12 sm:pt-[40px]">
+    <section className="mx-auto max-w-[1312px] px-4 py-8 sm:px-[18px] sm:pb-12 sm:pt-[26px]">
       <SectionHead title={content.signs_title} />
 
       {/* .fig Frame 232 gap=40 giữa tiêu đề và lưới; lưới cách nhau 32px */}

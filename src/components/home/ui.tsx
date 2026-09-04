@@ -138,8 +138,11 @@ export function SectionHead({
       )}
       {/* Frame 158: tiêu đề Bold 40px ls-2% IN HOA #3D3D3D, gap 8, hint Light 16px */}
       <h2 className="kp-h2 kp-sec-title m-0 text-[clamp(22px,4.4vw,40px)] tracking-[-0.02em] text-ink text-balance">{title}</h2>
+      {/* .fig: khối mô tả rộng 848 (x=296…1144) nên câu 2 vế XUỐNG 2 DÒNG (h=48).
+          Trước đây thả rộng hết khối 1272 → chỉ 1 dòng (h=24) và mọi khối bên dưới
+          bị kéo lên 24px so với design (QC 4/9 · A1). */}
       {hint && (
-        <p className="m-0 mt-2 font-light text-[14px] leading-snug tracking-[-0.02em] text-ink sm:text-[16px] sm:leading-[24px]">{hint}</p>
+        <p className="mx-auto m-0 mt-2 max-w-[848px] font-light text-[14px] leading-snug tracking-[-0.02em] text-ink sm:text-[16px] sm:leading-[24px]">{hint}</p>
       )}
     </div>
   );
