@@ -362,6 +362,26 @@ hoặc đọc trực tiếp như dưới đây.
   (`SpotPickerModal.tsx`) rồi mới sang form viết câu — chốt 4/9, KHÔNG được tự lấy góc
   phố mở đầu tiên. Design chưa vẽ frame cho popup này nên dựng theo khung Modal chung.
 
+### Dọn sau QC 4/9
+
+- **Gỡ hẳn khối TVC/KV** (D3): 4 khoá `campaign_title/hint/youtube_ids/kv_url` biến mất
+  khỏi `SITE_CONTENT_DEFAULTS`, `SiteContentData`, màn `/admin/noi-dung`; route
+  `/api/admin/site-content/kv` đã XOÁ; `SITE_KV_KEY`, `LEGACY_VIDEO_KEY`,
+  `parseYoutubeIds` cũng bỏ. Hàng cũ trong bảng `site_content` chỉ bị lơ đi — không
+  migration. `site_content` giờ đúng **13 khoá** (test khoá `tests/site-content.test.ts`).
+- **Tiêu đề tab riêng từng màn admin** (D4): layout `(panel)` khai
+  `title: { template: "%s — Admin Khu Phố" }`, mỗi route con có `layout.tsx` chỉ khai tên
+  ngắn. Trang admin là client component nên KHÔNG tự khai `metadata` được — nhớ tạo
+  `layout.tsx` khi thêm màn mới. `/admin/login` nằm ngoài `(panel)` nên khai đủ + `noindex`.
+- **`SpotPickerModal.tsx`** (mới): CTA "+ Viết câu nhắc của riêng bạn" ở tab 2 mở popup
+  chọn góc phố rồi mới sang form viết câu — không tự đoán góc phố đầu tiên.
+- Sửa bám `.fig`: sàn gạch/cung nét đứt/skyline đặt trong khung 1440 của KV (trước đó sàn
+  lệch 110px làm hình rời trông lơ lửng), mô tả khối đóng góp bó `max-w-848` để xuống 2
+  dòng, khối nội dung rộng **1276** (`sm:px-[18px]`), nhịp dọc 66/64/24 theo `.fig`.
+- `/api/admin/leads/[id]`: id không phải uuid → **404** (trước đó 500 vì lỗi Postgres 22P02).
+- `SearchBox` + 3 `<select>` lọc của admin thêm `w-full min-w-0` — `<input>` có bề rộng
+  nội tại ~363px làm `/admin/loi-nhac` tràn ngang ở khổ 375.
+
 ### CÒN TREO sau phiên 4/9
 
 1. Ảnh hero `cart.webp` (gánh hàng rong) và `sweepers.webp` (ông cháu quét sân) nằm **cao
