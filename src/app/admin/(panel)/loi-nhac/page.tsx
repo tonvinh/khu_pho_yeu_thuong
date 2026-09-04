@@ -14,6 +14,7 @@ import ImportModal from "@/components/admin/ImportModal";
 import SignsPanel from "@/components/admin/SignsPanel";
 import { NbSelect } from "@/components/admin/IssuesPanel";
 import { Pager, SearchBox, Tabs, Th, useUrlState } from "@/components/admin/table-tools";
+import { AdminModal as Modal } from "@/components/admin/modal";
 import { CATEGORIES, CATEGORY_CODES, categoryIcon, categoryLabel } from "@/lib/taxonomy";
 import SignCard from "@/components/home/SignCard";
 import { SITE_CONTENT_DEFAULTS } from "@/lib/site-content-defaults";
@@ -706,22 +707,3 @@ function EditDrawer({
   );
 }
 
-/* ===== Modal chung (z-50 — trên drawer z-40) ===== */
-function Modal({ title, onClose, children }: {
-  title: string; onClose: () => void; children: React.ReactNode;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/45" onClick={onClose} />
-      <div className="relative w-full max-w-lg rounded-2xl bg-white p-5 shadow-2xl">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="font-extrabold">{title}</h2>
-          <button onClick={onClose} aria-label="Đóng" className="rounded-full px-2 text-lg text-ink-soft hover:text-brick">
-            ✕
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}

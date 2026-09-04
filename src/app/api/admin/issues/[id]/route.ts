@@ -1,4 +1,10 @@
 // Duyệt / từ chối đề xuất (04 §2): duyệt → waiting (pin đỏ) + ghi điểm +2 (trần 3/tuần)
+//
+// QC 4/9: thêm 2 việc còn thiếu khi TỪ CHỐI —
+//   1. câu nhắc gửi kèm đề xuất bị bỏ lại trạng thái `submitted` vĩnh viễn: hàng duyệt
+//      câu lọc bỏ câu của issue chưa duyệt nên admin KHÔNG BAO GIỜ thấy nó nữa;
+//   2. không có audit_logs → không truy được ai duyệt/từ chối cái gì (bảng issues cũng
+//      không lưu người duyệt). Nay mọi thao tác đều ghi `issue_approve` / `issue_reject`.
 import { NextRequest, NextResponse } from "next/server";
 import { tx } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
@@ -36,11 +42,26 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
           await recordScoreEvent(c, issue.proposed_by, "issue_approved", id);
         }
       } else {
+        const note = String(body?.note || "").slice(0, 500) || null;
         await c.query(
           `UPDATE issues SET status = 'rejected', review_note = $2 WHERE id = $1`,
-          [id, String(body?.note || "").slice(0, 500) || null]
+          [id, note]
+        );
+        // Câu gửi kèm đi theo số phận của đề xuất, khỏi kẹt lại trong hàng chờ vô hình
+        await c.query(
+          `UPDATE suggestions SET status = 'rejected', review_note = COALESCE(review_note, $2)
+           WHERE issue_id = $1 AND status = 'submitted'`,
+          [id, note ? `Đề xuất góc phố bị từ chối: ${note}` : "Đề xuất góc phố bị từ chối"]
         );
       }
+      // Nhật ký thao tác của admin (04 §7) — cùng chỗ với votes_adjust, lead_phone_reveal
+      await c.query(
+        `INSERT INTO audit_logs (admin_user_id, action, ref_id, detail)
+         VALUES ($1, $2, $3, $4)`,
+        [auth.admin.id, action === "approve" ? "issue_approve" : "issue_reject", id,
+         JSON.stringify({ location_text: issue.location_text, note: body?.note || null })]
+      );
+
       // Báo tin duyệt/từ chối in-web cho người đề xuất (dieuchinh.1.8 #15)
       if (issue.proposed_by) {
         await c.query(

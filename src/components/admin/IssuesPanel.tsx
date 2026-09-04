@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import { Pager, SearchBox, Tabs, Th } from "@/components/admin/table-tools";
+import { AdminModal } from "@/components/admin/modal";
 import { CATEGORIES, CATEGORY_CODES, categoryIcon, categoryLabel } from "@/lib/taxonomy";
 
 interface Issue {
@@ -50,10 +51,13 @@ export default function IssuesPanel({
   onChanged: () => void;
 }) {
   const [rows, setRows] = useState<Issue[]>([]);
+  // QC 4/9: khung hình đầu tiên rows rỗng → loé "Hàng chờ trống 🎉" dù hàng chờ có 6 dòng
+  // (đúng lỗi B3 của QC 2/9, hồi đó mới vá cho 2 màn kia).
+  const [loaded, setLoaded] = useState(false);
   const [total, setTotal] = useState(0);
   const [counts, setCounts] = useState<Counts | null>(null);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
-  const [rejectId, setRejectId] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<Issue | null>(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -65,6 +69,7 @@ export default function IssuesPanel({
     if (search) p.set("q", search);
     apiGet<{ issues: Issue[]; total: number; counts: Counts }>(`/api/admin/issues?${p}`)
       .then((r) => { setRows(r.issues); setTotal(r.total); setCounts(r.counts); })
+      .finally(() => setLoaded(true))
       .catch(() => {});
   }, [status, category, nbId, search, page, per]);
   useEffect(load, [load]);
@@ -88,7 +93,7 @@ export default function IssuesPanel({
       await apiSend("PATCH", `/api/admin/issues/${id}`, {
         action, note: action === "reject" ? note : undefined,
       });
-      setRejectId(null); setNote("");
+      setRejecting(null); setNote("");
       notify(action === "approve"
         ? "Đã duyệt — góc phố hiện công khai, +2đ cho người đề xuất (nếu chưa vượt trần 3/tuần)"
         : "Đã từ chối (ẩn, lý do lưu nội bộ)");
@@ -170,7 +175,11 @@ export default function IssuesPanel({
             {rows.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-3 py-6 text-center text-sm text-ink-soft">
-                  {status === "pending_review" ? "Hàng chờ trống 🎉" : "Không có đề xuất nào khớp bộ lọc."}
+                  {!loaded
+                    ? "Đang tải…"
+                    : status === "pending_review"
+                      ? "Hàng chờ trống 🎉"
+                      : "Không có đề xuất nào khớp bộ lọc."}
                 </td>
               </tr>
             )}
@@ -236,25 +245,15 @@ export default function IssuesPanel({
                       >
                         Duyệt
                       </button>
+                      {/* QC 4/9: lý do từ chối trước đây gõ vào ô 11px nhét trong cột
+                          thao tác rộng 92px — không đọc nổi câu mình vừa gõ. Nay mở
+                          popup như bên duyệt câu, có luôn ngữ cảnh góc phố. */}
                       <button
-                        onClick={() => { setRejectId(rejectId === r.id ? null : r.id); setNote(""); }}
+                        onClick={() => { setRejecting(r); setNote(""); }}
                         className="rounded-full border border-brick px-2 py-1 text-xs font-bold text-brick hover:bg-brick/5"
                       >
                         Từ chối…
                       </button>
-                      {rejectId === r.id && (
-                        <div className="mt-1 flex flex-col gap-1">
-                          <input
-                            value={note}
-                            onChange={(e) => setNote(e.target.value)}
-                            placeholder="Lý do nội bộ"
-                            className="w-full rounded-lg border border-cream-dark bg-cream px-2 py-1 text-[11px]"
-                          />
-                          <Btn variant="danger" onClick={() => act(r.id, "reject")} disabled={busy}>
-                            Xác nhận
-                          </Btn>
-                        </div>
-                      )}
                     </div>
                   ) : (
                     <span className="block text-right text-[11px] text-ink-soft">
@@ -275,6 +274,45 @@ export default function IssuesPanel({
         onPage={(p) => onChange({ page: String(p) })}
         onPer={(n) => onChange({ per: String(n), page: "1" })}
       />
+
+      {/* Popup từ chối — thay ô nhập 11px nhét trong cột thao tác (QC 4/9) */}
+      {rejecting && (
+        <AdminModal title="Từ chối đề xuất góc phố" onClose={() => setRejecting(null)}>
+          <p className="text-base font-bold leading-snug">
+            {categoryIcon(rejecting.category)} {rejecting.location_text}
+          </p>
+          <p className="mt-1 text-xs text-ink-soft">
+            {rejecting.neighborhood_name}
+            {rejecting.ward ? ` · ${rejecting.ward}` : ""}
+            {rejecting.proposer_name ? ` · ${rejecting.proposer_name} đề xuất` : ""}
+          </p>
+          {rejecting.description && (
+            <p className="mt-2 rounded-xl bg-cream px-3 py-2 text-xs text-ink">{rejecting.description}</p>
+          )}
+
+          <label className="mt-4 block">
+            <span className="text-xs font-bold">Lý do (lưu nội bộ, người đề xuất không thấy)</span>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+              autoFocus
+              placeholder="VD: trùng góc phố đã có · vị trí chưa đủ cụ thể · đích danh nhà hàng xóm"
+              className="mt-1 w-full rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
+            />
+          </label>
+          <p className="mt-2 text-[11px] text-ink-soft">
+            Câu nhắc gửi kèm đề xuất này (nếu có) cũng bị từ chối theo.
+          </p>
+
+          <div className="mt-4 flex justify-end gap-2">
+            <Btn variant="ghost" onClick={() => setRejecting(null)}>Huỷ</Btn>
+            <Btn variant="danger" onClick={() => act(rejecting.id, "reject")} disabled={busy}>
+              Từ chối đề xuất
+            </Btn>
+          </div>
+        </AdminModal>
+      )}
     </div>
   );
 }

@@ -185,6 +185,22 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
           await applyInstalled(c, s, body?.installed_date);
           break;
       }
+
+      // Nhật ký thao tác admin (QC 4/9): trước đây duyệt/từ chối/chọn câu/treo biển
+      // KHÔNG để lại dấu vết nào — bảng suggestions cũng không lưu người duyệt.
+      const logged = action === "update" ? (body?.status as string | undefined) : action;
+      if (logged) {
+        await c.query(
+          `INSERT INTO audit_logs (admin_user_id, action, ref_id, detail)
+           VALUES ($1, $2, $3, $4)`,
+          [auth.admin.id, `suggestion_${logged}`, id,
+           JSON.stringify({
+             content: s.content.slice(0, 120),
+             from: r.rows[0].status,
+             note: body?.note || null,
+           })]
+        );
+      }
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
