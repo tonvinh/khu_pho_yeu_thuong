@@ -53,7 +53,7 @@ export default function UserMenu({ me, onLoggedOut }: { me: Me; onLoggedOut: () 
         aria-expanded={open}
         aria-label={`Tài khoản của ${me.display_name}`}
         title={`Chào ${me.display_name}`}
-        className="grid h-[35px] w-[35px] flex-none cursor-pointer place-items-center rounded-full border-[1.5px] border-white bg-white/20 font-display text-[14px] font-bold text-white transition hover:bg-white/35"
+        className="grid h-[44px] w-[44px] flex-none cursor-pointer place-items-center rounded-full sm:h-[35px] sm:w-[35px] border-[1.5px] border-white bg-white/20 font-display text-[14px] font-bold text-white transition hover:bg-white/35"
       >
         {me.display_name.trim().charAt(0).toUpperCase()}
       </button>

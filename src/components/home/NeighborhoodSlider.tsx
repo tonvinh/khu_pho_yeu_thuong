@@ -160,7 +160,7 @@ export default function NeighborhoodSlider({
             aria-label="Khu phố trước"
             /* Mobile: mũi tên nằm TRONG khung (bản cũ -translate-x-1/2 làm nửa nút
                lọt ra ngoài mép màn hình 375px) — desktop giữ nguyên tâm x=260 của .fig */
-            className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:left-0 sm:h-10 sm:w-10 sm:-translate-x-1/2 sm:top-[53.2%]"
+            className="absolute left-2 top-1/2 grid h-11 w-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:left-0 sm:h-10 sm:w-10 sm:-translate-x-1/2 sm:top-[53.2%]"
           >
             <IconChevron className="rotate-180" />
           </button>
@@ -168,7 +168,7 @@ export default function NeighborhoodSlider({
             type="button"
             onClick={next}
             aria-label="Khu phố sau"
-            className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:right-0 sm:h-10 sm:w-10 sm:translate-x-1/2 sm:top-[53.2%]"
+            className="absolute right-2 top-1/2 grid h-11 w-11 -translate-y-1/2 cursor-pointer place-items-center rounded-full bg-white/50 text-brick transition hover:bg-white/70 sm:right-0 sm:h-10 sm:w-10 sm:translate-x-1/2 sm:top-[53.2%]"
           >
             <IconChevron />
           </button>
