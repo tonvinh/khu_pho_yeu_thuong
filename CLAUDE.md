@@ -311,7 +311,7 @@ Quyết định 3/9: bỏ hẳn dải khuyến mãi, **gỡ luôn 4 khoá site_c
 
 ### CÒN TREO — phải hỏi Design/BA
 
-1. **Chân trang dài hơn design**: khối chữ 697×134 (5 dòng) vs .fig 697×84 (~3 dòng) — dòng
+1. ~~**Chân trang dài hơn design**~~ (chốt 4/9: giữ nguyên) — bỏ qua mục này. Nội dung cũ:: khối chữ 697×134 (5 dòng) vs .fig 697×84 (~3 dòng) — dòng
    `footer_support` ("Đã là khách hàng của FPT…") chiếm 2 dòng. Design có bỏ dòng này không?
 2. **Dropdown tra cứu 1 kết quả**: design chỉ vẽ MỘT dòng mời ("Khu phố mình chưa có nhiều
    lời nhắc…") nên khu ĐÃ đạt chuẩn 4N cũng đọc thấy câu đó. Cần câu riêng cho khu đạt chuẩn?
@@ -381,6 +381,17 @@ hoặc đọc trực tiếp như dưới đây.
 - `/api/admin/leads/[id]`: id không phải uuid → **404** (trước đó 500 vì lỗi Postgres 22P02).
 - `SearchBox` + 3 `<select>` lọc của admin thêm `w-full min-w-0` — `<input>` có bề rộng
   nội tại ~363px làm `/admin/loi-nhac` tràn ngang ở khổ 375.
+
+### Chốt 4/9 sau QC
+
+- **Nguồn chuẩn giao diện = `docs/lp/LandingpageFCM.fig` HIỆN TẠI trong repo** (không chờ
+  export mới). Ngoại lệ duy nhất: hai nhãn nút đã chốt bằng lời — tab 2 `Bình chọn` viền
+  xanh, tab 3 `Xem lời nhắc` viền cam.
+- **Chân trang giữ nguyên đủ 4 dòng**, gồm câu “Đã là khách hàng của FPT… 1900 6600”.
+  Khối chữ cao 134 vs `.fig` 84 là chấp nhận có chủ ý — đừng “sửa” lại theo .fig.
+- “Dòng đầu tab 2 màu cam” trong Figma: **không tái hiện được** (để chuột ra xa và rê lên
+  từng dòng đều ra màu đậm) — coi như khung render dở lúc prototype tải, không phải trạng
+  thái thiết kế. Web render tất cả dòng màu đậm là đúng.
 
 ### CÒN TREO sau phiên 4/9
 
