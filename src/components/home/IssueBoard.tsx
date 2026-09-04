@@ -79,6 +79,7 @@ export default function IssueBoard({
   ambassadors,
   onWrite,
   onVoteNote,
+  onPickSpot,
   onPropose,
   onOpenAmbassador,
 }: {
@@ -93,6 +94,8 @@ export default function IssueBoard({
   onWrite: (issueId: string) => void;
   /** Tab 2: bình chọn THẲNG một câu nhắc (1 phiếu/câu, không rút — Q6) */
   onVoteNote: (noteId: string) => void;
+  /** CTA đáy tab 2: mở popup CHỌN GÓC PHỐ rồi mới sang form viết câu (chốt 4/9) */
+  onPickSpot: () => void;
   onPropose: () => void;
   /** Tab 3: mở popup "Cây bút khu phố" của một người */
   onOpenAmbassador: (shareSlug: string) => void;
@@ -256,8 +259,10 @@ export default function IssueBoard({
           {/* CTA đáy card đổi theo tab — .fig KHÔNG vẽ nút nào ở tab 1 */}
           {isNotes && (
             <div className="flex justify-center py-4 sm:pb-0 sm:pt-6">
+              {/* Dòng tab 2 là CÂU NHẮC nên CTA không còn ngữ cảnh góc phố → mở
+                  popup chọn góc phố trước (chốt 4/9), không tự đoán góc đầu tiên. */}
               <button
-                onClick={() => onWrite(open[0]?.id ?? "")}
+                onClick={onPickSpot}
                 disabled={open.length === 0}
                 className="kp-btn kp-btn-primary tap h-[50px] px-8 text-[16px] disabled:opacity-50 sm:min-w-[318px]"
               >

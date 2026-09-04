@@ -20,6 +20,7 @@ import LeadSection from "./LeadSection";
 import IdentifyModal from "./IdentifyModal";
 import ProposeModal from "./ProposeModal";
 import SuggestModal from "./SuggestModal";
+import SpotPickerModal from "./SpotPickerModal";
 import LeadPromptModal from "./LeadPromptModal";
 import NeighborhoodModal from "./NeighborhoodModal";
 import AmbassadorModal from "./AmbassadorModal";
@@ -42,6 +43,8 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   const pendingAction = useRef<(() => void) | null>(null);
   const [proposeOpen, setProposeOpen] = useState(false);
   const [suggestIssueId, setSuggestIssueId] = useState<string | null>(null);
+  // Popup chọn góc phố trước khi viết câu (CTA đáy tab 2 — chốt 4/9)
+  const [spotPickerOpen, setSpotPickerOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [notifs, setNotifs] = useState<NotificationItem[]>([]);
   const [leadPromptOpen, setLeadPromptOpen] = useState(false);
@@ -450,6 +453,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         ambassadors={data.ambassadors}
         onWrite={(id) => setSuggestIssueId(id)}
         onVoteNote={voteNote}
+        onPickSpot={() => setSpotPickerOpen(true)}
         onPropose={openPropose}
         onOpenAmbassador={(slug) => setAmbassadorSlug(slug)}
       />
@@ -534,6 +538,14 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
              mở từ deep-link không nằm trong danh sách → rơi về "Đang tải…". */
           initialTitle={suggestIssue ? categoryLabel(suggestIssue.category) : undefined}
           initialWard={suggestIssue?.neighborhood_name}
+        />
+      )}
+      {spotPickerOpen && (
+        <SpotPickerModal
+          issues={data.issues.filter((it) => it.status !== "signed")}
+          onPick={(id) => { setSpotPickerOpen(false); setSuggestIssueId(id); }}
+          onPropose={() => { setSpotPickerOpen(false); openPropose(); }}
+          onClose={() => setSpotPickerOpen(false)}
         />
       )}
       {nbSlug && (

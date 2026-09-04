@@ -58,6 +58,7 @@ function board(over: Partial<Parameters<typeof IssueBoard>[0]> = {}) {
       ambassadors={AMBASSADORS}
       onWrite={vi.fn()}
       onVoteNote={vi.fn()}
+      onPickSpot={vi.fn()}
       onPropose={vi.fn()}
       onOpenAmbassador={vi.fn()}
       {...over}
@@ -178,11 +179,16 @@ describe("IssueBoard — tab 2 'Lời nhắc chờ bạn bình chọn' (Figma li
     expect(screen.queryByText("Xem câu nhắc")).toBeNull();
   });
 
-  it("CTA đáy là '+ Viết câu nhắc của riêng bạn'", () => {
-    board();
+  it("CTA đáy '+ Viết câu nhắc của riêng bạn' mở popup CHỌN GÓC PHỐ (chốt 4/9)", () => {
+    const onPickSpot = vi.fn();
+    const onWrite = vi.fn();
+    board({ onPickSpot, onWrite });
     openTab(TAB2);
-    expect(screen.getByText("+ Viết câu nhắc của riêng bạn")).toBeTruthy();
     expect(screen.queryByText("+ Đề xuất góc phố mới")).toBeNull();
+    fireEvent.click(screen.getByText("+ Viết câu nhắc của riêng bạn"));
+    expect(onPickSpot).toHaveBeenCalled();
+    // KHÔNG được tự đoán góc phố đầu tiên như bản tạm trước đó
+    expect(onWrite).not.toHaveBeenCalled();
   });
 
   it("phân trang 5 dòng/trang theo số CÂU", () => {

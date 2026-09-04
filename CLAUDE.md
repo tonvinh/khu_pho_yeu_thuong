@@ -319,10 +319,18 @@ Quyết định 3/9: bỏ hẳn dải khuyến mãi, **gỡ luôn 4 khoá site_c
 
 ## Figma LIVE 4/9 — file trên figma.com ĐÃ ĐI TRƯỚC bản `.fig` trong repo
 
-`docs/lp/LandingpageFCM.fig` (bản 2/9) **không còn là nguồn chuẩn**: mở link design thật
-(`figma.com/design/FMiW4tzQvKgi8qomzYFlff/...?node-id=7217-1989`) ngày 4/9 thấy section
-Design đã có **12 frame Landing page** (bản 2/9 chỉ 5) và nội dung khác. Trước khi đo lại
-giao diện phải xin Design export `.fig` mới, hoặc đọc trực tiếp như dưới đây.
+`docs/lp/LandingpageFCM.fig` (lưu 2/9 22:34) **không còn khớp file trên figma.com**.
+Bằng chứng đo được (không phải suy đoán) — cùng node id, khác hẳn:
+
+| Node | Trong `.fig` local | Render live 4/9 |
+|---|---|---|
+| `7651:1537` nút mỗi dòng tab 2 | `Button 4/5`, viền **#FF8206**, w=**137** (Xem câu nhắc) | viền **xanh #2323FF**, nhãn **Bình chọn** |
+| `7458:38738` nút mỗi dòng tab 3 | `Button 3/4`, viền **#2323FF**, w=**120** (Bình chọn) | viền **cam**, nhãn **Xem lời nhắc** |
+
+(File local có 11 frame tên "Landing page", live có 12 — chênh 1 frame, không phải 5→12.)
+Ảnh export `docs/lp/Landing page*.png` (2/9 22:17) còn CŨ HƠN cả `.fig` → đây chính là thứ
+làm phiên QC 2/9 đọc sai nhãn nút. Trước khi đo px lại phải xin Design export `.fig` mới,
+hoặc đọc trực tiếp như dưới đây.
 
 **Cách đọc Figma live bằng Claude-in-Chrome** (đã chạy được, quyền figma.com có sẵn):
 - Canvas đọc rất khó (zoom bằng phím/nút không ăn khi focus ở panel). Dùng **chế độ
@@ -350,8 +358,9 @@ giao diện phải xin Design export `.fig` mới, hoặc đọc trực tiếp n
 - `VoteModal.tsx` **đã xoá** (cùng `tests/ui/vote-modal.test.tsx`): design bỏ nút
   `Xem câu nhắc` nên popup không còn lối vào. Muốn xem toàn bộ câu của một khu thì vào
   popup "Thông tin khu phố" (`NeighborhoodModal`).
-- CTA đáy tab 2 (`+ Viết câu nhắc của riêng bạn`) giờ mở form cho **góc phố mở đầu tiên**
-  (`open[0]`) vì dòng không còn là góc phố — chỗ này cần Design/BA chốt lại.
+- CTA đáy tab 2 (`+ Viết câu nhắc của riêng bạn`) mở popup **"Chọn góc phố"**
+  (`SpotPickerModal.tsx`) rồi mới sang form viết câu — chốt 4/9, KHÔNG được tự lấy góc
+  phố mở đầu tiên. Design chưa vẽ frame cho popup này nên dựng theo khung Modal chung.
 
 ### CÒN TREO sau phiên 4/9
 
