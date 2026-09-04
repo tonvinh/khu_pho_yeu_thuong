@@ -108,12 +108,6 @@ export interface SiteContentData {
   footer_line2: string;
   footer_support: string;
   footer_tagline: string;
-  campaign_title: string;
-  campaign_hint: string;
-  /** Danh sách video TVC phát lần lượt (khối TVC hiện tạm ẩn khỏi trang chủ) */
-  campaign_youtube_ids: string[];
-  /** URL ảnh KV chiến dịch — null → placeholder "chờ thiết kế final" */
-  campaign_kv_url: string | null;
 }
 
 /** Một cây bút trên bảng vinh danh — hình dạng đúng bằng `AmbassadorRow` của

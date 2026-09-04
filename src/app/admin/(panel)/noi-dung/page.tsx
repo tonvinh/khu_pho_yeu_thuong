@@ -6,8 +6,8 @@
 // khối biển (gồm banner khuyến mãi in trên biển) · khối ưu đãi · footer.
 // Khối TVC hiện TẠM ẨN khỏi trang chủ nhưng vẫn quản lý được ở đây, và nhận NHIỀU
 // link video phát lần lượt (yêu cầu "back up ngầm tool up link video").
-import { useCallback, useEffect, useRef, useState } from "react";
-import { apiGet, apiSend, apiUpload } from "@/components/client-api";
+import { useCallback, useEffect, useState } from "react";
+import { apiGet, apiSend } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import SignCard from "@/components/home/SignCard";
 
@@ -16,13 +16,11 @@ type TextKey =
   | "board_title" | "board_hint"
   | "signs_title"
   | "lead_title" | "lead_body" | "lead_privacy"
-  | "footer_line1" | "footer_line2" | "footer_support" | "footer_tagline"
-  | "campaign_title" | "campaign_hint" | "campaign_youtube_ids";
+  | "footer_line1" | "footer_line2" | "footer_support" | "footer_tagline";
 
 interface ContentPayload {
   defaults: Record<TextKey, string>;
   overrides: Record<TextKey, string>;
-  kv_url: string | null;
 }
 
 export default function SiteContentPage() {
@@ -55,20 +53,6 @@ export default function SiteContentPage() {
     } catch (e) { fail(e); } finally { setBusy(false); }
   };
 
-  const uploadKv = async (file: File) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    try {
-      await apiUpload("/api/admin/site-content/kv", fd);
-      notify("Đã lưu ảnh KV chiến dịch ✓"); load();
-    } catch (e) { fail(e); }
-  };
-  const deleteKv = async () => {
-    try {
-      await apiSend("DELETE", "/api/admin/site-content/kv");
-      notify("Đã xoá ảnh KV — trang chủ quay về placeholder demo."); load();
-    } catch (e) { fail(e); }
-  };
 
   if (!data || !form) return <p className="text-sm text-ink-soft">Đang tải…</p>;
 
@@ -108,19 +92,6 @@ export default function SiteContentPage() {
     );
   };
 
-  // Danh sách video đang có hiệu lực (ô có thể chứa nhiều ID/link, ngăn cách dấu phẩy)
-  const videoIds = (form.campaign_youtube_ids.trim() || data.defaults.campaign_youtube_ids)
-    .split(/[,\n]/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const setVideos = (ids: string[]) => setForm({ ...form, campaign_youtube_ids: ids.join(",") });
-  const moveVideo = (i: number, dir: -1 | 1) => {
-    const next = [...videoIds];
-    const j = i + dir;
-    if (j < 0 || j >= next.length) return;
-    [next[i], next[j]] = [next[j], next[i]];
-    setVideos(next);
-  };
 
   return (
     <div className="max-w-4xl space-y-4">
@@ -196,82 +167,6 @@ export default function SiteContentPage() {
         </div>
       </Card>
 
-      <Card title="Video TVC + KV chiến dịch (khối đang TẠM ẨN khỏi trang chủ)">
-        <p className="mb-3 rounded-xl bg-cream px-3 py-2 text-[11.5px] leading-5 text-ink-soft">
-          Khối “Câu chuyện Khu phố biết thương” đã được gỡ khỏi trang chủ theo yêu cầu 18/8.
-          Nội dung ở đây vẫn lưu bình thường để bật lại ngay khi thiết kế chốt vị trí cho TVC.
-          Nhiều video sẽ <b>phát lần lượt</b> theo đúng thứ tự dưới đây.
-        </p>
-
-        <span className="text-xs font-bold">Danh sách video (phát lần lượt)</span>
-        <div className="mt-2 space-y-2">
-          {videoIds.map((id, i) => (
-            <div key={`${id}-${i}`} className="flex flex-wrap items-center gap-2 rounded-xl border border-cream-dark bg-cream px-3 py-2">
-              <span className="text-xs font-bold text-ink-soft">#{i + 1}</span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://i.ytimg.com/vi/${id}/default.jpg`}
-                alt=""
-                className="h-9 w-16 rounded object-cover"
-              />
-              <input
-                value={id}
-                onChange={(e) => {
-                  const next = [...videoIds];
-                  next[i] = e.target.value.trim();
-                  setVideos(next);
-                }}
-                className="min-w-[180px] flex-1 rounded-lg border border-cream-dark bg-white px-2 py-1.5 text-sm"
-              />
-              <button onClick={() => moveVideo(i, -1)} disabled={i === 0}
-                className="rounded-full border border-cream-dark px-2 py-1 text-xs disabled:opacity-40">↑</button>
-              <button onClick={() => moveVideo(i, 1)} disabled={i === videoIds.length - 1}
-                className="rounded-full border border-cream-dark px-2 py-1 text-xs disabled:opacity-40">↓</button>
-              <button onClick={() => setVideos(videoIds.filter((_, k) => k !== i))}
-                className="rounded-full border border-status-waiting px-2 py-1 text-xs font-bold text-status-waiting">Xoá</button>
-              <a href={`https://www.youtube.com/watch?v=${id}`} target="_blank" rel="noopener noreferrer"
-                className="text-xs underline text-ink-soft hover:text-brick">Mở ↗</a>
-            </div>
-          ))}
-        </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <Btn variant="ghost" onClick={() => setVideos([...videoIds, ""])}>+ Thêm video</Btn>
-          <span className="text-[11px] text-ink-soft">
-            Dán link youtube.com/watch?v=…, youtu.be/…, shorts/… hoặc ID 11 ký tự — hệ thống tự chuẩn hoá khi lưu.
-          </span>
-        </div>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          {field("campaign_title", "Tiêu đề khối")}
-          {field("campaign_hint", "Dòng mô tả cạnh tiêu đề")}
-        </div>
-
-        <div className="mt-4 rounded-xl border border-cream-dark p-3">
-          <span className="text-xs font-bold">Ảnh KV chiến dịch (cột trái của khu)</span>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            {data.kv_url ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={data.kv_url}
-                  alt="KV chiến dịch"
-                  className="h-28 rounded-lg border border-cream-dark object-cover"
-                />
-                <UploadBtn label="🔁 Thay ảnh KV" onFile={uploadKv} />
-                <Btn variant="ghost" onClick={deleteKv}>Xoá ảnh</Btn>
-              </>
-            ) : (
-              <>
-                <UploadBtn label="🖼 Tải ảnh KV…" onFile={uploadKv} />
-                <span className="text-[11px] text-ink-soft">
-                  jpg/png/webp ≤ 10MB, giữ nguyên tỷ lệ ảnh gốc.
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-      </Card>
-
       <div className="flex justify-end">
         <Btn onClick={save} disabled={busy}>{busy ? "Đang lưu…" : "💾 Lưu tất cả"}</Btn>
       </div>
@@ -279,28 +174,3 @@ export default function SiteContentPage() {
   );
 }
 
-/* ===== Nút upload file dạng pill (như trang Khu phố) ===== */
-function UploadBtn({ label, onFile }: { label: string; onFile: (f: File) => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  return (
-    <>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onFile(f);
-          e.target.value = "";
-        }}
-      />
-      <button
-        onClick={() => inputRef.current?.click()}
-        className="rounded-full border border-brick px-3.5 py-1.5 text-xs font-bold text-brick"
-      >
-        {label}
-      </button>
-    </>
-  );
-}

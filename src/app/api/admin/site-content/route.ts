@@ -1,15 +1,14 @@
-// Module admin "Nội dung" — sửa text trang chủ (hero, câu chuyện chiến dịch, khối
-// ưu đãi). GET trả mặc định + ghi đè hiện tại; PATCH nhận các field text: giá trị
-// rỗng hoặc trùng mặc định → XOÁ ghi đè (quay về copy gốc). Ảnh KV có route ./kv.
+// Module admin "Nội dung" — sửa text trang chủ (hero, khối đóng góp, khối biển,
+// khối ưu đãi, chân trang). GET trả mặc định + ghi đè hiện tại; PATCH nhận các field
+// text: giá trị rỗng hoặc trùng mặc định → XOÁ ghi đè (quay về copy gốc).
+// 4/9 (QC · D3): bỏ 4 khoá campaign_* và route ./kv — khối TVC/KV không còn trên site.
 // Audit: site_content_update (detail = các key đã đổi).
 import { NextRequest, NextResponse } from "next/server";
 import { q } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
-import { imgUrl } from "@/lib/storage";
 import {
   getSiteOverrides,
   SITE_CONTENT_DEFAULTS,
-  SITE_KV_KEY,
   SITE_TEXT_KEYS,
   type SiteTextKey,
 } from "@/lib/site-content";
@@ -18,29 +17,11 @@ export const dynamic = "force-dynamic";
 
 const MAX_LEN = 1000;
 
-/** Nhận link YouTube đủ dạng (watch?v=, youtu.be/, shorts/, embed/, live/) hoặc ID trần */
-function parseYoutubeId(input: string): string | null {
-  const s = input.trim();
-  if (/^[A-Za-z0-9_-]{6,20}$/.test(s)) return s;
-  try {
-    const u = new URL(s);
-    if (!/(^|\.)(youtube(-nocookie)?\.com|youtu\.be)$/.test(u.hostname)) return null;
-    const id =
-      u.hostname === "youtu.be"
-        ? u.pathname.split("/")[1]
-        : u.searchParams.get("v") || u.pathname.match(/\/(embed|shorts|live)\/([^/?]+)/)?.[2];
-    return id && /^[A-Za-z0-9_-]{6,20}$/.test(id) ? id : null;
-  } catch {
-    return null;
-  }
-}
-
 async function payload() {
   const over = await getSiteOverrides();
   return {
     defaults: SITE_CONTENT_DEFAULTS,
     overrides: Object.fromEntries(SITE_TEXT_KEYS.map((k) => [k, over[k] || ""])),
-    kv_url: imgUrl(over[SITE_KV_KEY] || null),
   };
 }
 
@@ -64,19 +45,6 @@ export async function PATCH(req: NextRequest) {
     if (typeof raw !== "string") return jsonError(400, `Trường ${key} phải là chuỗi`);
     let value = raw.trim();
     if (value.length > MAX_LEN) return jsonError(400, `Trường ${key} tối đa ${MAX_LEN} ký tự`);
-    // 18/8: một ô chứa NHIỀU video (phát lần lượt) — tách theo dấu phẩy/xuống dòng,
-    // chuẩn hoá từng link về ID rồi ghép lại.
-    if (key === "campaign_youtube_ids" && value) {
-      const ids: string[] = [];
-      for (const part of value.split(/[,\n]/).map((x) => x.trim()).filter(Boolean)) {
-        const id = parseYoutubeId(part);
-        if (!id) {
-          return jsonError(400, `Link YouTube không hợp lệ: “${part}” — dán link video hoặc ID 11 ký tự`);
-        }
-        if (!ids.includes(id)) ids.push(id);
-      }
-      value = ids.join(",");
-    }
     changes.push({ key, value: value && value !== SITE_CONTENT_DEFAULTS[key] ? value : null });
   }
   if (changes.length === 0) return jsonError(400, "Không có trường nào để lưu");

@@ -31,8 +31,6 @@ export function nb(over: Partial<MapNeighborhood> = {}): MapNeighborhood {
 export function siteContent(over: Partial<SiteContentData> = {}): SiteContentData {
   return {
     ...SITE_CONTENT_DEFAULTS,
-    campaign_youtube_ids: ["M7lc1UVf-VE"],
-    campaign_kv_url: null,
     ...over,
   };
 }

@@ -10,9 +10,6 @@
 // (file đó re-export lại toàn bộ).
 import { COPY } from "./copy";
 
-/** Row đặc biệt: key MinIO của ảnh KV chiến dịch (không phải text hiển thị) */
-export const SITE_KV_KEY = "campaign_kv_key";
-
 export const SITE_CONTENT_DEFAULTS = {
   // Hero
   hero_title: "Hãy gửi một lời thương cho xóm mình nhé!",
@@ -36,28 +33,13 @@ export const SITE_CONTENT_DEFAULTS = {
   footer_line2: "Nhắc · Nhở · Nhỏ · Nhẹ",
   footer_support: COPY.footerSupport,
   footer_tagline: COPY.ctaCampaign,
-  // Khối TVC/KV — TẠM ẨN khỏi trang chủ (email 18/8), giữ nội dung để bật lại
-  campaign_title: "Câu chuyện “Khu phố biết thương”",
-  campaign_hint: "",
-  /** Nhiều video, ngăn cách dấu phẩy — phát lần lượt. Key cũ campaign_youtube_id vẫn đọc được */
-  campaign_youtube_ids: "M7lc1UVf-VE",
+  // 4/9 (D3): 4 khoá campaign_* (tiêu đề/mô tả/video TVC/ảnh KV) ĐÃ GỠ — khối
+  // "Câu chuyện Khu phố biết thương" bỏ khỏi trang chủ từ 18/8 và component
+  // CampaignMedia đã xoá 2/9, để lại thì admin sửa được thứ không hiện ở đâu
+  // (đúng loại trường chết đã dọn với sign_promo_* hôm 3/9). Hàng cũ trong bảng
+  // site_content chỉ bị lơ đi, không cần migration. Chuỗi copy vẫn nằm ở copy.ts.
 } as const;
 
 export type SiteTextKey = keyof typeof SITE_CONTENT_DEFAULTS;
 export const SITE_TEXT_KEYS = Object.keys(SITE_CONTENT_DEFAULTS) as SiteTextKey[];
 
-/** Key video cũ (1 video) — vẫn dùng làm fallback khi chưa ai lưu danh sách mới */
-export const LEGACY_VIDEO_KEY = "campaign_youtube_id";
-
-/** Tách "id1, id2" hoặc URL YouTube đầy đủ → mảng videoId sạch */
-export function parseYoutubeIds(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((s) => {
-      const m = s.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([\w-]{11})/);
-      return m ? m[1] : s;
-    })
-    .filter((s) => /^[\w-]{11}$/.test(s));
-}

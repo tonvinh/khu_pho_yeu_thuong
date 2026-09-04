@@ -440,6 +440,23 @@ d("B4 · dữ liệu dòng góc phố", () => {
 });
 
 // ===================================================================
+// QC 4/9 · D4 — mỗi màn có tiêu đề tab riêng
+// ===================================================================
+d("D4 · tiêu đề trang", () => {
+  const title = (html: string) => (html.match(/<title>([^<]*)<\/title>/) || [])[1] || "";
+
+  it("/admin/login KHÔNG dùng chung tiêu đề trang chủ", async () => {
+    const html = await new Client().html("/admin/login");
+    expect(title(html)).toBe("Đăng nhập — Admin Khu Phố");
+  });
+
+  it("trang chủ và trang chính sách vẫn có tiêu đề riêng", async () => {
+    expect(title(await new Client().html("/"))).toMatch(/Khu Phố Của Tôi/);
+    expect(title(await new Client().html("/chinh-sach-du-lieu"))).toMatch(/^Chính sách dữ liệu/);
+  });
+});
+
+// ===================================================================
 // Figma bản LIVE 4/9 — tab 2 là danh sách CÂU NHẮC chờ bình chọn
 // ===================================================================
 d("Tab 2 · GET /api/v1/notes", () => {
