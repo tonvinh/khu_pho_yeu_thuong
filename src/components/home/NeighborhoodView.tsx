@@ -75,7 +75,7 @@ function NoteCard({ note }: { note: NeighborhoodNote }) {
           onClick={vote}
           disabled={voted}
           aria-label={voted ? "Đã bình chọn" : `Bình chọn câu của ${note.author_name}`}
-          className={`kp-btn kp-btn-vote tap tap-sm-auto h-[44px] flex-none px-5 text-[13.5px] sm:h-[35px] sm:w-[119px] sm:text-[14px] ${
+          className={`kp-btn kp-btn-vote kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[35px] sm:w-[119px] sm:px-0 ${
             voted ? "cursor-default opacity-70" : ""
           }`}
         >

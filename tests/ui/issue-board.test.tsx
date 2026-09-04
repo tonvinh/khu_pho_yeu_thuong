@@ -247,3 +247,17 @@ describe("IssueBoard · B4 — kẻ ngăn dòng và biên", () => {
     expect(within(row).getByText("0 Bình chọn")).toBeTruthy();
   });
 });
+
+describe("IssueBoard — nút trong dòng không xuống 2 dòng", () => {
+  it("nút dòng mang .kp-btn-row và nhả lề ngang từ sm (khung rộng cố định)", () => {
+    board();
+    for (const [label, w] of [["Gửi lời nhắc", "sm:w-[120px]"]] as const) {
+      const btn = screen.getAllByRole("button", { name: label })[0];
+      expect(btn.className).toContain("kp-btn-row");
+      expect(btn.className).toContain(w);
+      expect(btn.className).toContain("sm:px-0");
+      // cỡ chữ do .kp-btn-row quyết định, không để utility text-* (bị .kp-btn đè)
+      expect(btn.className).not.toMatch(/text-\[13\.5px\]|sm:text-\[14px\]/);
+    }
+  });
+});

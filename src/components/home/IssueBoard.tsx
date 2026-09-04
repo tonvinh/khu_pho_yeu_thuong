@@ -162,7 +162,7 @@ export default function IssueBoard({
               {/* .fig: 119×35 r=70 viền #2323FF 1px */}
               <button
                 onClick={() => onOpenAmbassador(a.share_slug)}
-                className="kp-btn kp-btn-vote tap tap-sm-auto h-[44px] flex-none px-5 text-[13.5px] sm:h-[35px] sm:w-[119px] sm:text-[14px]"
+                className="kp-btn kp-btn-vote kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[35px] sm:w-[119px] sm:px-0"
               >
                 Bình chọn
               </button>
@@ -201,7 +201,7 @@ export default function IssueBoard({
                 /* .fig: 120×35 r=70 viền #FF8206 1px */
                 <button
                   onClick={() => onWrite(it.id)}
-                  className="kp-btn kp-btn-primary tap tap-sm-auto h-[44px] flex-none px-5 text-[13.5px] sm:h-[35px] sm:w-[120px] sm:text-[14px]"
+                  className="kp-btn kp-btn-primary kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[35px] sm:w-[120px] sm:px-0"
                 >
                   Gửi lời nhắc
                 </button>
@@ -209,7 +209,7 @@ export default function IssueBoard({
                 /* .fig: 137×35.9 r=100 viền #FF8206 1.5px */
                 <button
                   onClick={() => onVote(it.id)}
-                  className="kp-btn kp-btn-primary tap tap-sm-auto h-[44px] flex-none px-5 text-[13.5px] sm:h-[36px] sm:w-[137px] sm:text-[14px]"
+                  className="kp-btn kp-btn-primary kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 sm:h-[36px] sm:w-[137px] sm:px-0"
                 >
                   Xem câu nhắc
                 </button>

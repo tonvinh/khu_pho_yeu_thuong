@@ -259,6 +259,16 @@ body {
   border-color: var(--color-brick);
   color: var(--color-brick-dark);
 }
+/* Nút nằm trong DÒNG danh sách (IssueBoard, NeighborhoodView) — khung rộng CỐ ĐỊNH
+   theo .fig (120 / 137 / 119 × 35) nên chữ không được xuống dòng.
+   BẪY (cùng họ với C1 của .kp-h2): `.kp-btn` khai báo NGOÀI @layer nên utility
+   `text-[14px]` của Tailwind (nằm trong layer utilities) KHÔNG đè được font-size
+   15px của nó — "Gửi lời nhắc" đo ra 78px trong khung nội dung 77px và tràn xuống
+   2 dòng. Rule này phải đứng SAU .kp-btn thì mới thắng. */
+.kp-btn-row {
+  font-size: 14px;
+  white-space: nowrap;
+}
 
 /* Dải sọc chéo cam viền trên/dưới card danh sách (asset docs/lp/Frame 151.png
    dựng lại bằng CSS cho nhẹ + co giãn). */

@@ -75,3 +75,18 @@ describe("C2 — chiều cao ô nhập", () => {
     expect(block("textarea.kp-input-lg")).toContain("height: 90px");
   });
 });
+
+describe("Nút trong dòng danh sách — chữ không được xuống 2 dòng", () => {
+  it(".kp-btn-row chốt 14px + nowrap (khung .fig rộng cố định 120/137/119)", () => {
+    const b = block(".kp-btn-row {");
+    expect(b).toContain("font-size: 14px");
+    expect(b).toContain("white-space: nowrap");
+  });
+
+  it("khai báo SAU .kp-btn — cùng bẫy C1: .kp-btn ngoài @layer đè utility text-[14px]", () => {
+    const base = at(".kp-btn {");
+    expect(base).toBeGreaterThan(-1);
+    expect(at(".kp-btn-row {")).toBeGreaterThan(base);
+    expect(block(".kp-btn {")).toContain("font-size: 15px");
+  });
+});

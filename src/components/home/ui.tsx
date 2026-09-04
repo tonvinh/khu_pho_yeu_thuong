@@ -167,8 +167,11 @@ export function FilterTabs<K extends string>({
             key={t.key}
             onClick={() => onChange(t.key)}
             /* Tab: cao 39, r hết cỡ, gap 10 — đang chọn nền #FF8206 viền #E86305,
-               tab thường viền #3D3D3D 1.5px (không phải viền kem) */
-            className={`tap tap-sm-auto inline-flex h-[44px] flex-none cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-full border-[1.5px] px-4 text-[14px] transition sm:h-[39px] sm:px-5 sm:text-[16px] ${
+               tab thường viền #3D3D3D 1.5px (không phải viền kem).
+               Lề trong LỆCH theo design: trái 20, PHẢI 8 — chip số gần như chạm mép
+               phải (đo trên `docs/lp/Landing page.png`: mép chip → mép pill = 7.5px,
+               trong khi chữ cách mép trái 20px). Lề đều 20/20 làm chip trôi vào giữa. */
+            className={`tap tap-sm-auto inline-flex h-[44px] flex-none cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-full border-[1.5px] pl-4 pr-2 text-[14px] transition sm:h-[39px] sm:pl-5 sm:text-[16px] ${
               isActive
                 ? "border-brick-dark bg-brick text-white shadow-kp-s"
                 : "border-ink bg-transparent text-ink hover:border-brick hover:text-brick-dark"
@@ -184,8 +187,9 @@ export function FilterTabs<K extends string>({
             )}
             <span
               /* Chip số trong tab (.fig): tab thường = tròn đặc #3D3D3D chữ trắng,
-                 tab đang chọn = tròn trắng chữ cam */
-              className={`grid h-[22px] min-w-[22px] place-items-center rounded-full px-1 text-[11.5px] font-bold ${
+                 tab đang chọn = tròn trắng chữ cam. Ø24 (đo trên ảnh export: 24.5),
+                 chữ 13px — bản cũ Ø22/11.5px nên chip nhỏ hơn design thấy rõ. */
+              className={`grid h-[24px] min-w-[24px] place-items-center rounded-full px-1 text-[13px] font-bold leading-none ${
                 isActive ? "bg-white text-brick" : "bg-ink text-white"
               }`}
             >
