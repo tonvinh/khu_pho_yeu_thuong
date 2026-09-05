@@ -40,7 +40,14 @@ Thumbs.db
 # team Design, không đưa vào repo. Bộ giải mã: scripts/figma/.
 docs/lp/*.fig
 
-# Cache trung gian do scripts/figma/parse.py sinh ra từ .fig (67MB, tái tạo được)
-scripts/figma/nodes.pkl
+# Cache trung gian do scripts/figma/parse.py sinh ra từ .fig (67MB, tái tạo được).
+# Glob chứ không chốt tên: macOS/iCloud hay đẻ bản nhân đôi "nodes 2.pkl" — đúng thứ
+# từng làm `pnpm build` chết vì trùng type trong .next (QC 4/9).
+scripts/figma/nodes*.pkl
 scripts/figma/__pycache__/
 docs/lp/font_FPT_songvui.zip
+
+# Ảnh export gốc từ Figma nặng ~8.7MB/tấm và nguồn font thô — giữ ở Drive của Design.
+# Bản NÉN để đối chiếu khi QC nằm ở docs/lp/export-02-09/*.webp (1440px, ~430KB/tấm).
+docs/lp/Landing page*.png
+docs/lp/FONT v3 SONGVUI/
