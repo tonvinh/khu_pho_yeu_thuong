@@ -26,3 +26,7 @@ minio-*.tar.gz
 .vscode
 .idea
 .DS_Store
+
+# Cấu hình CHỈ dành cho pnpm 11 ở máy dev (cho phép build native sharp/esbuild).
+# Image build bằng pnpm 9 — pnpm 9 thấy file này sẽ chết "packages field missing or empty".
+pnpm-workspace.yaml

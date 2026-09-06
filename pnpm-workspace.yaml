@@ -1,0 +1,5 @@
+# pnpm 11: cho phép chạy script cài đặt của 2 gói native
+# (sharp xử lý ảnh, esbuild cho vitest).
+allowBuilds:
+  esbuild: true
+  sharp: true
