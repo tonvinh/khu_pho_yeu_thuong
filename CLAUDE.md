@@ -313,8 +313,7 @@ Quyết định 3/9: bỏ hẳn dải khuyến mãi, **gỡ luôn 4 khoá site_c
 
 1. ~~**Chân trang dài hơn design**~~ (chốt 4/9: giữ nguyên) — bỏ qua mục này. Nội dung cũ:: khối chữ 697×134 (5 dòng) vs .fig 697×84 (~3 dòng) — dòng
    `footer_support` ("Đã là khách hàng của FPT…") chiếm 2 dòng. Design có bỏ dòng này không?
-2. **Dropdown tra cứu 1 kết quả**: design chỉ vẽ MỘT dòng mời ("Khu phố mình chưa có nhiều
-   lời nhắc…") nên khu ĐÃ đạt chuẩn 4N cũng đọc thấy câu đó. Cần câu riêng cho khu đạt chuẩn?
+2. ~~**Dropdown tra cứu 1 kết quả**~~ (chốt 7/9: hai câu theo `notes_count`, xem mục dưới).
 3. Sáu frame popup trong .fig vẫn còn nhãn nav CŨ — chưa đồng bộ với `7217:1990`.
 
 ## Figma LIVE 4/9 — file trên figma.com ĐÃ ĐI TRƯỚC bản `.fig` trong repo
@@ -557,3 +556,25 @@ landing 1440×3780, **không có ảnh nào của 6 frame popup**.
    hiện `Lựa chọn` — có cần câu gợi ý riêng cho trạng thái khoá không?
 4. Nhãn `Phường /Xã` trong `.fig` có dấu cách lạc chỗ (`Phường` + space + `/Xã`) — giữ
    nguyên văn hay sửa thành `Phường/Xã`?
+
+## Sửa 7/9 — popup "Thông tin khu phố": nút bình chọn CHỈ ở câu `approved`
+
+QC: câu pill "Chờ treo biển" vẫn còn nút (kể cả dạng khoá "Đã bình chọn"). Đúng design thì
+chỉ trạng thái **`approved`** (pill "Đang chờ bạn bình chọn") mới có nút — `selected` /
+`produced` (Chờ treo biển) và `installed` (Đã lên biển) đã hết vòng bình chọn nên KHÔNG
+render nút, kể cả khi người xem từng bình chọn câu đó.
+`NeighborhoodView.tsx`: `canVote = note.status === "approved" && !note.is_mine`
+(trước là `!is_mine && status !== "installed"`). Test khoá: 6 case mới trong
+`tests/ui/neighborhood-view.test.tsx` (3 trạng thái × có/không `voted`).
+
+## Sửa 7/9 — hai câu mời ở dropdown tra cứu 1 kết quả (QC duyệt lời)
+
+`HeroLookup.tsx` — câu mời dưới card kết quả duy nhất, tách theo `notes_count`:
+
+| `notes_count` | Câu |
+|---|---|
+| = 0 | `Khu phố mình chưa có lời nhắc, bạn viết câu đầu tiên nhé?` (bỏ chữ "nhiều") |
+| > 0 | `Hãy cùng góp thêm lời nhắc cho khu phố nhé!` (cũ: "Bạn viết lời nhắc cho khu phố nhé!") |
+
+Đây là câu trả lời cho mục CÒN TREO #2 của phiên 2–3/9 (design chỉ vẽ MỘT dòng nên khu đã
+có lời nhắc đọc thấy câu "viết câu đầu tiên"). Test khoá: `tests/ui/hero-lookup.test.tsx`.

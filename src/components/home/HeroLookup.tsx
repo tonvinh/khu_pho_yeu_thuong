@@ -156,8 +156,8 @@ export default function HeroLookup({
                   câu "viết câu đầu tiên" sai (khu đạt chuẩn 4N vẫn đọc thấy) → tách
                   hai câu theo `notes_count` (số câu đã duyệt của khu). */}
               {single.notes_count > 0
-                ? "Bạn viết lời nhắc cho khu phố nhé!"
-                : "Khu phố mình chưa có nhiều lời nhắc, bạn viết câu đầu tiên nhé?"}
+                ? "Hãy cùng góp thêm lời nhắc cho khu phố nhé!"
+                : "Khu phố mình chưa có lời nhắc, bạn viết câu đầu tiên nhé?"}
             </span>
             <button
               onClick={() => onOpenNeighborhood(single.slug)}

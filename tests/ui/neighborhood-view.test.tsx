@@ -125,10 +125,19 @@ describe("NeighborhoodView · B9 — bình chọn trong popup", () => {
     expect(screen.queryByRole("button", { name: /Bình chọn/ })).toBeNull();
   });
 
-  it("câu đã lên biển thì không bình chọn nữa", () => {
-    view({ nb: detail({ notes: [note({ status: "installed" })] }) });
-    expect(screen.queryByRole("button", { name: /Bình chọn/ })).toBeNull();
-  });
+  // Chốt 7/9: chỉ trạng thái `approved` ("Đang chờ bạn bình chọn") mới có nút —
+  // câu đã chọn / chờ treo biển / đã lên biển thì hết vòng bình chọn.
+  for (const status of ["selected", "produced", "installed"] as const) {
+    it(`status='${status}' → KHÔNG có nút bình chọn`, () => {
+      view({ nb: detail({ notes: [note({ status })] }) });
+      expect(screen.queryByRole("button", { name: /Bình chọn/ })).toBeNull();
+    });
+
+    it(`status='${status}' dù đã bình chọn cũng không hiện nút "Đã bình chọn"`, () => {
+      view({ nb: detail({ notes: [note({ status, voted: true })] }) });
+      expect(screen.queryByRole("button", { name: /bình chọn/i })).toBeNull();
+    });
+  }
 });
 
 describe("NeighborhoodView · Q5 — prop hero cho trang share", () => {

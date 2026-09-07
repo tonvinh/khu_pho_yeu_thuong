@@ -124,17 +124,17 @@ describe("HeroLookup — câu mời ở ô 1 kết quả đổi theo số lời 
   const single = (notes_count: number) =>
     lookup({ neighborhoods: [nb({ name: "Hẻm 51 Cao Thắng", notes_count, certified_4n: notes_count > 0 })] });
 
-  it("khu ĐÃ có lời nhắc: 'Bạn viết lời nhắc cho khu phố nhé!'", () => {
+  it("khu ĐÃ có lời nhắc: 'Hãy cùng góp thêm lời nhắc cho khu phố nhé!'", () => {
     single(12);
     type("Hẻm 51 Cao Thắng");
-    expect(screen.getByText("Bạn viết lời nhắc cho khu phố nhé!")).toBeTruthy();
+    expect(screen.getByText("Hãy cùng góp thêm lời nhắc cho khu phố nhé!")).toBeTruthy();
     expect(screen.queryByText(/viết câu đầu tiên/)).toBeNull();
   });
 
   it("khu CHƯA có lời nhắc: giữ câu mời viết câu đầu tiên", () => {
     single(0);
     type("Hẻm 51 Cao Thắng");
-    expect(screen.getByText(/Khu phố mình chưa có nhiều lời nhắc, bạn viết câu đầu tiên nhé\?/)).toBeTruthy();
+    expect(screen.getByText(/Khu phố mình chưa có lời nhắc, bạn viết câu đầu tiên nhé\?/)).toBeTruthy();
   });
 });
 

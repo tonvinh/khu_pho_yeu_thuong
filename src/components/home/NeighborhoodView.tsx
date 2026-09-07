@@ -31,9 +31,11 @@ function NoteCard({ note }: { note: NeighborhoodNote }) {
   const [busy, setBusy] = useState(false);
   const pill = STATUS_PILL[note.status];
 
-  // Câu đã lên biển thì hết vòng bình chọn; câu của mình không được tự thương
-  // (quy tắc cứng 3). Đã bình chọn thì khoá — không rút phiếu (Q6).
-  const canVote = !note.is_mine && note.status !== "installed";
+  // Chỉ câu đang trong vòng bình chọn (`approved` — pill "Đang chờ bạn bình chọn")
+  // mới có nút; câu đã được chọn/đang chờ treo/đã lên biển thì hết vòng (chốt 7/9).
+  // Câu của mình không được tự thương (quy tắc cứng 3). Đã bình chọn thì khoá —
+  // không rút phiếu (Q6).
+  const canVote = note.status === "approved" && !note.is_mine;
 
   const vote = async () => {
     if (voted || busy) return;
