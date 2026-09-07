@@ -6,6 +6,7 @@
 //  · B4 avatar không bấm được nên cư dân không đăng xuất được
 // jsdom KHÔNG tính layout/media query nên ở đây kiểm ĐIỂM DỪNG khai báo trong markup;
 // số đo chồng lấn thật đo bằng DOM trong trình duyệt (xem tests/e2e).
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import HomeShell from "@/components/home/HomeShell";
@@ -256,5 +257,38 @@ describe("HomeShell · popup khu phố → 'Viết lời nhắc cho xóm mình'"
     expect(screen.getByText("📍 Góc phố ở Phường Tân Định")).toBeTruthy();
     // me.neighborhood_name = "Xóm Lò Gốm" — không được dùng làm nhóm đầu ở luồng này
     expect(screen.queryByText("📍 Góc phố ở Xóm Lò Gốm")).toBeNull();
+  });
+});
+
+// ── Trang share `/khu-pho/[slug]` dùng chung luồng với popup ────────────────
+// Trang share là server component (fetch DB) nên không render được trong jsdom;
+// ở đây khoá HAI ĐẦU của cầu nối: deep-link `?viet-loi-nhac=` mở đúng popup, và
+// trang share thật sự phát ra link đó (không còn href="/" trơ như trước).
+describe("HomeShell · deep-link `?viet-loi-nhac=<tên khu phố>`", () => {
+  it("mở thẳng popup 'Chọn góc phố' với khu phố trong query", async () => {
+    window.history.replaceState(null, "", "/?viet-loi-nhac=Ph%C6%B0%E1%BB%9Dng%20T%C3%A2n%20%C4%90%E1%BB%8Bnh");
+    render(
+      <HomeShell
+        initial={homeData({
+          issues: [
+            issue({ id: "is-tan-dinh", neighborhood_id: "nb-9", neighborhood_name: "Phường Tân Định" }),
+            issue({ id: "is-lo-gom" }),
+          ],
+        })}
+      />
+    );
+    expect(await screen.findByText("Chọn góc phố")).toBeTruthy();
+    expect(screen.getByText("📍 Góc phố ở Phường Tân Định")).toBeTruthy();
+  });
+
+  it("dọn query khỏi URL để F5 không mở lại popup", async () => {
+    window.history.replaceState(null, "", "/?viet-loi-nhac=X");
+    render(<HomeShell initial={homeData()} />);
+    await waitFor(() => expect(window.location.search).toBe(""));
+  });
+
+  it("nút ở trang share trỏ về trang chủ kèm tên khu phố", () => {
+    const src = readFileSync("src/app/khu-pho/[slug]/page.tsx", "utf8");
+    expect(src).toContain("/?viet-loi-nhac=${encodeURIComponent(nb.name)}");
   });
 });
