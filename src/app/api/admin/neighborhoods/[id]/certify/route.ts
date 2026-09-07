@@ -1,4 +1,7 @@
-// Cấp chứng nhận "Khu phố biết thương" chuẩn 4N (04 §5) — admin xác nhận thủ công
+// Cấp chứng nhận "Khu phố biết thương" chuẩn 4N (04 §5) — admin xác nhận thủ công.
+// 7/9: BỎ điều kiện "100% biển đã treo". Chứng nhận là quyết định vận hành của ban tổ
+// chức (có buổi trao biển ngoài đời), không phải hệ quả tự động của dữ liệu trên web —
+// admin bật/tắt tự do, UI chỉ hiển thị tiến độ biển để tham khảo.
 import { NextRequest, NextResponse } from "next/server";
 import { one, q } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
@@ -9,25 +12,17 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const { id } = await ctx.params;
   const body = await req.json().catch(() => ({}));
 
-  const nb = await one<{ total: number; signed: number }>(
-    `SELECT
-       (SELECT count(*)::int FROM issues WHERE neighborhood_id = $1
-          AND status IN ('waiting','voting','signed')) AS total,
-       (SELECT count(*)::int FROM issues WHERE neighborhood_id = $1
-          AND status = 'signed') AS signed`,
-    [id]
-  );
+  const nb = await one<{ id: string; deleted_at: string | null }>(
+    `SELECT id, deleted_at FROM neighborhoods WHERE id = $1`, [id]
+  ).catch(() => null);
   if (!nb) return jsonError(404, "Không tìm thấy khu phố");
+  if (nb.deleted_at) return jsonError(409, "Khu phố đã xoá — khôi phục trước khi sửa");
   if (body?.revoke === true) {
     // Thu hồi chứng nhận — ảnh chứng nhận GIỮ NGUYÊN (độc lập trạng thái 4N từ migration 005)
     await q(
       `UPDATE neighborhoods SET certified_4n=false, certified_at=NULL WHERE id=$1`, [id]
     );
     return NextResponse.json({ ok: true });
-  }
-  // Điều kiện: 100% biển của các vấn đề đã duyệt trong khu được treo (02 §6)
-  if (nb.total === 0 || nb.signed < nb.total) {
-    return jsonError(409, `Chưa đạt 100% biển đã treo (${nb.signed}/${nb.total})`);
   }
   await q(
     `UPDATE neighborhoods SET certified_4n = true,

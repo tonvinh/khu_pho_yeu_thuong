@@ -45,7 +45,7 @@ async function loadHomeData(): Promise<HomeData> {
          WHERE s.issue_id = i.id AND s.status IN ('approved','selected','produced','installed')
          GROUP BY s.id, u.display_name
          ORDER BY count(v.id) DESC, s.created_at ASC LIMIT 1) tq ON true
-       WHERE i.status IN ('waiting','voting','signed')
+       WHERE n.deleted_at IS NULL AND i.status IN ('waiting','voting','signed')
        ORDER BY (i.status = 'signed'), i.approved_at DESC NULLS LAST`,
         [viewerId]),
       // Tab 2 giờ liệt kê CÂU NHẮC chờ bình chọn (Figma live 4/9) — cùng hàm với
@@ -58,11 +58,12 @@ async function loadHomeData(): Promise<HomeData> {
               AND s.status IN ('approved','selected','produced','installed')) AS notes_count,
          COALESCE((SELECT json_agg(p.photo_key ORDER BY p.position)
            FROM neighborhood_photos p WHERE p.neighborhood_id = n.id), '[]'::json) AS photo_keys
-       FROM neighborhoods n WHERE NOT n.hidden
+       FROM neighborhoods n WHERE NOT n.hidden AND n.deleted_at IS NULL
        ORDER BY n.featured_position NULLS LAST, n.name`),
       q(`SELECT id, neighborhood_id, category, location_text, status, pin_x, pin_y
        FROM issues WHERE status IN ('waiting','voting','signed')
-         AND pin_x IS NOT NULL AND pin_y IS NOT NULL`),
+         AND pin_x IS NOT NULL AND pin_y IS NOT NULL
+         AND neighborhood_id IN (SELECT id FROM neighborhoods WHERE deleted_at IS NULL)`),
       // 6 biển MỚI NHẤT theo ngày duyệt (bản cũ: 24 câu xếp theo lượt thương cho 3 tab —
       // block đã bỏ tab, bỏ bình chọn, cố định 6 ô nên chỉ cần đúng 6 bản ghi).
       q(`SELECT s.id, s.content, i.location_text, i.category, n.name AS neighborhood_name,
@@ -74,6 +75,7 @@ async function loadHomeData(): Promise<HomeData> {
          JOIN neighborhoods n ON n.id = i.neighborhood_id
          JOIN users u ON u.id = s.author_id
          WHERE s.status IN ('approved','selected','produced','installed')
+           AND n.deleted_at IS NULL
          ORDER BY approved_at DESC
          LIMIT ${SIGN_SLOTS}`),
       getSiteContent(),

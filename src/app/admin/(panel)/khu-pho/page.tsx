@@ -6,12 +6,17 @@
 // ảnh chứng nhận upload được bất kỳ lúc nào (không phụ thuộc 4N). KHÔNG còn bản đồ/pin.
 // 4/8: gộp luôn màn duyệt đề xuất góc phố (/admin/de-xuat cũ) thành tab thứ hai; mọi bộ
 // lọc / tìm kiếm / trang đều nằm trên URL để chia sẻ link giữ nguyên trạng thái.
+// 7/9: 3 trạng thái bật/tắt TỰ DO, không còn ràng buộc chéo (ẩn website vẫn giữ được cờ
+// tiêu biểu, 4N không cần 100% biển đã treo); cột vị trí là SLOT SLIDE 1..10 của hero
+// (hoán đổi khi trùng); thêm xoá mềm + tab "Đã xoá" để khôi phục.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiGet, apiSend, apiUpload } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import ImportModal from "@/components/admin/ImportModal";
 import IssuesPanel from "@/components/admin/IssuesPanel";
+import { AdminModal } from "@/components/admin/modal";
 import { Pager, SearchBox, Tabs, Th, clampPage, useUrlState } from "@/components/admin/table-tools";
+import { FEATURED_SLOTS } from "@/lib/featured";
 
 interface GeoUnit { code: string; name: string }
 interface NbPhoto { position: number; url: string }
@@ -19,6 +24,8 @@ interface Nb {
   id: string; name: string; ward: string | null; city: string | null; slug: string;
   visible: boolean; is_featured: boolean; featured_position: number | null;
   certified_4n: boolean; certified_at: string | null; certificate_photo_url: string | null;
+  /** Xoá mềm: khác null là khu phố đã biến mất khỏi web, chỉ còn ở tab "Đã xoá" */
+  deleted_at: string | null;
   photos: NbPhoto[];
   total_issues: number; signed_issues: number;
 }
@@ -26,14 +33,16 @@ interface FormState { name: string; city: string; ward: string }
 
 const EMPTY_FORM: FormState = { name: "", city: "", ward: "" };
 
-// Bộ lọc trạng thái của bảng khu phố (lọc phía client — danh sách khu phố nhỏ)
+// Bộ lọc trạng thái của bảng khu phố — mọi tab TRỪ "Đã xoá" đều chỉ tính khu chưa xoá (danh sách khu phố nhỏ nên lọc ở client)
 const NB_STATUS: Array<{ key: string; label: string; match: (n: Nb) => boolean }> = [
-  { key: "", label: "Tất cả", match: () => true },
-  { key: "visible", label: "Đang hiển thị", match: (n) => n.visible },
-  { key: "hidden", label: "Đang ẩn", match: (n) => !n.visible },
-  { key: "featured", label: "Khu phố tiêu biểu", match: (n) => n.is_featured },
-  { key: "certified", label: "Đạt chuẩn 4N", match: (n) => n.certified_4n },
-  { key: "no_photo", label: "Chưa có ảnh tổng quan", match: (n) => n.photos.length === 0 },
+  { key: "", label: "Tất cả", match: (n) => !n.deleted_at },
+  { key: "visible", label: "Đang hiển thị", match: (n) => !n.deleted_at && n.visible },
+  { key: "hidden", label: "Đang ẩn", match: (n) => !n.deleted_at && !n.visible },
+  { key: "featured", label: "Khu phố tiêu biểu", match: (n) => !n.deleted_at && n.is_featured },
+  { key: "certified", label: "Đạt chuẩn 4N", match: (n) => !n.deleted_at && n.certified_4n },
+  { key: "no_photo", label: "Chưa có ảnh tổng quan",
+    match: (n) => !n.deleted_at && n.photos.length === 0 },
+  { key: "deleted", label: "🗑 Đã xoá", match: (n) => !!n.deleted_at },
 ];
 
 // Tham số URL dùng chung cho 2 tab (đổi tab thì reset về mặc định của tab đó)
@@ -50,6 +59,7 @@ export default function NeighborhoodsPage() {
   const [importing, setImporting] = useState(false);
   const [editing, setEditing] = useState<Nb | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [deleting, setDeleting] = useState<Nb | null>(null);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
@@ -66,10 +76,13 @@ export default function NeighborhoodsPage() {
   }, [rows]);
 
   // ===== Lọc / tìm kiếm / phân trang bảng khu phố (client-side) =====
+  // Khu đã xoá mềm chỉ xuất hiện ở tab "🗑 Đã xoá" — không đưa vào ô lọc tỉnh/thành hay
+  // ô chọn khu phố của tab Đề xuất góc phố.
+  const alive = useMemo(() => rows.filter((n) => !n.deleted_at), [rows]);
   const cities = useMemo(
-    () => [...new Set(rows.map((n) => n.city).filter((c): c is string => !!c))]
+    () => [...new Set(alive.map((n) => n.city).filter((c): c is string => !!c))]
       .sort((a, b) => a.localeCompare(b, "vi")),
-    [rows]
+    [alive]
   );
   const kw = ui.q.trim().toLowerCase();
   const filtered = useMemo(() => {
@@ -125,6 +138,8 @@ export default function NeighborhoodsPage() {
     } catch (e) { fail(e); }
   };
 
+  // 4N là quyết định vận hành (có buổi trao biển ngoài đời) — server 7/9 đã bỏ điều kiện
+  // "100% biển đã treo", UI chỉ còn hiện tiến độ biển ở tooltip cho admin tham khảo.
   const toggleCertify = (n: Nb) =>
     apiSend("PATCH", `/api/admin/neighborhoods/${n.id}/certify`, n.certified_4n ? { revoke: true } : {})
       .then(() => {
@@ -134,6 +149,23 @@ export default function NeighborhoodsPage() {
         load();
       })
       .catch(fail);
+
+  // ===== Xoá mềm / khôi phục =====
+  // Xoá KHÔNG mất dữ liệu: khu phố + góc phố + câu nhắc chỉ biến mất khỏi web, khôi phục
+  // là về nguyên trạng (trừ 2 cờ hiển thị — bật lại bằng tay để admin kiểm trước).
+  const softDelete = async (n: Nb) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await apiSend("DELETE", `/api/admin/neighborhoods/${n.id}`);
+      notify(`Đã xoá khu phố "${n.name}" — xem lại ở tab 🗑 Đã xoá.`);
+      setDeleting(null);
+      load();
+    } catch (e) { fail(e); } finally { setBusy(false); }
+  };
+  const restore = (n: Nb) =>
+    patch(n.id, { restore: true },
+      `Đã khôi phục "${n.name}" — khu phố đang ẨN, bật "Hiển thị website" khi cần.`);
 
   // ===== Ảnh (trong modal Sửa) =====
   const uploadPhoto = async (id: string, position: number, file: File) => {
@@ -213,7 +245,7 @@ export default function NeighborhoodsPage() {
           page={Number(ui.page) || 1}
           per={per}
           onChange={setUi}
-          nbs={rows}
+          nbs={alive}
           cities={cities}
           onChanged={load}
         />
@@ -277,8 +309,11 @@ export default function NeighborhoodsPage() {
                 <Th className="text-center" title="Số biển đã treo / tổng số bảng biển">Bảng biển</Th>
                 <Th className="text-center">Ảnh tổng quan</Th>
                 <Th>Trạng thái</Th>
-                <Th className="text-center" title="Vị trí trong block Khu phố tiêu biểu — số nhỏ đứng trước">
-                  Vị trí tiêu biểu
+                <Th
+                  className="text-center"
+                  title={`Slot slide ở hero trang chủ — ${FEATURED_SLOTS} chỗ, số nhỏ chạy trước`}
+                >
+                  Vị trí slide (1–{FEATURED_SLOTS})
                 </Th>
                 <Th />
               </tr>
@@ -292,7 +327,12 @@ export default function NeighborhoodsPage() {
                 </tr>
               )}
               {pageRows.map((n) => (
-                <tr key={n.id} className="border-b border-cream-dark/60 align-top last:border-0 hover:bg-cream/40">
+                <tr
+                  key={n.id}
+                  className={`border-b border-cream-dark/60 align-top last:border-0 hover:bg-cream/40 ${
+                    n.deleted_at ? "opacity-60" : ""
+                  }`}
+                >
                   <td className="px-3 py-3">
                     <div className="font-bold">{n.name}</div>
                     <a
@@ -322,53 +362,52 @@ export default function NeighborhoodsPage() {
                     <span className="text-ink-soft">/4</span>
                   </td>
                   <td className="px-3 py-3">
+                    {n.deleted_at ? (
+                      <span className="whitespace-nowrap text-xs font-bold text-ink-soft">
+                        🗑 Đã xoá {new Date(n.deleted_at).toLocaleDateString("vi-VN")}
+                      </span>
+                    ) : (
                     <div className="flex flex-col gap-1.5">
                       <Toggle
                         checked={n.visible}
                         onChange={() =>
                           patch(n.id, { visible: !n.visible },
                             n.visible
-                              ? "Đã ẩn khu phố khỏi website (tiêu biểu cũng tắt theo)."
+                              ? "Đã ẩn khu phố khỏi website (cờ tiêu biểu và vị trí slide giữ nguyên)."
                               : "Khu phố đã hiển thị trên website ✓")}
                         label="Hiển thị website"
                       />
-                      {/* 18/8: block "Khu phố tiêu biểu" ở hero CHỈ hiện khu ĐÃ ĐẠT CHUẨN 4N
-                          (email review: "đây chỉ là chỗ vinh danh") — bật tiêu biểu cho khu
-                          chưa đạt chuẩn thì cờ vẫn lưu nhưng KHÔNG ra trang chủ, nên phải
-                          cảnh báo tại chỗ cho admin khỏi tưởng hỏng. */}
+                      {/* 7/9: bật/tắt TỰ DO, không còn khoá theo trạng thái khác. Khu đang
+                          ẩn website mà bật tiêu biểu thì cờ vẫn lưu nhưng slider hero không
+                          lấy (server lọc `NOT hidden`) — cảnh báo tại chỗ cho khỏi tưởng hỏng. */}
                       <Toggle
                         checked={n.is_featured}
-                        disabled={!n.visible}
                         title={
-                          !n.visible
-                            ? "Bật 'Hiển thị website' trước"
-                            : n.certified_4n
-                              ? undefined
-                              : "Khu này CHƯA đạt chuẩn 4N — bật tiêu biểu sẽ chưa hiện ở hero trang chủ"
+                          n.visible
+                            ? `Hiện ở slider hero — nhớ xếp vị trí slide (1–${FEATURED_SLOTS})`
+                            : "Khu đang ẩn website nên chưa ra slider hero — bật 'Hiển thị website' để lên trang chủ"
                         }
                         onChange={() =>
                           patch(n.id, { is_featured: !n.is_featured },
                             n.is_featured
-                              ? "Đã bỏ khỏi block Khu phố tiêu biểu."
-                              : n.certified_4n
-                                ? "Đã đưa vào block Khu phố tiêu biểu đầu trang chủ ✓"
-                                : "Đã bật tiêu biểu — nhưng khu này chưa đạt chuẩn 4N nên chưa hiện ở hero trang chủ.")}
-                        label={`Khu phố tiêu biểu${n.is_featured && !n.certified_4n ? " ⚠️" : ""}`}
+                              ? "Đã bỏ khỏi slider Khu phố tiêu biểu (slot slide được nhả ra)."
+                              : n.visible
+                                ? "Đã đưa vào slider Khu phố tiêu biểu — xếp vị trí slide ở cột bên phải ✓"
+                                : "Đã bật tiêu biểu — nhưng khu đang ẩn website nên chưa ra slider hero.")}
+                        label={`Khu phố tiêu biểu${n.is_featured && !n.visible ? " ⚠️" : ""}`}
                       />
                       <Toggle
                         checked={n.certified_4n}
-                        disabled={!n.certified_4n && (n.total_issues === 0 || n.signed_issues < n.total_issues)}
                         title={
                           n.certified_4n
                             ? `Đã đạt chuẩn${n.certified_at ? ` từ ${new Date(n.certified_at).toLocaleDateString("vi-VN")}` : ""} — tắt để thu hồi`
-                            : n.total_issues === 0 || n.signed_issues < n.total_issues
-                              ? `Chưa đủ điều kiện — cần 100% biển đã treo (${n.signed_issues}/${n.total_issues})`
-                              : "Đủ điều kiện — bật để cấp chứng nhận"
+                            : `Bật để cấp chứng nhận (tiến độ biển hiện tại ${n.signed_issues}/${n.total_issues} — chỉ để tham khảo)`
                         }
                         onChange={() => toggleCertify(n)}
                         label={`Đạt chuẩn 4N${n.certified_4n ? " 🏅" : ""}`}
                       />
                     </div>
+                    )}
                   </td>
                   <td className="px-3 py-3 text-center">
                     {n.is_featured ? (
@@ -376,21 +415,37 @@ export default function NeighborhoodsPage() {
                         value={n.featured_position}
                         onSave={(pos) =>
                           patch(n.id, { featured_position: pos },
-                            pos === null
-                              ? "Đã bỏ vị trí — khu phố xếp cuối block theo tên."
-                              : `Đã xếp vị trí ${pos} trong block Khu phố tiêu biểu ✓`)}
+                            slotMessage(rows, n, pos))}
                       />
                     ) : (
                       <span className="text-xs text-ink-soft">—</span>
                     )}
                   </td>
                   <td className="px-3 py-3 text-right">
-                    <button
-                      onClick={() => openEdit(n)}
-                      className="rounded-full border border-cream-dark px-3 py-1 text-xs font-bold hover:border-brick hover:text-brick"
-                    >
-                      ✏️ Sửa
-                    </button>
+                    {n.deleted_at ? (
+                      <button
+                        onClick={() => restore(n)}
+                        className="whitespace-nowrap rounded-full border border-cream-dark px-3 py-1 text-xs font-bold hover:border-brick hover:text-brick"
+                      >
+                        ↩️ Khôi phục
+                      </button>
+                    ) : (
+                      <div className="flex justify-end gap-1.5">
+                        <button
+                          onClick={() => openEdit(n)}
+                          className="rounded-full border border-cream-dark px-3 py-1 text-xs font-bold hover:border-brick hover:text-brick"
+                        >
+                          ✏️ Sửa
+                        </button>
+                        <button
+                          onClick={() => setDeleting(n)}
+                          title="Xoá mềm — dữ liệu vẫn còn, khôi phục được ở tab 🗑 Đã xoá"
+                          className="rounded-full border border-cream-dark px-3 py-1 text-xs font-bold text-status-waiting hover:border-status-waiting"
+                        >
+                          🗑 Xoá
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -423,6 +478,27 @@ export default function NeighborhoodsPage() {
         </ImportModal>
       )}
 
+      {deleting && (
+        <AdminModal title={`Xoá khu phố "${deleting.name}"?`} onClose={() => setDeleting(null)}>
+          <p className="text-sm text-ink-soft">
+            Khu phố này sẽ <strong>biến mất khỏi website</strong> cùng toàn bộ góc phố và câu
+            nhắc của nó: slider tiêu biểu, ô tra cứu 4N, bảng đóng góp, khối biển và trang chia
+            sẻ <em>/khu-pho/{deleting.slug}</em> (trang này sẽ báo 404).
+          </p>
+          <p className="mt-2 text-sm text-ink-soft">
+            Dữ liệu <strong>không bị xoá thật</strong> — điểm, lượt thương, câu nhắc
+            ({deleting.total_issues} góc phố) vẫn còn nguyên và khôi phục được bất kỳ lúc nào ở
+            tab <strong>🗑 Đã xoá</strong>.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <Btn onClick={() => softDelete(deleting)} disabled={busy}>
+              {busy ? "Đang xoá…" : "🗑 Xoá khu phố"}
+            </Btn>
+            <Btn variant="ghost" onClick={() => setDeleting(null)}>Huỷ</Btn>
+          </div>
+        </AdminModal>
+      )}
+
       {editing && (
         <EditDrawer
           nb={editing}
@@ -438,7 +514,20 @@ export default function NeighborhoodsPage() {
   );
 }
 
-/* ===== Ô nhập vị trí tiêu biểu — lưu khi blur hoặc Enter ===== */
+/** Lời báo sau khi xếp slot — ba ca khác nhau, đừng gộp thành một câu:
+ *  slot trống · đổi chỗ (khu vừa xếp đang giữ slot khác) · đẩy ra (khu vừa xếp chưa có slot). */
+function slotMessage(rows: Nb[], n: Nb, pos: number | null): string {
+  if (pos === null) return "Đã bỏ vị trí — khu phố xếp cuối slider theo tên.";
+  const holder = rows.find((r) => r.id !== n.id && r.featured_position === pos);
+  if (!holder) return `Đã xếp vào slot slide số ${pos} ✓`;
+  return n.featured_position === null
+    ? `Đã xếp vào slot slide số ${pos} ✓ — "${holder.name}" bị đẩy ra khỏi ${FEATURED_SLOTS} slot.`
+    : `Đã xếp vào slot slide số ${pos} ✓ — đổi chỗ với "${holder.name}" (giờ ở slot ${n.featured_position}).`;
+}
+
+/* ===== Ô nhập vị trí slide (1..FEATURED_SLOTS) — lưu khi blur hoặc Enter =====
+   Nhập trùng slot của khu khác thì server HOÁN ĐỔI hai khu cho nhau (unique index
+   `neighborhoods_featured_position_uniq`), không báo lỗi. */
 function PositionInput({
   value, onSave,
 }: {
@@ -451,7 +540,7 @@ function PositionInput({
     const trimmed = text.trim();
     const next = trimmed === "" ? null : Number(trimmed);
     if (next === value) return;
-    if (next !== null && (!Number.isInteger(next) || next < 1 || next > 999)) {
+    if (next !== null && (!Number.isInteger(next) || next < 1 || next > FEATURED_SLOTS)) {
       setText(value === null ? "" : String(value));
       return;
     }
@@ -462,7 +551,7 @@ function PositionInput({
     <input
       type="number"
       min={1}
-      max={999}
+      max={FEATURED_SLOTS}
       value={text}
       placeholder="—"
       onChange={(e) => setText(e.target.value)}

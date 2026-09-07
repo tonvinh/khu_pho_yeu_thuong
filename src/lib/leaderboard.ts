@@ -32,7 +32,8 @@ export async function getAmbassadors(limit = 10): Promise<AmbassadorRow[]> {
        tq.location_text AS top_quote_spot,
        COALESCE(tq.installed, false) AS top_quote_installed
      FROM users u
-     LEFT JOIN neighborhoods n ON n.id = u.neighborhood_id
+     -- Khu phố đã xoá mềm coi như không tồn tại: tên khu của người dùng để trống
+     LEFT JOIN neighborhoods n ON n.id = u.neighborhood_id AND n.deleted_at IS NULL
      JOIN LATERAL (SELECT sum(points) AS score FROM score_events
                    WHERE user_id = u.id AND is_valid) se ON true
      LEFT JOIN LATERAL (SELECT count(*) AS n FROM suggestions
@@ -50,6 +51,7 @@ export async function getAmbassadors(limit = 10): Promise<AmbassadorRow[]> {
        SELECT s.content, i.location_text, s.status = 'installed' AS installed
        FROM suggestions s
        JOIN issues i ON i.id = s.issue_id
+       JOIN neighborhoods nq ON nq.id = i.neighborhood_id AND nq.deleted_at IS NULL
        WHERE s.author_id = u.id AND s.status IN ('approved','selected','produced','installed')
        ORDER BY (SELECT count(*) FROM votes v
                  WHERE v.suggestion_id = s.id AND v.is_valid) DESC,

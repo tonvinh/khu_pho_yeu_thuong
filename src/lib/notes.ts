@@ -44,6 +44,7 @@ export async function getVotingNotes(viewerId: string | null, limit = 50): Promi
      JOIN neighborhoods n ON n.id = i.neighborhood_id
      JOIN users u ON u.id = s.author_id
      WHERE s.status = 'approved' AND i.status IN ('waiting', 'voting')
+       AND n.deleted_at IS NULL
      ORDER BY voted ASC, votes DESC, s.created_at DESC
      LIMIT $2`,
     [viewerId ?? ANON, limit]

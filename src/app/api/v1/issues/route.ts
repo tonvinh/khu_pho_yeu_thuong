@@ -13,10 +13,11 @@ export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get("status");
   const neighborhood = req.nextUrl.searchParams.get("neighborhood");
   const params: unknown[] = [];
-  let where = `i.status IN ('waiting','voting','signed')`;
+  // Khu phố đã xoá mềm (deleted_at) biến mất khỏi web cùng toàn bộ góc phố của nó
+  let where = `n.deleted_at IS NULL AND i.status IN ('waiting','voting','signed')`;
   if (status && ["waiting", "voting", "signed"].includes(status)) {
     params.push(status);
-    where = `i.status = $${params.length}`;
+    where = `n.deleted_at IS NULL AND i.status = $${params.length}`;
   }
   if (neighborhood) {
     params.push(neighborhood);

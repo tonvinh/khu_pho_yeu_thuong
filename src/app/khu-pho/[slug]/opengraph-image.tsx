@@ -12,7 +12,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
        (SELECT count(*)::int FROM issues WHERE neighborhood_id=n.id AND status='signed') AS signed,
        (SELECT count(*)::int FROM issues WHERE neighborhood_id=n.id
           AND status IN ('waiting','voting','signed')) AS total
-     FROM neighborhoods n WHERE n.slug = $1`,
+     FROM neighborhoods n WHERE n.slug = $1 AND n.deleted_at IS NULL`,
     [slug]
   );
   return ogCard({

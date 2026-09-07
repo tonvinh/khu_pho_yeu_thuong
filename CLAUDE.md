@@ -578,3 +578,83 @@ render nút, kể cả khi người xem từng bình chọn câu đó.
 
 Đây là câu trả lời cho mục CÒN TREO #2 của phiên 2–3/9 (design chỉ vẽ MỘT dòng nên khu đã
 có lời nhắc đọc thấy câu "viết câu đầu tiên"). Test khoá: `tests/ui/hero-lookup.test.tsx`.
+
+## Sửa 7/9 — nút "Viết lời nhắc cho xóm mình" đi đúng luồng viết câu
+
+QC: nút ở đáy popup "Thông tin khu phố" không chạy. Thật ra nó chỉ đóng popup rồi
+`scrollIntoView("#goc-xom")` — nhìn như không có gì xảy ra.
+
+Nay đi ĐÚNG luồng của CTA `+ Viết câu nhắc của riêng bạn` (tab 2): mở `SpotPickerModal`
+→ chọn góc phố → `SuggestModal`. `NeighborhoodModal.onWrite` nhận **tên khu phố đang
+xem** và `HomeShell` giữ thêm state `spotPickerNb`, nên `myNeighborhood` của popup chọn
+góc phố là khu ĐANG XEM chứ không phải khu của người đã định danh
+(`spotPickerNb ?? me?.neighborhood_name ?? null`). Vào từ tab 2 thì vẫn như cũ.
+
+Trang share `/khu-pho/[slug]` là server component nên không mở popup tại chỗ được: nút
+cùng tên ở đó trỏ `/?viet-loi-nhac=<tên khu phố>` (trước là `href="/"` — về trang chủ
+mất ngữ cảnh). `HomeShell` xử lý query này chung chỗ với `?khu-pho=<slug>` và cũng xoá
+query bằng `replaceState`. **Mang TÊN chứ không mang slug**: `SpotPickerModal` so khớp
+theo `issues[].neighborhood_name` (cùng cột DB), truyền slug thì phải fetch thêm rồi
+nhóm đầu danh sách nhảy sau khi popup đã mở.
+
+Test khoá: 5 case cuối `tests/ui/home-shell.test.tsx` (kể cả một case đọc thẳng
+`src/app/khu-pho/[slug]/page.tsx` để hai đầu deep-link không lệch nhau).
+
+## Sửa 7/9 — /admin/khu-pho: trạng thái tự do · 10 slot slide · xoá mềm
+
+Ba yêu cầu trong một điểm QC ("Trong Admin ⇒ Khu phố"). Migration **011**
+(`deleted_at` + đánh số lại `featured_position` + CHECK 1..10 + unique index).
+
+**1. Ba trạng thái bật/tắt KHÔNG điều kiện.** Trước đây `is_featured` bắt buộc khu đang
+hiển thị (ẩn website → server tự tắt tiêu biểu), `certified_4n` bắt buộc 100% biển đã
+treo. Nay cả `PATCH /api/admin/neighborhoods/[id]` lẫn `.../certify` đều bỏ ràng buộc —
+chứng nhận 4N là quyết định vận hành (có buổi trao biển ngoài đời), không phải hệ quả tự
+động của dữ liệu web. UI chỉ còn *cảnh báo* trong tooltip: khu đang ẩn mà bật tiêu biểu
+thì cờ vẫn lưu nhưng chưa ra slider (server công khai vẫn lọc `NOT hidden`).
+
+**2. `featured_position` = SLOT SLIDE của hero, đúng 10 chỗ.** Đây là câu trả lời cho ghi
+chú QC "Chưa chạy được — đây là vị trí của slide": `NeighborhoodSlider` trước đó lọc theo
+`certified_4n` nên cả `is_featured` lẫn vị trí đều **vô nghĩa**. Nay slider lấy
+`is_featured` rồi `.slice(0, FEATURED_SLOTS)` (`src/lib/featured.ts` — module riêng để
+client component không kéo theo lớp DB); thứ tự do server sắp sẵn
+(`ORDER BY featured_position NULLS LAST, name`).
+- Slot là **duy nhất**: `neighborhoods_featured_position_uniq` (partial, bỏ qua khu đã xoá).
+- Xếp trùng slot của khu khác → server **HOÁN ĐỔI** hai khu, không báo lỗi. Unique index
+  kiểm theo TỪNG CÂU LỆNH (partial index không DEFERRABLE được) nên PATCH chạy 3 bước
+  trong 1 transaction: nhả slot của mình → đẩy khu đang giữ slot đích sang chỗ vừa nhả
+  (khu chưa có slot thì đối phương bị đẩy ra NULL) → nhận slot mới.
+- Bỏ cờ tiêu biểu ⇒ nhả slot (`featured_position = NULL`).
+
+**3. Xoá mềm.** `DELETE /api/admin/neighborhoods/[id]` chỉ đặt `deleted_at`, đồng thời
+`hidden=true`, `is_featured=false`, nhả slot. `PATCH { restore: true }` khôi phục nhưng
+để **ẩn** (admin kiểm rồi mới bật). Bảng admin có tab **🗑 Đã xoá**; mọi tab khác + ô lọc
+tỉnh/thành + ô chọn khu phố của tab Đề xuất đều dùng `alive` (đã lọc).
+- Quy tắc: khu đã xoá **biến mất cả cụm khỏi web** — trang chủ, tra cứu 4N, IssueBoard,
+  khối biển, popup khu phố, `/khu-pho/<slug>` (404) và OG image. Đã thêm
+  `deleted_at IS NULL` vào: `page.tsx` (4 query), `/api/v1/map`, `/api/v1/issues` (+`[id]`),
+  `lib/{notes,counters,neighborhood,leaderboard,ambassador}.ts`, `/api/v1/me`,
+  `/api/v1/auth/identify`, `opengraph-image.tsx`. **Thêm truy vấn công khai mới đụng
+  `neighborhoods` thì nhớ lọc theo.** Điểm/lượt thương/câu nhắc KHÔNG bị xoá — khôi phục
+  là về nguyên trạng.
+- `resolveNeighborhoodId`: nhánh **id** lọc `deleted_at IS NULL`, nhánh **tên** thì
+  KHÔNG (tên là UNIQUE — bỏ qua khu đã xoá thì INSERT của cư dân vỡ). Import file cũng
+  báo riêng "trùng tên với khu phố ĐÃ XOÁ" để admin đi khôi phục.
+
+**Câu thông báo sau khi xếp slot có BA ca, đừng gộp** (QC trên Chrome bắt được): slot còn
+trống → `Đã xếp vào slot slide số N ✓`; khu vừa xếp đang giữ slot khác → *đổi chỗ với "X"
+(giờ ở slot cũ)*; khu vừa xếp chưa có slot → *"X" bị đẩy ra khỏi 10 slot*. Hàm
+`slotMessage(rows, n, pos)` tra khu đang giữ slot đích ngay trong `rows` của client.
+Câu "ẩn khu phố (tiêu biểu cũng tắt theo)" cũng phải sửa — nay giữ nguyên cờ tiêu biểu.
+
+Test khoá: `tests/ui/admin-neighborhoods.test.tsx` (12 case) · `tests/ui/slider-slots.test.tsx`
+(3 case). `tests/ui/slider-motion.test.tsx` đổi fixture sang `is_featured`.
+
+**Mẹo QC màn admin bằng Claude-in-Chrome**: thanh thông báo tự ẩn sau 6s làm TRÔI cả bảng
+~52px — click theo toạ độ chụp trước đó là bấm nhầm hàng khác (phiên này lỡ ẩn nhầm một khu
+phố). Thao tác chắc ăn: tìm hàng bằng JS (`tbody tr` chứa tên) rồi `.click()`. Riêng ô số
+phải bắn `nativeInputValueSetter` + `input` + **`focusout`** (`inp.blur()` không ăn vì
+element chưa thực sự được focus).
+
+**BẪY môi trường (mất 5 phút phiên này)**: `pnpm build` khi `pnpm dev` đang chạy sẽ ghi đè
+`.next` của dev server → dev server trả 500 cho mọi route và không tự hồi. Muốn build thử
+thì tắt dev server trước (hoặc chấp nhận `rm -rf .next` rồi khởi động lại dev).

@@ -84,10 +84,18 @@ export async function POST(req: NextRequest) {
     if (seen.has(key)) r.errors.push(`Trùng tên với dòng ${seen.get(key)}`);
     else seen.set(key, r.row);
   }
-  const existing = await q<{ name: string; slug: string }>(`SELECT name, slug FROM neighborhoods`);
-  const existingNames = new Set(existing.map((n) => n.name.toLowerCase()));
+  const existing = await q<{ name: string; slug: string; deleted_at: string | null }>(
+    `SELECT name, slug, deleted_at FROM neighborhoods`
+  );
+  // Tên khu phố là UNIQUE kể cả khi đã xoá mềm — báo rõ để admin đi khôi phục thay vì
+  // ngồi sửa tên trong file (7/9).
+  const existingNames = new Map(existing.map((n) => [n.name.toLowerCase(), !!n.deleted_at]));
   for (const r of rows) {
-    if (existingNames.has(r.ten.toLowerCase())) r.errors.push("Khu phố đã tồn tại trong hệ thống");
+    const deleted = existingNames.get(r.ten.toLowerCase());
+    if (deleted === undefined) continue;
+    r.errors.push(deleted
+      ? "Trùng tên với khu phố ĐÃ XOÁ — khôi phục ở tab 🗑 Đã xoá thay vì import lại"
+      : "Khu phố đã tồn tại trong hệ thống");
   }
 
   const errorCount = rows.filter((r) => r.errors.length).length;

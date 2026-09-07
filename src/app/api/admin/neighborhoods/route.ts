@@ -6,13 +6,16 @@ import { geoError } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 
-// Danh sách khu phố + ảnh tổng quan + trạng thái hiển thị/tiêu biểu/chứng nhận (04 §5)
+// Danh sách khu phố + ảnh tổng quan + trạng thái hiển thị/tiêu biểu/chứng nhận (04 §5).
+// Trả CẢ khu đã xoá mềm (kèm `deleted_at`) — bảng admin có tab "Đã xoá" để khôi phục;
+// mọi tab khác lọc bỏ ở client.
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if ("error" in auth) return auth.error;
   const rows = await q(
     `SELECT n.id, n.name, n.ward, n.city, n.slug, n.hidden, n.is_featured,
        n.featured_position, n.certified_4n, n.certified_at, n.certificate_photo_key,
+       n.deleted_at,
        COALESCE((SELECT json_agg(json_build_object('position', p.position, 'key', p.photo_key)
                    ORDER BY p.position)
                  FROM neighborhood_photos p WHERE p.neighborhood_id = n.id), '[]'::json) AS photos,
@@ -63,6 +66,14 @@ export async function POST(req: NextRequest) {
      ON CONFLICT (name) DO NOTHING RETURNING id`,
     [name, ward, city, slug, body?.visible === false]
   );
-  if (!created) return jsonError(409, "Khu phố trùng tên hoặc slug");
+  if (!created) {
+    const dead = await one<{ id: string }>(
+      `SELECT id FROM neighborhoods WHERE lower(name) = lower($1) AND deleted_at IS NOT NULL`,
+      [name]
+    );
+    return jsonError(409, dead
+      ? "Tên này thuộc một khu phố ĐÃ XOÁ — vào tab 'Đã xoá' để khôi phục thay vì tạo mới"
+      : "Khu phố trùng tên hoặc slug");
+  }
   return NextResponse.json({ ok: true, id: created.id }, { status: 201 });
 }

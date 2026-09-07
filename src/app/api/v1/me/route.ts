@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     `SELECT u.display_name, u.share_slug, u.neighborhood_id, n.name AS neighborhood_name,
        COALESCE((SELECT sum(points)::int FROM score_events
                  WHERE user_id = u.id AND is_valid), 0) AS score
-     FROM users u LEFT JOIN neighborhoods n ON n.id = u.neighborhood_id
+     FROM users u LEFT JOIN neighborhoods n ON n.id = u.neighborhood_id AND n.deleted_at IS NULL
      WHERE u.id = $1`,
     [user.id]
   );

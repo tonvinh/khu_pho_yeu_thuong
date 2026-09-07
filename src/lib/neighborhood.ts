@@ -32,7 +32,8 @@ export async function loadNeighborhoodDetail(
        (SELECT count(*)::int FROM suggestions s JOIN issues i ON i.id = s.issue_id
          WHERE i.neighborhood_id = n.id
            AND s.status IN ('approved','selected','produced','installed')) AS suggestions_total
-     FROM neighborhoods n WHERE n.slug = $1 OR n.id::text = $1`,
+     FROM neighborhoods n
+     WHERE (n.slug = $1 OR n.id::text = $1) AND n.deleted_at IS NULL`,
     [key]
   );
   if (!nb) return null;

@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MapData, MapNeighborhood } from "./types";
 import { shortAddress } from "@/lib/address";
+import { FEATURED_SLOTS } from "@/lib/featured";
 import { IconPin } from "./ui";
 
 /** Thời lượng một cú trượt (ms) — dùng chung cho transition và hẹn giờ nhảy qua clone */
@@ -29,10 +30,13 @@ export default function NeighborhoodSlider({
   /** Bấm pill địa chỉ → mở POPUP hồ sơ khu phố (18/8, thay trang /khu-pho/[slug]) */
   onOpen?: (slug: string) => void;
 }) {
-  // Chỉ khu ĐÃ ĐẠT CHUẨN 4N; is_featured chỉ còn dùng để ưu tiên thứ tự
-  // (server đã ORDER BY featured_position, name).
+  // 7/9: slider = ĐÚNG 10 SLOT do admin xếp. Khu lên slider là khu bật "Khu phố tiêu
+  // biểu" (đang hiển thị website — server đã lọc `NOT hidden AND deleted_at IS NULL`),
+  // xếp theo `featured_position` 1→10 (server đã ORDER BY featured_position, name).
+  // Trước đây lọc theo `certified_4n` nên cột "Vị trí tiêu biểu" của admin không có tác
+  // dụng gì; nay 4N chỉ còn là huy hiệu hiển thị trên ảnh.
   const list = useMemo(
-    () => map.neighborhoods.filter((n) => n.certified_4n),
+    () => map.neighborhoods.filter((n) => n.is_featured).slice(0, FEATURED_SLOTS),
     [map.neighborhoods]
   );
   const len = list.length;

@@ -8,10 +8,11 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import NeighborhoodSlider from "@/components/home/NeighborhoodSlider";
 import { nb } from "./helpers";
 
+// Từ 7/9 slider lấy khu theo `is_featured` (slot slide do admin xếp), không theo 4N nữa
 const LIST = [
-  nb({ id: "n1", name: "Xóm Lò Gốm", slug: "xom-lo-gom", certified_4n: true }),
-  nb({ id: "n2", name: "Xóm Đình", slug: "xom-dinh", certified_4n: true }),
-  nb({ id: "n3", name: "Xóm Chợ", slug: "xom-cho", certified_4n: true }),
+  nb({ id: "n1", name: "Xóm Lò Gốm", slug: "xom-lo-gom", is_featured: true }),
+  nb({ id: "n2", name: "Xóm Đình", slug: "xom-dinh", is_featured: true }),
+  nb({ id: "n3", name: "Xóm Chợ", slug: "xom-cho", is_featured: true }),
 ];
 
 /** Giả lập matchMedia của jsdom (mặc định không có) */
@@ -68,11 +69,11 @@ describe("NeighborhoodSlider — giảm chuyển động (C3)", () => {
     expect(offset(container)).not.toBe(before);
   });
 
-  it("chỉ có 1 khu đạt chuẩn → không có mũi tên, không có hẹn giờ", () => {
+  it("chỉ có 1 khu tiêu biểu → không có mũi tên, không có hẹn giờ", () => {
     setReducedMotion(false);
     render(
       <NeighborhoodSlider
-        map={{ neighborhoods: [LIST[0], nb({ id: "n9", certified_4n: false })], pins: [] }}
+        map={{ neighborhoods: [LIST[0], nb({ id: "n9", is_featured: false })], pins: [] }}
       />
     );
     expect(screen.queryByLabelText("Khu phố sau")).toBeNull();

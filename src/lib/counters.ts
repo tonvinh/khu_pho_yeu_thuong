@@ -19,7 +19,8 @@ export async function getCounters(): Promise<Counters> {
   const row = await one<Counters>(`
     SELECT
       (SELECT count(*)::int FROM suggestions WHERE status = 'installed') AS signs_installed,
-      (SELECT count(*)::int FROM neighborhoods WHERE NOT hidden) AS neighborhoods_joined,
+      (SELECT count(*)::int FROM neighborhoods
+        WHERE NOT hidden AND deleted_at IS NULL) AS neighborhoods_joined,
       -- "Câu đóng góp" chỉ đếm câu ĐÃ DUYỆT (quy tắc cứng 1: chưa duyệt thì chưa
       -- tính công khai) — cùng tinh thần với bộ đếm "người đóng góp" cũ.
       (SELECT count(*)::int FROM suggestions

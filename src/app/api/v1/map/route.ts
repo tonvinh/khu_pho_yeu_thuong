@@ -15,13 +15,14 @@ export async function GET() {
             AND s.status IN ('approved','selected','produced','installed')) AS notes_count,
        COALESCE((SELECT json_agg(p.photo_key ORDER BY p.position)
          FROM neighborhood_photos p WHERE p.neighborhood_id = n.id), '[]'::json) AS photo_keys
-     FROM neighborhoods n WHERE NOT n.hidden
+     FROM neighborhoods n WHERE NOT n.hidden AND n.deleted_at IS NULL
      ORDER BY n.featured_position NULLS LAST, n.name`
   );
   const issues = await q(
     `SELECT id, neighborhood_id, category, location_text, status, pin_x, pin_y
      FROM issues
-     WHERE status IN ('waiting','voting','signed') AND pin_x IS NOT NULL AND pin_y IS NOT NULL`
+     WHERE status IN ('waiting','voting','signed') AND pin_x IS NOT NULL AND pin_y IS NOT NULL
+       AND neighborhood_id IN (SELECT id FROM neighborhoods WHERE deleted_at IS NULL)`
   );
   return NextResponse.json({
     neighborhoods: neighborhoods.map((n) => ({

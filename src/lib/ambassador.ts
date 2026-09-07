@@ -37,7 +37,7 @@ export async function loadAmbassadorDetail(
 ): Promise<AmbassadorDetail | null> {
   const u = await one<{ id: string; display_name: string; share_slug: string; ward: string | null; city: string | null }>(
     `SELECT u.id, u.display_name, u.share_slug, n.ward, n.city
-     FROM users u LEFT JOIN neighborhoods n ON n.id = u.neighborhood_id
+     FROM users u LEFT JOIN neighborhoods n ON n.id = u.neighborhood_id AND n.deleted_at IS NULL
      WHERE u.share_slug = $1 AND NOT u.is_shadow_banned`,
     [slug]
   );
@@ -52,7 +52,7 @@ export async function loadAmbassadorDetail(
      FROM suggestions s
      JOIN issues i ON i.id = s.issue_id
      JOIN neighborhoods n ON n.id = i.neighborhood_id
-     WHERE s.author_id = $1
+     WHERE s.author_id = $1 AND n.deleted_at IS NULL
        AND s.status IN ('approved','selected','produced','installed')
      ORDER BY votes DESC, s.created_at ASC
      LIMIT ${NOTE_LIMIT}`,

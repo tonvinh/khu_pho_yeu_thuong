@@ -19,7 +19,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
         WHERE np.neighborhood_id = i.neighborhood_id
         ORDER BY np.position ASC LIMIT 1) AS neighborhood_photo_key
      FROM issues i JOIN neighborhoods n ON n.id = i.neighborhood_id
-     WHERE i.id = $1 AND i.status IN ('waiting','voting','signed')`,
+     WHERE i.id = $1 AND n.deleted_at IS NULL
+       AND i.status IN ('waiting','voting','signed')`,
     [id]
   );
   if (!issue) return jsonError(404, "Không tìm thấy vấn đề");

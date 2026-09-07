@@ -5,6 +5,7 @@ import type { Pool, PoolClient } from "pg";
 
 type Db = Pool | PoolClient;
 
+
 function slugify(s: string): string {
   return s
     .normalize("NFD")
@@ -25,11 +26,17 @@ export async function resolveNeighborhoodId(
   geo?: { city?: string | null; ward?: string | null }
 ): Promise<string | null> {
   if (id) {
-    const r = await db.query(`SELECT id FROM neighborhoods WHERE id = $1`, [id]);
+    // Khu phố đã xoá mềm không còn chọn được (nó đã biến mất khỏi mọi danh sách công khai)
+    const r = await db.query(
+      `SELECT id FROM neighborhoods WHERE id = $1 AND deleted_at IS NULL`, [id]
+    );
     return (r.rows[0]?.id as string) ?? null;
   }
   const name = String(text || "").trim().slice(0, 200);
   if (!name) return null;
+  // Khớp tên KHÔNG lọc deleted_at: tên khu phố là UNIQUE nên trùng tên với một khu đã xoá
+  // thì INSERT dưới đây sẽ vỡ. Trả về khu đã xoá — đề xuất treo ở đó cho tới khi admin
+  // khôi phục khu phố, thay vì hỏng luôn form của cư dân.
   const found = await db.query(
     `SELECT id FROM neighborhoods WHERE lower(name) = lower($1)`,
     [name]

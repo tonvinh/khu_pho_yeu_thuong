@@ -51,14 +51,26 @@ const STANDARD_NEIGHBORHOODS = [
 ];
 
 /** Chèn đủ 20 khu phố tiêu chuẩn, trả map slug → id. DO UPDATE để RETURNING id cả khi đã có.
- *  is_featured=true: 20 khu tiêu chuẩn là nội dung block "Khu phố tiêu biểu" trang chủ. */
+ *  is_featured=true: 20 khu tiêu chuẩn là nội dung block "Khu phố tiêu biểu" trang chủ —
+ *  10 khu đầu nhận luôn slot slide 1..10 của hero (FEATURED_SLOTS trong src/lib/featured.ts,
+ *  không import được vì script là .mjs thuần). Nhả hết vị trí cũ trước khi xếp lại: cột này
+ *  có unique index nên gán chồng slot sẽ vỡ. */
+const FEATURED_SLOTS = 10;
+
 async function ensureStandardNeighborhoods() {
   const ids = {};
-  for (const [name, ward, city, s] of STANDARD_NEIGHBORHOODS) {
+  await client.query(
+    `UPDATE neighborhoods SET featured_position = NULL WHERE featured_position IS NOT NULL`
+  );
+  for (const [i, [name, ward, city, s]] of STANDARD_NEIGHBORHOODS.entries()) {
+    const pos = i < FEATURED_SLOTS ? i + 1 : null;
     const r = await client.query(
-      `INSERT INTO neighborhoods (name, ward, city, slug, is_featured) VALUES ($1,$2,$3,$4,true)
-       ON CONFLICT (slug) DO UPDATE SET ward = EXCLUDED.ward, city = EXCLUDED.city RETURNING id`,
-      [name, ward, city, s]
+      `INSERT INTO neighborhoods (name, ward, city, slug, is_featured, featured_position)
+       VALUES ($1,$2,$3,$4,true,$5)
+       ON CONFLICT (slug) DO UPDATE SET ward = EXCLUDED.ward, city = EXCLUDED.city,
+         is_featured = true, featured_position = EXCLUDED.featured_position
+       RETURNING id`,
+      [name, ward, city, s, pos]
     );
     ids[s] = r.rows[0].id;
   }
