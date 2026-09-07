@@ -294,56 +294,6 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         </div>
       </div>
 
-      {/* Banner báo tin in-web (thay SMS — Q1): biển đã treo + duyệt/từ chối */}
-      {/* `relative` BẮT BUỘC (QC 2/9 · A1): nền hero ở trên là `absolute` nên trong cùng
-          stacking context nó vẽ đè lên mọi con `static`, bất kể thứ tự DOM — banner bị
-          phủ kín, không đọc và không bấm được. Thanh nav phía trên có `relative` nên
-          thoát bẫy này. */}
-      {notifs.length > 0 && (
-        <div className="relative bg-[var(--kp-hero-from)] px-4 pt-4 sm:px-6">
-          <div className="mx-auto max-w-[1312px]">
-            {notifs.map((n) => {
-              const rejected = n.type === "issue_rejected" || n.type === "suggestion_rejected";
-              const detail = n.payload.content
-                ? `“${n.payload.content}”`
-                : n.payload.location_text || null;
-              return (
-                <div key={n.id} className="mb-3 rounded-2xl bg-white p-4 shadow-kp-s">
-                  <p className="m-0 font-bold">
-                    {n.type === "sign_installed"
-                      ? COPY.bannerGoodNews(n.payload.location_text || "xóm mình")
-                      : rejected
-                        ? COPY.notifRejected
-                        : COPY.notifApproved}
-                  </p>
-                  {n.type !== "sign_installed" && detail && (
-                    <p className="m-0 mt-0.5 text-[13px] text-ink-soft">{detail}</p>
-                  )}
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {n.type === "sign_installed" && (
-                      <a href={`${BASE}/bien/${n.ref_id}`} className="kp-btn kp-btn-primary tap px-4 py-1.5 text-sm">
-                        Chia sẻ
-                      </a>
-                    )}
-                    {rejected && (
-                      <button
-                        onClick={() => { dismissNotif(n.id); openPropose(); }}
-                        className="kp-btn kp-btn-outline tap px-4 py-1.5 text-sm"
-                      >
-                        Đề xuất lại
-                      </button>
-                    )}
-                    <button onClick={() => dismissNotif(n.id)} className="tap cursor-pointer px-3 py-2 text-sm text-ink-soft">
-                      Đóng
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {/* ===== HERO — toạ độ lấy nguyên từ .fig (khổ 1440):
            nền gradient #FF7B00→#FFEFE6 cao 900 · skyline y=201 · sàn gạch y=704 ·
            cung nét đứt y=689 · khối chữ 929 ở y=149 · slider 840×430 ở y=293 ·
@@ -579,6 +529,62 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           onClose={() => setLeadPromptOpen(false)}
           showToast={showToast}
         />
+      )}
+
+      {/* ===== BÁO TIN IN-WEB (thay SMS — Q1): LỚP NỔI, KHÔNG chèn vào luồng trang.
+           Lỗi 7/9 (ảnh team gửi): block này vốn nằm giữa thanh nav và hero. Ba thông
+           báo cao ~430px đẩy hero tụt xuống, mà nền hero là lớp `absolute` cao ĐÚNG
+           900px tính từ mép trang (số đo .fig) nên tiêu đề hero chữ trắng rơi ra khỏi
+           dải cam, nằm trên nền kem — và nền cam ĐẶC của block cắt ngang gradient
+           thành hai mảng lệch màu.
+           Nay là lớp `fixed` góc phải dưới: trang chủ giữ nguyên mọi số đo .fig dù có
+           bao nhiêu thông báo. z-40 để modal (z-50) vẫn đè lên được.
+           Đặt bên TRÁI (và trên mobile là bottom-96) để không đè nút nổi
+           "Lên đầu trang" (BackToTop.tsx — fixed bottom-6 right-4, cũng z-40). ===== */}
+      {notifs.length > 0 && (
+        <div
+          aria-live="polite"
+          className="fixed inset-x-4 bottom-[96px] z-40 flex max-h-[60vh] flex-col gap-2 overflow-y-auto sm:inset-x-auto sm:bottom-6 sm:left-6 sm:w-[380px]"
+        >
+          {notifs.map((n) => {
+            const rejected = n.type === "issue_rejected" || n.type === "suggestion_rejected";
+            const detail = n.payload.content
+              ? `“${n.payload.content}”`
+              : n.payload.location_text || null;
+            return (
+              <div key={n.id} className="shrink-0 rounded-2xl border border-cream-dark bg-white p-3.5 shadow-kp">
+                <p className="m-0 text-[14px] leading-[1.35]">
+                  {n.type === "sign_installed"
+                    ? COPY.bannerGoodNews(n.payload.location_text || "xóm mình")
+                    : rejected
+                      ? COPY.notifRejected
+                      : COPY.notifApproved}
+                </p>
+                {n.type !== "sign_installed" && detail && (
+                  <p className="m-0 mt-1 line-clamp-2 text-[13px] font-light text-ink-soft">{detail}</p>
+                )}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {n.type === "sign_installed" && (
+                    <a href={`${BASE}/bien/${n.ref_id}`} className="kp-btn kp-btn-primary tap tap-sm-auto px-4 py-1.5 text-sm">
+                      Chia sẻ
+                    </a>
+                  )}
+                  {rejected && (
+                    <button
+                      onClick={() => { dismissNotif(n.id); openPropose(); }}
+                      className="kp-btn kp-btn-outline tap tap-sm-auto px-4 py-1.5 text-sm"
+                    >
+                      Đề xuất lại
+                    </button>
+                  )}
+                  <button onClick={() => dismissNotif(n.id)} className="tap tap-sm-auto cursor-pointer px-3 py-2 text-sm text-ink-soft">
+                    Đóng
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {toast && (

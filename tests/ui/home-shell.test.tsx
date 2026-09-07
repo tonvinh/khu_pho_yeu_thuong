@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // Top bar + banner báo tin của trang chủ — ba lỗi QC 2/9:
 //  · A1 banner báo tin bị nền hero (absolute) phủ kín vì khối banner là `static`
+//    (7/9: banner chuyển hẳn thành lớp nổi `fixed` — xem describe đầu tiên)
 //  · A3 nav chồng chữ ở mọi khổ 640–1169px vì bố cục Figma 1440 bật ngay từ sm=640
 //  · B4 avatar không bấm được nên cư dân không đăng xuất được
 // jsdom KHÔNG tính layout/media query nên ở đây kiểm ĐIỂM DỪNG khai báo trong markup;
@@ -58,16 +59,23 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-describe("HomeShell · A1 — banner báo tin không bị nền hero phủ", () => {
-  it("khối banner có `relative` (nền hero là absolute nên con `static` bị vẽ đè)", async () => {
+describe("HomeShell · banner báo tin là LỚP NỔI, không chèn vào luồng trang", () => {
+  // QC 2/9 · A1: banner từng là khối `static` nên nền hero (absolute) phủ kín.
+  // Lỗi 7/9: sửa A1 xong banner vẫn nằm TRONG luồng giữa nav và hero — 3 thông báo
+  // đẩy hero tụt khỏi dải gradient cao cố định 900px (tiêu đề trắng trên nền kem).
+  // Bất biến hiện tại: khối banner `fixed`, nằm NGOÀI khối bọc hero.
+  it("khối banner là `fixed` và không nằm trong khối bọc nền hero", async () => {
     mockApi({ notifs: [NOTIF] });
-    render(<HomeShell initial={homeData()} />);
+    const { container } = render(<HomeShell initial={homeData()} />);
 
     const line = await screen.findByText(/Hẻm QC 1/);
-    // leo lên khối bao ngoài cùng của banner (div bg hero)
-    const wrap = line.closest("div.bg-\\[var\\(--kp-hero-from\\)\\]");
+    const wrap = line.closest("div.fixed");
     expect(wrap).toBeTruthy();
-    expect(wrap!.className).toContain("relative");
+    expect(wrap!.className).toContain("z-40");
+
+    // nền hero là lớp absolute cao 900 — banner không được là con của khối bọc nó
+    const bg = container.querySelector('[aria-hidden].absolute.inset-x-0.top-0')!;
+    expect(bg.parentElement!.contains(wrap!)).toBe(false);
   });
 
   it("banner 'đã treo biển' có nút Chia sẻ trỏ /bien/{id} và nút Đóng", async () => {
@@ -128,7 +136,7 @@ describe("HomeShell · B1 — nhãn nav và cửa vào luồng đề xuất", ()
     expect(screen.queryByRole("dialog")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Đề xuất khu phố cần treo biển" }));
     expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(screen.getByRole("dialog").textContent).toContain("Đề xuất góc phố");
+    expect(screen.getByRole("dialog").textContent).toContain("Đề xuất khu phố mới");
   });
 
   it("CTA 'Ưu đãi dành cho cư dân' chỉ cuộn xuống khối ưu đãi, KHÔNG mở popup", () => {

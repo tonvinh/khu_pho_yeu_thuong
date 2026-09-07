@@ -4,7 +4,7 @@
 // Bản 18/8 dựng ba tab gần giống nhau (cùng dòng meta, nút đổi theo số câu) vì design
 // lúc đó vẽ lorem không phân biệt được. Figma bản 2/9 (7217:1990) tách hẳn:
 //
-//   tab 1 "Góc phố mới cần treo biển"  6 dòng · meta CHỈ số câu · nút Gửi lời nhắc  · KHÔNG CTA đáy
+//   tab 1 "Góc phố mới cần treo biển"  6 dòng · CHỈ góc chưa có câu · nút Gửi lời nhắc · KHÔNG CTA đáy
 //   tab 2 "Lời nhắc chờ bạn bình chọn" 5 dòng · meta phường·người·bình chọn · CTA Viết câu
 //   tab 3 "Cây bút của khu phố"        5 dòng · huy hiệu · meta câu·bình chọn · CTA Đề xuất
 //
@@ -16,10 +16,14 @@
 //
 // Ba tab giờ là ba thực thể khác nhau: góc phố · câu nhắc · người viết.
 // Bình chọn xong là chốt, không rút lại (Q6) → nút khoá thành "Đã bình chọn".
+//
+// **Sửa theo review 7/9 (tab 2)**: nút "Bình chọn" có TRÁI TIM ở đầu (tròn 20px nền
+// #2323FF 40% + tim đặc — đo trên export `docs/lp/Landing page-2.png`), và tab 2 KHÔNG
+// có thanh phân trang: design chỉ vẽ 5 câu rồi tới CTA đáy.
 import { useState } from "react";
 import type { AmbassadorRow, IssueCard, VotingNote } from "./types";
 import { categoryLabel } from "@/lib/taxonomy";
-import { FilterTabs, IconHeart, IconPencil, IconPin, IconUser, SectionHead, Stripe } from "./ui";
+import { FilterTabs, IconHeart, IconHeartSolid, IconPencil, IconPin, IconUser, SectionHead, Stripe } from "./ui";
 
 type TabKey = "latest" | "to_vote" | "writers";
 
@@ -40,7 +44,7 @@ const TAB_SHORT: Record<TabKey, string> = {
 };
 
 const EMPTY_HINT: Record<TabKey, string> = {
-  latest: "Chưa có góc phố nào đang mở — bạn đề xuất góc đầu tiên nhé!",
+  latest: "Góc phố nào cũng đã có lời nhắc rồi — bạn đề xuất góc mới nhé!",
   to_vote: "Chưa có lời nhắc nào đang chờ bình chọn — bạn viết câu mở hàng nhé!",
   writers: "Chưa có cây bút nào được vinh danh — viết câu đầu tiên cho xóm mình nhé!",
 };
@@ -67,6 +71,15 @@ function Meta({ icon, children }: { icon: React.ReactNode; children: React.React
     <span data-meta className="inline-flex items-center gap-1.5">
       {icon}
       {children}
+    </span>
+  );
+}
+
+/** Trái tim trong nút "Bình chọn" của tab 2 — .fig: tròn 20px nền #2323FF 40%, tim đặc */
+function VoteHeart() {
+  return (
+    <span className="grid h-[20px] w-[20px] flex-none place-items-center rounded-full bg-accent-blue/40">
+      <IconHeartSolid className="h-[11px] w-[11px] text-accent-blue" />
     </span>
   );
 }
@@ -103,7 +116,9 @@ export default function IssueBoard({
   const [tab, setTab] = useState<TabKey>("latest");
   const [page, setPage] = useState(0);
 
-  const open = issues.filter((it) => it.status !== "signed");
+  // Tab 1 chỉ nhận góc phố CHƯA có câu đề xuất nào (chốt 7/9 theo design): góc đã có
+  // câu thuộc về tab 2 (bình chọn từng câu), nếu không hai tab hiện trùng nội dung.
+  const open = issues.filter((it) => it.status !== "signed" && it.suggestion_count === 0);
 
   const isWriters = tab === "writers";
   const isNotes = tab === "to_vote";
@@ -113,7 +128,9 @@ export default function IssueBoard({
   const safePage = Math.min(page, pages - 1);
   const from = safePage * per;
   const spotRows = open.slice(from, from + per);
-  const noteRows = notes.slice(from, from + per);
+  // Tab 2 KHÔNG phân trang (chốt 7/9 theo design: chỉ 5 câu, không có nút trang) —
+  // lấy thẳng 5 câu đầu của thứ tự `getVotingNotes` (chưa-bình-chọn → nhiều thương).
+  const noteRows = notes.slice(0, per);
   const writerRows = ambassadors.slice(from, from + per);
   const empty = (isWriters ? writerRows : isNotes ? noteRows : spotRows).length === 0;
 
@@ -201,8 +218,9 @@ export default function IssueBoard({
                 onClick={() => onVoteNote(n.id)}
                 disabled={n.voted || n.is_mine}
                 title={n.is_mine ? "Câu của mình thì để cả xóm thương nhé 💛" : undefined}
-                className="kp-btn kp-btn-vote kp-btn-row tap tap-sm-auto h-[44px] flex-none px-5 disabled:cursor-default disabled:opacity-60 sm:h-[35px] sm:min-w-[119px] sm:px-4"
+                className="kp-btn kp-btn-vote kp-btn-row tap tap-sm-auto h-[44px] flex-none px-4 disabled:cursor-default disabled:opacity-60 sm:h-[35px] sm:min-w-[119px] sm:px-3"
               >
+                <VoteHeart />
                 {n.voted ? "Đã bình chọn" : "Bình chọn"}
               </button>
             </div>
@@ -216,12 +234,9 @@ export default function IssueBoard({
                   {categoryLabel(it.category)} · {it.location_text}
                 </div>
                 <div className={metaRow}>
-                  {/* .fig tab 1: node phường + lượt thương bị ẩn, chỉ còn số câu */}
-                  <Meta icon={<IconPencil className="text-brick" />}>
-                    {it.suggestion_count > 0
-                      ? `${it.suggestion_count} câu đề xuất`
-                      : "Chưa có câu đề xuất"}
-                  </Meta>
+                  {/* .fig tab 1: node phường + lượt thương bị ẩn, chỉ còn số câu —
+                      và danh sách đã lọc `suggestion_count === 0` nên luôn là dòng mời */}
+                  <Meta icon={<IconPencil className="text-brick" />}>Chưa có câu đề xuất</Meta>
                 </div>
               </div>
               {/* .fig: 120×35 r=70 viền #FF8206 1px */}
@@ -234,8 +249,8 @@ export default function IssueBoard({
             </div>
           ))}
 
-          {/* Phân trang (thay nút "Xem thêm" của bản cũ) */}
-          {pages > 1 && (
+          {/* Phân trang (thay nút "Xem thêm" của bản cũ) — tab 2 bỏ hẳn theo design */}
+          {pages > 1 && !isNotes && (
             <div className="flex items-center justify-center gap-3 pt-3 text-[13px]">
               <button
                 onClick={() => setPage(Math.max(0, safePage - 1))}

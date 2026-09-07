@@ -32,7 +32,9 @@ export const EXAMPLE_SUGGESTIONS: Record<CategoryCode, string[]> = {
   ],
 };
 
-/** Placeholder mô tả vấn đề khi đề xuất góc phố — theo chủ đề */
+/** Placeholder mô tả vấn đề khi đề xuất góc phố — theo chủ đề.
+ *  MỒ CÔI từ 7/9: .fig 7458:41331 ghi placeholder cố định "Nhập đoạn mô tả" nên
+ *  `ProposeModal` không dùng nữa. Giữ lại phòng Design đổi ý (xoá được nếu chốt bỏ). */
 export const EXAMPLE_ISSUE_DESC: Record<CategoryCode, string> = {
   khoe_moi_ngay: "VD: Xóm ít vận động, muốn rủ nhau đi bộ buổi chiều cho khoẻ.",
   tre_con_trong_xom: "VD: Tụi nhỏ hay chạy ra đường lúc tan học, xe đông.",

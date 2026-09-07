@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
-// Popup "Đề xuất góc phố mới" — Figma 7458:40650 (bước 1/2) và 7458:41331 (bước 2/2).
+// Popup "Đề xuất khu phố mới" — Figma 7458:40650 (bước 1/2) và 7458:41331 (bước 2/2).
 // Quyết định 2/9: DESIGN THẮNG SPEC → bước 2 không còn hộp cảnh báo (docs/02 §62),
 // không còn chip 4N và bộ đếm ký tự (docs/20).
+// QC 7/9: bước 2 chỉ còn ĐÚNG 3 nhóm ô của .fig — tỉnh/phường lên đầu, ô tên khu phố và
+// ô tên hẻm/ngõ gộp làm một, ô "Viết câu nhắc thương của bạn (nếu có)" bị bỏ.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import ProposeModal from "@/components/home/ProposeModal";
@@ -73,15 +75,29 @@ describe("ProposeModal — bước 1/2 chọn chủ đề", () => {
 });
 
 describe("ProposeModal — bước 2/2 thông tin khu phố", () => {
-  it("hiện đủ các ô của design", () => {
+  it("hiện ĐÚNG 3 nhóm ô của design, đúng thứ tự", () => {
     setup();
     goStep2();
     expect(screen.getByText("2/2")).toBeTruthy();
-    expect(screen.getByText("Tên khu phố")).toBeTruthy();
-    expect(screen.getByText("Tỉnh/thành phố")).toBeTruthy();
-    expect(screen.getByText("Phường /Xã")).toBeTruthy();
-    expect(screen.getByText("Tên hẻm/ngõ muốn treo")).toBeTruthy();
-    expect(screen.getByText("Mô tả vấn đề tại khu phố")).toBeTruthy();
+    const labels = Array.from(document.querySelectorAll("label > span:first-child")).map(
+      (n) => n.textContent
+    );
+    expect(labels).toEqual([
+      "Tỉnh/thành phố",
+      "Phường /Xã",
+      "Tên khu phố/hẻm/ngõ muốn treo biển",
+      "Điều dễ thương bạn muốn chia sẻ ở khu phố này",
+    ]);
+  });
+
+  it("bỏ ô 'Tên khu phố' riêng và ô câu nhắc thương (design 2/9 gộp/gỡ)", () => {
+    setup();
+    goStep2();
+    expect(screen.queryByText("Tên khu phố")).toBeNull();
+    expect(screen.queryByText("Tên hẻm/ngõ muốn treo")).toBeNull();
+    expect(screen.queryByText("Mô tả vấn đề tại khu phố")).toBeNull();
+    expect(screen.queryByText("Viết câu nhắc thương của bạn (nếu có)")).toBeNull();
+    expect(screen.queryByPlaceholderText(COPY.suggestionPlaceholder)).toBeNull();
   });
 
   it("KHÔNG còn hộp cảnh báo, chip 4N và bộ đếm ký tự (design 18/8 bỏ)", () => {
@@ -93,24 +109,29 @@ describe("ProposeModal — bước 2/2 thông tin khu phố", () => {
     expect(screen.queryByText("0/120")).toBeNull();
   });
 
-  it("tự nhập khu phố mà chưa chọn tỉnh/thành thì chặn gửi", () => {
+  it("chưa chọn tỉnh/thành thì chặn gửi", () => {
     setup();
     goStep2();
-    fireEvent.change(screen.getByPlaceholderText("Nhập tên khu phố của bạn"), { target: { value: "Xóm mới" } });
+    fireEvent.change(screen.getByPlaceholderText("Nhập tên hẻm ngõ nơi bạn sinh sống"), {
+      target: { value: "Hẻm 12 Nguyễn Du" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Gửi đề xuất/ }));
     expect(screen.getByText("Chọn tỉnh/thành của khu phố nhé")).toBeTruthy();
     expect(apiSend).not.toHaveBeenCalled();
   });
 
-  it("đã chọn khu phố có sẵn nhưng thiếu tên hẻm/ngõ thì chặn gửi", () => {
+  it("thiếu tên khu phố/hẻm/ngõ thì chặn gửi", () => {
     setup({ defaultNeighborhoodId: "nb-1" });
     goStep2();
+    fireEvent.change(screen.getByPlaceholderText("Nhập tên hẻm ngõ nơi bạn sinh sống"), {
+      target: { value: "" },
+    });
     fireEvent.click(screen.getByRole("button", { name: /Gửi đề xuất/ }));
-    expect(screen.getByText("Nhập tên hẻm/ngõ muốn treo nhé")).toBeTruthy();
+    expect(screen.getByText("Nhập tên khu phố/hẻm/ngõ muốn treo biển nhé")).toBeTruthy();
     expect(apiSend).not.toHaveBeenCalled();
   });
 
-  it("đủ thông tin thì POST /api/v1/issues đúng payload", async () => {
+  it("đủ thông tin thì POST /api/v1/issues đúng payload, KHÔNG gửi suggested_content", async () => {
     const { onDone } = setup({ neighborhoods: [nb()], defaultNeighborhoodId: "nb-1" });
     goStep2();
     fireEvent.change(screen.getByPlaceholderText("Nhập tên hẻm ngõ nơi bạn sinh sống"), {
@@ -123,9 +144,22 @@ describe("ProposeModal — bước 2/2 thông tin khu phố", () => {
     expect(method).toBe("POST");
     expect(path).toBe("/api/v1/issues");
     expect(body.category).toBe("tre_con_trong_xom");
+    // Ô gộp đi vào CẢ location_text lẫn tên khu phố tự nhập
     expect(body.location_text).toBe("Hẻm 12 Nguyễn Du");
-    expect(body.neighborhood_id).toBe("nb-1");
+    expect(body.neighborhood_id).toBe(null);
+    expect(body.neighborhood_text).toBe("Hẻm 12 Nguyễn Du");
+    expect("suggested_content" in body).toBe(false);
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+  });
+
+  it("chọn khu phố có sẵn thì gửi neighborhood_id, không sinh khu phố trùng", async () => {
+    setup({ neighborhoods: [nb()], defaultNeighborhoodId: "nb-1" });
+    goStep2();
+    fireEvent.click(screen.getByRole("button", { name: /Gửi đề xuất/ }));
+    await waitFor(() => expect(apiSend).toHaveBeenCalledTimes(1));
+    const body = apiSend.mock.calls[0][2] as Record<string, unknown>;
+    expect(body.neighborhood_id).toBe("nb-1");
+    expect(body.neighborhood_text).toBe(null);
   });
 
   it("API lỗi thì hiện message của server, không crash", async () => {

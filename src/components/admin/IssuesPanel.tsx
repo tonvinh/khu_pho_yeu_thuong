@@ -15,7 +15,7 @@ interface Issue {
   status: string; created_at: string; approved_at: string | null; review_note: string | null;
   neighborhood_id: string; neighborhood_name: string; ward: string | null; city: string | null;
   hidden: boolean; proposer_name: string | null;
-  suggestion_count: number; attached_suggestion: string | null;
+  suggestion_count: number;
 }
 interface Nb { id: string; name: string; city: string | null; ward: string | null }
 interface Counts { all: number; pending_review: number; waiting: number; voting: number; signed: number; rejected: number }
@@ -188,16 +188,6 @@ export default function IssuesPanel({
                 <td className="px-3 py-2.5">
                   <div className="font-bold leading-snug">📍 {r.location_text}</div>
                   {r.description && <p className="mt-0.5 text-xs text-ink-soft">{r.description}</p>}
-                  {r.attached_suggestion && (
-                    <p className="mt-1 rounded-lg bg-cream px-2 py-1 text-[11px]">
-                      💬 Câu nhắc gửi kèm: “{r.attached_suggestion}”
-                      {r.status === "pending_review" && (
-                        <span className="block text-ink-soft">
-                          Duyệt xong, câu này vào hàng “Chờ duyệt” bên Lời nhắc.
-                        </span>
-                      )}
-                    </p>
-                  )}
                   {r.status === "rejected" && r.review_note && (
                     <p className="mt-0.5 text-[11px] text-status-waiting">Lý do: {r.review_note}</p>
                   )}
@@ -301,10 +291,6 @@ export default function IssuesPanel({
               className="mt-1 w-full rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm"
             />
           </label>
-          <p className="mt-2 text-[11px] text-ink-soft">
-            Câu nhắc gửi kèm đề xuất này (nếu có) cũng bị từ chối theo.
-          </p>
-
           <div className="mt-4 flex justify-end gap-2">
             <Btn variant="ghost" onClick={() => setRejecting(null)}>Huỷ</Btn>
             <Btn variant="danger" onClick={() => act(rejecting.id, "reject")} disabled={busy}>

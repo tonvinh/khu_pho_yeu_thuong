@@ -74,6 +74,18 @@ describe("C2 — chiều cao ô nhập", () => {
     expect(block(".kp-input-lg {")).toContain("height: 50px");
     expect(block("textarea.kp-input-lg")).toContain("height: 90px");
   });
+
+  // QC 7/9 — hai khối trên chỉ có tác dụng nếu khai báo SAU hai rule đè nó. Trước khi
+  // sửa, ô popup đo trên Chrome ra 40px và textarea 95.4px dù CSS ghi 50/90.
+  it(".kp-input-lg khai báo SAU @media(sm){.kp-input{height:40px}} nên không bị đè", () => {
+    const media = CSS.indexOf("@media (min-width: 640px)", at(".kp-input {"));
+    expect(media).toBeGreaterThan(-1);
+    expect(at(".kp-input-lg {")).toBeGreaterThan(media);
+  });
+
+  it("textarea.kp-input-lg khai báo SAU textarea.kp-input{height:auto} (cùng specificity)", () => {
+    expect(at("textarea.kp-input-lg")).toBeGreaterThan(at("textarea.kp-input,"));
+  });
 });
 
 describe("Nút trong dòng danh sách — chữ không được xuống 2 dòng", () => {
@@ -88,5 +100,15 @@ describe("Nút trong dòng danh sách — chữ không được xuống 2 dòng"
     expect(base).toBeGreaterThan(-1);
     expect(at(".kp-btn-row {")).toBeGreaterThan(base);
     expect(block(".kp-btn {")).toContain("font-size: 15px");
+  });
+});
+
+describe("Dropdown ô tra cứu — .fig `Frame 261`", () => {
+  it(".kp-lookup-panel là LỚP NỔI (absolute) nên không đẩy dải 3 con số xuống", () => {
+    const b = block(".kp-lookup-panel");
+    expect(b).toContain("position: absolute");
+    expect(b).toContain("border-radius: 16px");
+    // cách ô nhập 8px, chiếm đúng bề ngang 816 của khối tra cứu (left/right = 0 từ sm)
+    expect(b).toContain("margin-top: 8px");
   });
 });

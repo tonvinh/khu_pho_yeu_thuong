@@ -403,3 +403,157 @@ hoặc đọc trực tiếp như dưới đây.
    chưa rõ là trạng thái gì (hover? đã bình chọn? câu dẫn đầu?). Đang render tất cả màu đậm.
 3. Toàn bộ số đo px của bản live chưa đo được (thiếu `.fig` mới) — mới đối chiếu được
    nhãn/cấu trúc từ prototype.
+
+## Chốt 7/9 — tab 1 chỉ là góc phố CHƯA có câu nào
+
+`IssueBoard` tab "Góc phố mới cần treo biển" lọc `status !== 'signed' && suggestion_count === 0`
+(trước chỉ bỏ góc đã treo biển nên góc có 1–2 câu vẫn hiện, trùng nội dung tab 2). Kéo theo:
+dòng meta luôn là **"Chưa có câu đề xuất"** (bỏ nhánh "N câu đề xuất"), bộ đếm trên tab đếm
+theo bộ lọc, câu rỗng đổi thành "Góc phố nào cũng đã có lời nhắc rồi — bạn đề xuất góc mới nhé!".
+Lọc đặt ở CLIENT trong `IssueBoard`, KHÔNG ở `/api/v1/issues`: `SpotPickerModal` (popup
+"Chọn góc phố") vẫn phải thấy mọi góc phố chưa treo biển, kể cả góc đã có câu.
+
+## Sửa 7/9 sau review tab 2 "Lời nhắc chờ bạn bình chọn"
+
+- Nút `Bình chọn` phải có **trái tim** ở đầu: vòng tròn 20px nền `#2323FF` 40% + tim đặc
+  `#2323FF` (component `VoteHeart` trong `IssueBoard.tsx`). Số đo lấy từ export
+  `docs/lp/Landing page-2.png` (button 119×35, r=70, viền `#2323FF` 1px, lề trong 12,
+  gap 8) — chính là component nút mà bản live 4/9 chuyển từ tab 3 sang tab 2.
+- **Tab 2 bỏ thanh phân trang**: design chỉ vẽ 5 câu rồi tới CTA đáy. `noteRows` cắt
+  thẳng 5 câu đầu; tab 1 và tab 3 vẫn giữ pager (tab 3 cần để xem hạng 6–10).
+
+## Sửa 7/9 — banner báo tin in-web thành LỚP NỔI
+
+Ảnh QC: 3 thông báo "Rất tiếc! Câu nhắc/Đề xuất… chưa phù hợp" xếp thành 3 thẻ trắng to
+choán hết đầu trang, tiêu đề hero chữ trắng rơi xuống nền kem. Nguyên nhân: khối banner
+nằm TRONG luồng giữa thanh nav và hero, cao ~430px, trong khi nền hero là lớp `absolute`
+cao ĐÚNG 900px tính từ mép trang (số đo .fig) — hero bị đẩy tụt ra ngoài dải gradient, và
+nền cam ĐẶC `--kp-hero-from` của khối banner còn cắt gradient thành hai mảng lệch màu.
+
+Nay khối banner là `fixed` (góc trái dưới, `sm:w-380`, `max-h-60vh` cuộn được, `z-40` để
+modal z-50 vẫn đè lên), đặt cạnh toast ở CUỐI `HomeShell` — trang chủ giữ nguyên mọi số đo
+.fig dù có bao nhiêu thông báo (đo Chrome: h1 y=149 desktop / 108 mobile, y như khi không
+có thông báo). Đặt bên TRÁI và `bottom-[96px]` ở mobile để không đè nút nổi "Lên đầu trang"
+(`BackToTop.tsx` — `fixed bottom-6 right-4`, cũng z-40).
+Test A1 cũ (banner phải có `relative` + nền hero) đã đổi thành: banner `fixed` và KHÔNG là
+con của khối bọc nền hero — `tests/ui/home-shell.test.tsx`.
+
+## Sửa 7/9 — dropdown ô tra cứu 4N bám lại `Frame 261`
+
+Ảnh QC: gõ đủ tên một khu phố ra khối kem + dòng chữ đen nằm TRONG luồng, đẩy dải 3 con số
+xuống. `.fig` vẽ CẢ BA trạng thái trong cùng `Frame 261` (x=312 y=1193 w=816 r=16 **nền
+trắng**, cách ô nhập 8px) và đó là dropdown **NỔI** đè lên dải con số:
+
+| Trạng thái | Frame | Khung |
+|---|---|---|
+| (a) nhiều kết quả | `7745:2107` | h=231, lề trong 24, dòng 45 gap 24 |
+| (b) đúng 1 kết quả | `7458:38738` | h=184: card `Frame 274` 768×77 r=16 nền `#FFF7EA` → gap 24 → hàng 35: chữ **CAM Bold 16** `#FF8206` + nút `Xem khu phố` 140×35 viền cam |
+| (c) rỗng | `7745:1345` | h=72: pin + chữ 16 Light `#969696` (lề trái 32) + nút 212.3×40 |
+
+Khung chung là class `.kp-lookup-panel` (globals.css) — `position:absolute` nên nội dung
+dưới KHÔNG bị đẩy (đo Chrome: nhãn "Biển đã treo" giữ y=1234 dù dropdown mở hay đóng).
+Đo lại trong iframe 1457px: (b) panel 816×184, card 768×77, nút 140×35 @x=964;
+(c) panel 816×72, nút 212×40 @x=892 — khớp `.fig`.
+
+**BẪY lặp lại (họ C1)**: `.tap { min-height:44px }` và `.kp-btn { font-size:15px }` khai báo
+NGOÀI `@layer` nên `sm:min-h-0` / `text-[14px]` của Tailwind không đè được — nút đo ra
+h=44 thay vì 35. Chốt chiều cao bằng `h-11 sm:h-[35px]` (bỏ `.tap`) và mượn `.kp-btn-row`
+cho cỡ chữ 14px + nowrap.
+
+## Sửa 7/9 — thanh tra cứu KHÔNG có nút tròn cam "+"
+
+QC báo icon "+" bên phải ô tra cứu không có trong design. Kiểm lại `.fig`: component
+`Searchbox` (`7458:39736`) THẬT SỰ có node `Button` 30×30 r=800 fill `#FF8206` chứa
+`vuesax/linear/add` — nhưng instance dùng ở frame landing (`7458:39755`) override
+`visible: false` cho node đó. Ảnh export `docs/lp/Landing page*.png` cũng không vẽ nút này.
+
+**BẪY (mở rộng cảnh báo cũ)**: `dump.py` không lọc `visible=false` VÀ không áp
+`symbolOverrides` của INSTANCE — nên một node in ra trong dump vẫn có thể bị TẮT ở frame
+đang xem. Muốn kiểm, đọc thẳng `by[<instance>]['symbolData']['symbolOverrides']`
+(mỗi phần tử có `guidPath` trỏ tới node con + các trường bị đè, gồm cả `visible`).
+Đối chiếu chéo với ảnh export trước khi dựng bất kỳ chi tiết nào lấy từ dump.
+
+Ruột thanh tra cứu theo `Frame 135`: 816×45 r=97.5 nền trắng viền cam, autolayout ngang
+lề trong **16**, gap 8, chỉ gồm kính lúp **18px** + placeholder **16px Light `#969696`**.
+Test khoá: `tests/ui/hero-lookup.test.tsx` — thanh tra cứu không chứa `<button>` nào.
+
+## Sửa 7/9 — popup "Đề xuất khu phố mới" bước 2/2 dựng lại theo `.fig` 7458:41331
+
+QC khoanh đỏ toàn bộ thân bước 2/2 ("chưa đúng thiết kế"). Đọc lại `.fig` thì đúng là sai
+bộ trường: docs/22 chỉ QC popup "Gửi câu nhắc" (§B8), **không có mục nào cho popup đề xuất**
+nên bản dựng 18/8 chưa từng được đối chiếu với bản Figma 2/9.
+
+Design chỉ có ĐÚNG 3 nhóm ô (`Frame 241`, autolayout dọc gap 16), nhãn 16px Bold cách ô 8:
+
+| # | Nhóm | Số đo `.fig` | Nhãn / placeholder |
+|---|---|---|---|
+| 1 | `Frame 198` 636×82 | 2 cột **310** gap 16, select cao **50** r=80 | `Tỉnh/thành phố` · `Phường /Xã` — cả hai placeholder **`Lựa chọn`** |
+| 2 | `Frame 199` 636×82 | input cao **50** r=80 | `Tên khu phố/hẻm/ngõ muốn treo biển` — `Nhập tên hẻm ngõ nơi bạn sinh sống` |
+| 3 | `Frame 200` 636×122 | textarea **636×90** r=16 | `Điều dễ thương bạn muốn chia sẻ ở khu phố này` — `Nhập đoạn mô tả` |
+
+Nút `Button 02` 636×50 r=100 viền `#FF8206` 1.5px, nhãn **`Gửi đề xuất`** (bước 1 là
+`Tiếp tục đề xuất`) — đọc bằng `symbolOverrides`, xem mẹo bên dưới.
+
+### Design vs code — khác biệt THẬT đã sửa
+
+| | Code cũ | Design 2/9 | Đã làm |
+|---|---|---|---|
+| Tiêu đề popup | `Đề xuất góc phố mới` | TEXT node `Đề xuất khu phố mới` (cả 2 frame) | đổi theo design |
+| Thứ tự | Tên khu phố → tỉnh/phường → hẻm | tỉnh/phường **lên đầu** | đổi |
+| Tên khu phố + Tên hẻm/ngõ | **2 ô** | **1 ô GỘP** | gộp |
+| Mô tả | `Mô tả vấn đề tại khu phố`, placeholder theo chủ đề | `Điều dễ thương…`, placeholder cố định | đổi |
+| Câu nhắc kèm | ô `Viết câu nhắc thương của bạn (nếu có)` | **không có** | BỎ |
+| Ô tỉnh/phường khi đã chọn khu phố | input đọc-chỉ | select bình thường | luôn là select |
+
+Hệ quả đã đi hết chuỗi:
+- `location_text` và `neighborhood_text` nay **cùng một giá trị** (ô gộp). `neighborhood_id`
+  chỉ có khi người dùng chọn khu phố có sẵn từ gợi ý.
+- Ô gộp vẫn là `NeighborhoodPicker` (design vẽ input thường; lúc không focus trông y hệt) —
+  giữ để `resolveNeighborhoodId` không sinh khu phố trùng. Chọn khu phố có sẵn thì điền hộ
+  tỉnh/phường; đổi tỉnh/phường thì **xoá `nbId`** vì khu phố đã chọn không còn khớp địa giới.
+- **Bắt buộc tỉnh/thành** cho mọi trường hợp (trước đây khu phố chọn sẵn được miễn).
+- Payload POST `/api/v1/issues` **không còn `suggested_content`** → đề xuất không sinh
+  `suggestions` nữa. Route vẫn NHẬN trường này (API công khai, bật lại được nếu Design xác
+  nhận là quên vẽ). Luồng viết câu nhắc đi qua `SpotPickerModal` → `SuggestModal` (chốt 4/9).
+- **Admin đã gỡ theo** (chốt 7/9 "gỡ cho đỡ rối"): `/api/admin/issues` bỏ subquery
+  `attached_suggestion`; `IssuesPanel` bỏ khối "💬 Câu nhắc gửi kèm" + dòng chú thích
+  "Câu nhắc gửi kèm đề xuất này (nếu có) cũng bị từ chối theo" ở popup từ chối. Đề xuất CŨ
+  còn câu kèm thì admin xem ở màn Lời nhắc sau khi duyệt đề xuất — **hành vi backend giữ
+  nguyên**: `PATCH /api/admin/issues/[id]` vẫn cho câu kèm đi theo số phận của đề xuất, và
+  `/api/admin/suggestions` vẫn lọc bỏ câu của đề xuất chưa duyệt (#17). Không migration.
+- `EXAMPLE_ISSUE_DESC` (`src/lib/examples.ts`) thành **mồ côi** — giữ lại, đã ghi chú.
+- Test: `tests/ui/propose-modal.test.tsx` khoá đúng 4 nhãn theo thứ tự + payload;
+  `tests/ui/home-shell.test.tsx` đổi theo tiêu đề mới.
+
+### BẪY CSS mới (họ C1/C2): `.kp-input-lg` bị đè, ô popup ra 40px chứ không phải 50
+
+Đo bằng Chrome: mọi ô một dòng trong 4 popup cao **40px** và textarea cao **95.4px**, dù
+`globals.css` ghi rõ 50/90. Nguyên nhân là THỨ TỰ khai báo (cùng specificity → rule sau thắng):
+`@media(sm){.kp-input{height:40px}}` và `textarea.kp-input{height:auto}` đứng SAU
+`.kp-input-lg`. Nay `.kp-input-lg` + `textarea.kp-input-lg` chuyển xuống **cuối cụm**, và
+khối `.kp-input-lg{font-size:16px}` trong `@media(sm)` thành dư nên bỏ.
+Sửa này ảnh hưởng **cả 4 popup** (`SuggestModal`, `IdentifyModal`, `LeadPromptModal`,
+`ProposeModal`) — đúng số của `.fig`. Test khoá: 2 case thứ tự trong `tests/globals-css.test.ts`.
+
+### Mẹo đọc `.fig` dùng lại được
+
+`symbolOverrides` **giải được nhãn chữ của INSTANCE**, không chỉ cờ `visible` (mở rộng mục
+"Sửa 7/9 — thanh tra cứu"): mỗi phần tử có thể mang `textData.characters`. Nhờ vậy đọc được
+nhãn `Button 02` mà không cần ảnh export — 5 ảnh `docs/lp/Landing page*.png` đều là frame
+landing 1440×3780, **không có ảnh nào của 6 frame popup**.
+
+```python
+(by['7458:41872'].get('symbolData') or {}).get('symbolOverrides')
+```
+
+### CÒN TREO — hỏi Design
+
+1. **Tiêu đề popup**: `.fig` ghi `Đề xuất khu phố mới`, còn nav link là
+   `Đề xuất khu phố cần treo biển` và CTA đáy tab 1 vẫn `+ Đề xuất góc phố mới` — ba cách
+   gọi cho cùng một luồng. Thống nhất "góc phố" hay "khu phố"?
+2. **Bỏ ô câu nhắc kèm có chủ ý không?** Nếu Design chỉ quên vẽ thì phải bật lại (code cũ
+   còn trong git, route vẫn nhận `suggested_content`).
+3. Ô `Phường /Xã` khi chưa chọn tỉnh: design chỉ vẽ `Lựa chọn`, web đang khoá xám và cũng
+   hiện `Lựa chọn` — có cần câu gợi ý riêng cho trạng thái khoá không?
+4. Nhãn `Phường /Xã` trong `.fig` có dấu cách lạc chỗ (`Phường` + space + `/Xã`) — giữ
+   nguyên văn hay sửa thành `Phường/Xã`?

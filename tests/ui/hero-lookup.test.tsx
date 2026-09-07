@@ -137,3 +137,53 @@ describe("HeroLookup — câu mời ở ô 1 kết quả đổi theo số lời 
     expect(screen.getByText(/Khu phố mình chưa có nhiều lời nhắc, bạn viết câu đầu tiên nhé\?/)).toBeTruthy();
   });
 });
+
+// Bản .fig vẽ CẢ BA trạng thái trong cùng `Frame 261` 816×… r=16 nền trắng, là dropdown
+// NỔI đè lên dải 3 con số. Trước đây (b) và (c) nằm trong luồng (`mt-3`) nên trang tụt
+// xuống và sai nhịp dọc — khoá lại bằng class dùng chung.
+describe("HeroLookup — cả 3 trạng thái dùng chung khung dropdown nổi (Frame 261)", () => {
+  it("(a) danh sách nằm trong panel .kp-lookup-panel", () => {
+    lookup();
+    type("xóm");
+    expect(screen.getByRole("listbox").className).toContain("kp-lookup-panel");
+  });
+
+  it("(b) card 1 kết quả nằm TRONG panel trắng, không phải khối rời trong luồng", () => {
+    lookup();
+    type("Lò Gốm");
+    const panel = screen.getByTestId("lookup-single").parentElement!;
+    expect(panel.className).toContain("kp-lookup-panel");
+  });
+
+  it("(c) khối rỗng chính là panel", () => {
+    lookup();
+    type("zzzz");
+    expect(screen.getByTestId("lookup-empty").className).toContain("kp-lookup-panel");
+  });
+
+  it("(b) dòng mời là chữ CAM Bold 16px theo .fig (fill #FF8206), không phải chữ đậm nhạt", () => {
+    lookup();
+    type("Lò Gốm");
+    const line = screen.getByText(/bạn viết câu đầu tiên nhé/);
+    expect(line.className).toContain("text-brick");
+    expect(line.className).toContain("font-bold");
+  });
+});
+
+// QC 7/9: thanh tra cứu KHÔNG có nút tròn cam "+" bên phải. Node `Button` (30×30 r=800
+// fill #FF8206 + icon vuesax/linear/add) có trong component `Searchbox` nhưng instance ở
+// frame landing `7458:39755` override `visible=false`, và ảnh export cũng không vẽ nó.
+// dump.py không resolve override của INSTANCE nên bản 2/9 dựng nhầm.
+describe("HeroLookup — thanh tra cứu chỉ có kính lúp + ô nhập", () => {
+  it("không có nút nào bên trong thanh tra cứu khi chưa gõ gì", () => {
+    lookup();
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
+  });
+
+  it("thanh tra cứu là cha trực tiếp của ô nhập và không chứa <button>", () => {
+    lookup();
+    const bar = screen.getByRole("combobox").parentElement!;
+    expect(bar.querySelector("button")).toBeNull();
+    expect(bar.querySelector("svg")).toBeTruthy(); // kính lúp 18px vẫn còn
+  });
+});

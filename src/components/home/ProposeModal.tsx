@@ -1,22 +1,24 @@
 "use client";
-// Modal "Đề xuất góc phố mới" — dựng lại theo design docs/lp/lp3.png + lp4.png:
-// wizard 2 BƯỚC trong modal giữa màn hình (bản cũ: drawer trượt phải, 5 bước một màn).
-//   Bước 1/2 — Lựa chọn chủ đề (6 chủ đề, chọn xong mới đi tiếp)
-//   Bước 2/2 — Thông tin khu phố: tên khu phố · tỉnh/thành · phường/xã · tên hẻm
-//              · mô tả vấn đề · câu nhắc thương (tuỳ chọn)
-// Quyết định 2/9 (docs/20): DESIGN THẮNG SPEC — bước 2 KHÔNG còn hộp cảnh báo
-// (docs/02 §62), chip 4N và bộ đếm ký tự vì .fig 7458:41714 không vẽ.
-// Giữ combobox tìm khu phố có sẵn (design vẽ input thường) để không sinh khu phố trùng —
-// resolveNeighborhoodId chỉ tạo bản ghi mới khi thật sự là tên chưa có.
+// Modal "Đề xuất khu phố mới" — wizard 2 BƯỚC, số đo lấy từ .fig trong repo:
+//   Bước 1/2 — Lựa chọn chủ đề  (frame 7458:40650)
+//   Bước 2/2 — Thông tin khu phố (frame 7458:41331)
+//
+// QC 7/9: bước 2 bị dựng sai bộ trường. Design chỉ có ĐÚNG 3 nhóm (Frame 241, gap 16):
+//   1. Frame 198  636×82 — 2 cột 310 gap 16: `Tỉnh/thành phố` · `Phường /Xã` (select 50, r=80)
+//   2. Frame 199  636×82 — `Tên khu phố/hẻm/ngõ muốn treo biển` (input 50, r=80)
+//   3. Frame 200  636×122 — `Điều dễ thương bạn muốn chia sẻ ở khu phố này` (textarea 90, r=16)
+// Nhãn 16px Bold, cách ô 8; nút `Button 02` 636×50 r=100 viền #FF8206 1.5px ở đáy.
+// So với bản cũ: tỉnh/phường lên ĐẦU, ô "Tên khu phố" và ô "Tên hẻm/ngõ" GỘP làm một,
+// ô "Viết câu nhắc thương của bạn (nếu có)" bị BỎ (DESIGN THẮNG SPEC — docs/20 §2.1).
+// Ô gộp vẫn là combobox `NeighborhoodPicker` (design vẽ input thường, nhưng lúc không
+// focus trông y hệt): chọn được khu phố có sẵn thì resolveNeighborhoodId không sinh
+// bản ghi trùng.
 import { useEffect, useState } from "react";
 import type { MapNeighborhood } from "./types";
 import { apiGet, apiSend } from "../client-api";
 import { CATEGORIES, type CategoryCode } from "@/lib/taxonomy";
-import { COPY } from "@/lib/copy";
-import { EXAMPLE_ISSUE_DESC } from "@/lib/examples";
-import { formatAddress } from "@/lib/address";
 import NeighborhoodPicker from "./NeighborhoodPicker";
-import { Field, IconCheck, IconChevronDown, IconPin, Modal } from "./ui";
+import { Field, IconCheck, IconChevronDown, Modal } from "./ui";
 
 interface GeoUnit { code: string; name: string }
 
@@ -37,6 +39,8 @@ export default function ProposeModal({
   const defaultNb = neighborhoods.find((n) => n.id === defaultNeighborhoodId) ?? null;
   const [step, setStep] = useState<1 | 2>(1);
   const [category, setCategory] = useState<CategoryCode | null>(null);
+  // Ô GỘP "Tên khu phố/hẻm/ngõ muốn treo biển" — vừa là location_text gửi lên API,
+  // vừa là tên khu phố khi người dùng tự nhập (nbId = null).
   const [nbId, setNbId] = useState<string | null>(defaultNb?.id ?? null);
   const [nbText, setNbText] = useState(defaultNb?.name ?? "");
   // Địa lý hành chính MỚI (1/7/2025): Tỉnh/Thành → thẳng Phường/Xã, bỏ quận/huyện.
@@ -44,21 +48,24 @@ export default function ProposeModal({
   const [provinces, setProvinces] = useState<GeoUnit[]>([]);
   const [wards, setWards] = useState<GeoUnit[]>([]);
   const [cityCode, setCityCode] = useState("");
-  const [city, setCity] = useState("");
-  const [ward, setWard] = useState("");
-  const [location, setLocation] = useState("");
+  const [city, setCity] = useState(defaultNb?.city ?? "");
+  const [ward, setWard] = useState(defaultNb?.ward ?? "");
   const [description, setDescription] = useState("");
-  const [suggestion, setSuggestion] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const nb = neighborhoods.find((n) => n.id === nbId) ?? null;
 
   useEffect(() => {
     apiGet<{ provinces: GeoUnit[] }>("/api/v1/geo")
       .then((r) => setProvinces(r.provinces))
       .catch(() => {});
   }, []);
+  // Hai ô tỉnh/phường nay LUÔN chọn được (design đặt lên đầu, không còn ô đọc-chỉ theo
+  // khu phố) → phải dò ngược mã tỉnh từ TÊN đã có sẵn để nạp danh sách phường.
+  useEffect(() => {
+    if (cityCode || !city || provinces.length === 0) return;
+    const hit = provinces.find((p) => p.name === city);
+    if (hit) setCityCode(hit.code);
+  }, [provinces, city, cityCode]);
   useEffect(() => {
     if (!cityCode) { setWards([]); return; }
     let stale = false;
@@ -68,13 +75,6 @@ export default function ProposeModal({
     return () => { stale = true; };
   }, [cityCode]);
 
-  // Preview địa chỉ theo cấu trúc 'Tên hẻm – Phường/Xã – Tỉnh/Thành'
-  const addressPreview = formatAddress(
-    location,
-    nb ? nb.ward || nb.name : ward || nbText,
-    nb ? nb.city : city
-  );
-
   const goStep2 = () => {
     if (!category) { setError("Chọn chủ đề nhé"); return; }
     setError(null);
@@ -82,24 +82,26 @@ export default function ProposeModal({
   };
 
   const submit = () => {
-    if (!nbId && !nbText.trim()) { setError("Chọn hoặc nhập tên khu phố của bạn nhé"); return; }
-    if (!nbId && !city) { setError("Chọn tỉnh/thành của khu phố nhé"); return; }
-    if (!location.trim()) { setError("Nhập tên hẻm/ngõ muốn treo nhé"); return; }
+    // Thứ tự báo lỗi bám thứ tự ô trên màn: tỉnh → phường/xã bỏ qua (tuỳ chọn) → tên.
+    if (!city) { setError("Chọn tỉnh/thành của khu phố nhé"); return; }
+    const name = nbText.trim();
+    if (!name) { setError("Nhập tên khu phố/hẻm/ngõ muốn treo biển nhé"); return; }
     // Hỏi định danh ở ĐÂY, không phải lúc mở modal (email 18/8: bấm "Đề xuất góc phố mới"
     // mà bung form ưu đãi là sai luồng)
     requireIdentity(async () => {
       setBusy(true);
       setError(null);
       try {
+        // Design gộp "tên khu phố" và "tên hẻm/ngõ" làm MỘT ô → cùng một giá trị đi vào
+        // location_text (vị trí treo biển) và neighborhood_text (khi là khu phố tự nhập).
         await apiSend("POST", "/api/v1/issues", {
           category,
-          location_text: location,
+          location_text: name,
           description,
           neighborhood_id: nbId,
-          neighborhood_text: nbId ? null : nbText,
+          neighborhood_text: nbId ? null : name,
           neighborhood_city: nbId ? null : city || null,
           neighborhood_ward: nbId ? null : ward || null,
-          suggested_content: suggestion,
         });
         onDone();
       } catch (e) {
@@ -112,7 +114,7 @@ export default function ProposeModal({
 
   return (
     <Modal
-      title="Đề xuất góc phố mới"
+      title="Đề xuất khu phố mới"
       onClose={onClose}
       onBack={step === 2 ? () => { setStep(1); setError(null); } : undefined}
     >
@@ -166,101 +168,79 @@ export default function ProposeModal({
         </>
       ) : (
         <>
-          <Field label="Tên khu phố" size="lg">
+          {/* Frame 241 — 3 nhóm ô, cách nhau 16px (mt-4). Nhóm 1: Frame 198, 2 cột 310. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Tỉnh/thành phố" size="lg">
+              <span className="relative block">
+                <select
+                  value={cityCode}
+                  onChange={(e) => {
+                    const code = e.target.value;
+                    setCityCode(code);
+                    setCity(provinces.find((p) => p.code === code)?.name ?? "");
+                    setWard("");
+                    // Đổi địa giới thì khu phố đã chọn từ danh sách không còn khớp nữa
+                    setNbId(null);
+                  }}
+                  aria-label="Tỉnh/thành phố"
+                  className="kp-input kp-input-lg tap appearance-none pr-12"
+                >
+                  <option value="">Lựa chọn</option>
+                  {provinces.map((p) => (
+                    <option key={p.code} value={p.code}>{p.name}</option>
+                  ))}
+                </select>
+                <IconChevronDown className="pointer-events-none absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-ink" />
+              </span>
+            </Field>
+            <Field label="Phường /Xã" size="lg">
+              <span className="relative block">
+                <select
+                  value={ward}
+                  onChange={(e) => { setWard(e.target.value); setNbId(null); }}
+                  disabled={!cityCode}
+                  aria-label="Phường /Xã"
+                  className="kp-input kp-input-lg tap appearance-none pr-12 disabled:bg-cream disabled:text-ink-soft"
+                >
+                  {/* .fig để CẢ HAI ô là "Lựa chọn"; ô phường chỉ bị khoá xám khi chưa có tỉnh */}
+                  <option value="">Lựa chọn</option>
+                  {/* Khu phố cũ có thể mang tên phường ngoài danh mục hiện hành —
+                      vẫn phải hiện được giá trị đang có, nếu không select rơi về rỗng. */}
+                  {ward && !wards.some((w) => w.name === ward) && <option value={ward}>{ward}</option>}
+                  {wards.map((w) => (
+                    <option key={w.code} value={w.name}>{w.name}</option>
+                  ))}
+                </select>
+                <IconChevronDown className="pointer-events-none absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-ink" />
+              </span>
+            </Field>
+          </div>
+
+          {/* Frame 199 — ô GỘP tên khu phố/hẻm/ngõ, full 636 */}
+          <Field label="Tên khu phố/hẻm/ngõ muốn treo biển" size="lg" className="mt-4">
             <NeighborhoodPicker
               neighborhoods={neighborhoods}
               valueId={nbId}
               valueText={nbText}
-              placeholder="Nhập tên khu phố của bạn"
-              size="lg"
-              onChange={(id, text) => { setNbId(id); setNbText(text); }}
-            />
-          </Field>
-
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="Tỉnh/thành phố" size="lg">
-              {nb ? (
-                <input value={nb.city ?? ""} disabled className="kp-input kp-input-lg bg-cream text-ink-soft" />
-              ) : (
-                <span className="relative block">
-                  <select
-                    value={cityCode}
-                    onChange={(e) => {
-                      const code = e.target.value;
-                      setCityCode(code);
-                      setCity(provinces.find((p) => p.code === code)?.name ?? "");
-                      setWard("");
-                    }}
-                    className="kp-input kp-input-lg tap appearance-none pr-12"
-                  >
-                    <option value="">Lựa chọn</option>
-                    {provinces.map((p) => (
-                      <option key={p.code} value={p.code}>{p.name}</option>
-                    ))}
-                  </select>
-                  <IconChevronDown className="pointer-events-none absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-ink" />
-                </span>
-              )}
-            </Field>
-            <Field label="Phường /Xã" size="lg">
-              {nb ? (
-                <input value={nb.ward ?? ""} disabled className="kp-input kp-input-lg bg-cream text-ink-soft" />
-              ) : (
-                <span className="relative block">
-                  <select
-                    value={ward}
-                    onChange={(e) => setWard(e.target.value)}
-                    disabled={!cityCode}
-                    className="kp-input kp-input-lg tap appearance-none pr-12 disabled:bg-cream disabled:text-ink-soft"
-                  >
-                    <option value="">{cityCode ? "Lựa chọn" : "Chọn tỉnh/thành trước"}</option>
-                    {wards.map((w) => (
-                      <option key={w.code} value={w.name}>{w.name}</option>
-                    ))}
-                  </select>
-                  <IconChevronDown className="pointer-events-none absolute right-4 top-1/2 h-6 w-6 -translate-y-1/2 text-ink" />
-                </span>
-              )}
-            </Field>
-          </div>
-          {nb && (
-            <p className="m-0 mt-1 text-[11.5px] text-ink-soft">
-              Tỉnh/thành và phường/xã lấy theo khu phố đã chọn (địa giới mới từ 1/7/2025).
-            </p>
-          )}
-
-          <Field label="Tên hẻm/ngõ muốn treo" size="lg" className="mt-4">
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
               placeholder="Nhập tên hẻm ngõ nơi bạn sinh sống"
-              className="kp-input kp-input-lg tap"
+              size="lg"
+              onChange={(id, text) => {
+                setNbId(id);
+                setNbText(text);
+                // Chọn khu phố có sẵn → điền hộ tỉnh/phường của khu đó
+                const picked = id ? neighborhoods.find((n) => n.id === id) : null;
+                if (picked?.city) setCity(picked.city);
+                if (picked?.ward) setWard(picked.ward);
+              }}
             />
-            {addressPreview && (
-              <p className="m-0 mt-1.5 flex items-center gap-1.5 pl-1 text-[11.5px] text-ink-soft">
-                <IconPin className="text-brick" />
-                {addressPreview}
-              </p>
-            )}
           </Field>
 
-          <Field label="Mô tả vấn đề tại khu phố" size="lg" className="mt-4">
+          {/* Frame 200 — textarea 636×90, bo 16 */}
+          <Field label="Điều dễ thương bạn muốn chia sẻ ở khu phố này" size="lg" className="mt-4">
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder={category ? EXAMPLE_ISSUE_DESC[category] : "Nhập đoạn mô tả"}
-              rows={3}
-              className="kp-input kp-input-lg"
-            />
-          </Field>
-
-          {/* Design để trống nhãn ô thứ 2 (trùng nhãn ô mô tả) — theo flow hiện có,
-              đây là câu nhắc thương gửi kèm, tuỳ chọn. */}
-          <Field label="Viết câu nhắc thương của bạn (nếu có)" size="lg" className="mt-4">
-            <textarea
-              value={suggestion}
-              onChange={(e) => setSuggestion(e.target.value.slice(0, 120))}
-              placeholder={COPY.suggestionPlaceholder}
+              placeholder="Nhập đoạn mô tả"
               rows={3}
               className="kp-input kp-input-lg"
             />

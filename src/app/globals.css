@@ -341,6 +341,28 @@ body {
   }
 }
 
+/* Dropdown ô tra cứu 4N — .fig `Frame 261` (3 trạng thái đều dùng chung khung này):
+   x=312 y=1193 w=816 r=16 nền trắng, cách ô nhập 8px. Là LỚP NỔI: cả ba trạng thái đều
+   đè lên dải 3 con số phía dưới chứ KHÔNG đẩy nội dung xuống (trước đây trạng thái
+   "1 kết quả" và "rỗng" nằm trong luồng nên trang tụt, sai nhịp dọc .fig). */
+.kp-lookup-panel {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 100%;
+  z-index: 20;
+  margin-top: 8px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-kp);
+}
+@media (min-width: 640px) {
+  .kp-lookup-panel {
+    left: 0;
+    right: 0;
+  }
+}
+
 /* Ô nhập — hai cỡ, lấy đúng từ .fig:
    · .kp-input       = Frame 189/193 khối ưu đãi: cao 40, chữ 14px
    · .kp-input-lg    = Frame 193 trong 4 popup: cao 50, chữ 16px
@@ -362,16 +384,6 @@ body {
   width: 100%;
   resize: vertical;
 }
-.kp-input-lg {
-  /* .fig Frame 193: ô một dòng CAO ĐÚNG 50; ô nhiều dòng cao 90, bo 16 */
-  height: 50px;
-  padding: 0 16px;
-  font-size: 16px;
-}
-textarea.kp-input-lg {
-  height: 90px;
-  padding: 12px 16px;
-}
 @media (min-width: 640px) {
   .kp-input {
     height: 40px;
@@ -380,10 +392,6 @@ textarea.kp-input-lg {
        cho nút — nếu không height: 40px thua min-height và ô vẫn cao 44 (QC 2/9 · C2). */
     min-height: 0;
     font-size: 14px;
-  }
-  .kp-input-lg {
-    /* .fig: 636×50, chữ 16px — giữ 16px cả ở desktop (không hạ xuống 14px) */
-    font-size: 16px;
   }
 }
 
@@ -401,6 +409,22 @@ select.kp-input[multiple] {
   height: auto;
   padding: 9px 16px;
   border-radius: 16px;
+}
+/* .kp-input-lg PHẢI khai SAU hai khối trên, không phải ngay dưới `.kp-input` (QC 7/9):
+   cùng specificity thì rule đứng sau thắng, nên `@media(sm){.kp-input{height:40px}}` đè
+   mất `height:50px` (ô popup ra 40) và `textarea.kp-input{height:auto}` đè mất
+   `height:90px` (textarea nở theo rows, đo được 95.4). Cùng một cái bẫy của `.kp-h2`
+   → `.kp-hero-title` (QC 2/9 · C1). */
+.kp-input-lg {
+  /* .fig Frame 193 (4 popup): ô một dòng CAO ĐÚNG 50, chữ 16px cả ở desktop */
+  height: 50px;
+  padding: 0 16px;
+  font-size: 16px;
+}
+textarea.kp-input-lg {
+  /* .fig: ô nhiều dòng 636×90, bo 16 */
+  height: 90px;
+  padding: 12px 16px;
 }
 .kp-input::placeholder {
   color: var(--color-ink-soft);

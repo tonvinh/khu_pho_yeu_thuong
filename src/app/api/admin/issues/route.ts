@@ -52,8 +52,6 @@ export async function GET(req: NextRequest) {
        u.display_name AS proposer_name,
        i.photo_key,
        (SELECT count(*)::int FROM suggestions s WHERE s.issue_id = i.id) AS suggestion_count,
-       (SELECT s.content FROM suggestions s
-         WHERE s.issue_id = i.id ORDER BY s.created_at ASC LIMIT 1) AS attached_suggestion,
        (count(*) OVER())::int AS total
      FROM issues i
      JOIN neighborhoods n ON n.id = i.neighborhood_id

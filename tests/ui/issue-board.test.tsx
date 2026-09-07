@@ -85,32 +85,33 @@ describe("IssueBoard · B4 — nhãn ba tab theo Figma", () => {
 describe("IssueBoard · B4 — tab 1 'Góc phố mới cần treo biển'", () => {
   it("bỏ góc phố đã treo biển", () => {
     board();
-    expect(screen.getByText(/Hẻm 42 Lê Lợi/)).toBeTruthy();
     expect(screen.queryByText(/Đường Số 5/)).toBeNull();
   });
 
-  it("meta CHỈ có số câu đề xuất — không phường, không lượt thương", () => {
+  it("CHỈ hiện góc phố chưa có câu đề xuất nào (7/9)", () => {
+    board();
+    expect(screen.getByText(/Ngõ 7 Trần Phú/)).toBeTruthy(); // 0 câu
+    expect(screen.queryByText(/Hẻm 42 Lê Lợi/)).toBeNull();  // đã có 3 câu → thuộc tab 2
+    // bộ đếm trên tab đếm theo bộ lọc: 1 góc phố, không phải 2
+    expect(screen.getByText(TAB1).closest("button")!.textContent).toContain("1");
+  });
+
+  it("meta CHỈ là 'Chưa có câu đề xuất' — không phường, không lượt thương", () => {
     const { container } = board();
-    const row = screen.getByText(/Hẻm 42 Lê Lợi/).closest("[data-row]")! as HTMLElement;
-    expect(within(row).getByText("3 câu đề xuất")).toBeTruthy();
+    const row = screen.getByText(/Ngõ 7 Trần Phú/).closest("[data-row]")! as HTMLElement;
+    expect(within(row).getByText("Chưa có câu đề xuất")).toBeTruthy();
     expect(row.textContent).not.toContain("Xóm Lò Gốm");
     expect(row.textContent).not.toContain("lượt thương");
     expect(container.textContent).not.toContain("28 lượt thương");
   });
 
-  it("góc phố chưa có câu nào hiện 'Chưa có câu đề xuất'", () => {
-    board();
-    const row = screen.getByText(/Ngõ 7 Trần Phú/).closest("[data-row]")! as HTMLElement;
-    expect(within(row).getByText("Chưa có câu đề xuất")).toBeTruthy();
-  });
-
-  it("nút LUÔN là 'Gửi lời nhắc' kể cả khi đã có câu, gọi onWrite", () => {
+  it("nút mỗi dòng là 'Gửi lời nhắc', gọi onWrite", () => {
     const onWrite = vi.fn();
     board({ onWrite });
     const buttons = screen.getAllByRole("button", { name: "Gửi lời nhắc" });
-    expect(buttons).toHaveLength(2); // cả i1 (3 câu) lẫn i2 (0 câu)
+    expect(buttons).toHaveLength(1); // chỉ i2 (0 câu)
     fireEvent.click(buttons[0]);
-    expect(onWrite).toHaveBeenCalledWith("i1");
+    expect(onWrite).toHaveBeenCalledWith("i2");
   });
 
   it("KHÔNG có CTA ở đáy card (design tab 1 bỏ hẳn)", () => {
@@ -191,13 +192,21 @@ describe("IssueBoard — tab 2 'Lời nhắc chờ bạn bình chọn' (Figma li
     expect(onWrite).not.toHaveBeenCalled();
   });
 
-  it("phân trang 5 dòng/trang theo số CÂU", () => {
+  it("chỉ 5 câu đầu và KHÔNG có thanh phân trang (review 7/9)", () => {
     const many = Array.from({ length: 7 }, (_, i) => note({ id: `n${i}`, content: `Câu ${i}` }));
     board({ notes: many });
     openTab(TAB2);
     expect(screen.getByText("Câu 4")).toBeTruthy();
     expect(screen.queryByText("Câu 5")).toBeNull();
-    expect(screen.getByText("Trang 1/2")).toBeTruthy();
+    expect(screen.queryByText(/^Trang /)).toBeNull();
+  });
+
+  it("nút 'Bình chọn' có trái tim ở đầu (review 7/9)", () => {
+    board();
+    openTab(TAB2);
+    const row = screen.getByText("Đường sạch, ngõ xinh - Xin đừng vứt rác").closest("[data-row]")! as HTMLElement;
+    const btn = within(row).getByRole("button", { name: "Bình chọn" });
+    expect(btn.querySelector("svg")).toBeTruthy();
   });
 });
 
@@ -259,7 +268,7 @@ describe("IssueBoard · B4/Q7 — tab 3 'Cây bút của khu phố'", () => {
 describe("IssueBoard · B4 — kẻ ngăn dòng và biên", () => {
   it("kẻ ngăn là NÉT ĐỨT (.kp-row-sep), không phải viền liền", () => {
     const { container } = board();
-    const row = screen.getByText(/Hẻm 42 Lê Lợi/).closest("[data-row]")!;
+    const row = screen.getByText(/Ngõ 7 Trần Phú/).closest("[data-row]")!;
     expect(row.className).toContain("kp-row-sep");
     expect(container.querySelector(".border-b.border-cream-dark")).toBeNull();
   });
@@ -279,7 +288,7 @@ describe("IssueBoard · B4 — kẻ ngăn dòng và biên", () => {
 
   it("biên: mỗi tab rỗng dùng đúng câu rỗng của nó", () => {
     board({ issues: [], notes: [], ambassadors: [] });
-    expect(screen.getByText(/Chưa có góc phố nào đang mở/)).toBeTruthy();
+    expect(screen.getByText(/Góc phố nào cũng đã có lời nhắc rồi/)).toBeTruthy();
     openTab(TAB2);
     expect(screen.getByText(/Chưa có lời nhắc nào đang chờ bình chọn/)).toBeTruthy();
     openTab(TAB3);
