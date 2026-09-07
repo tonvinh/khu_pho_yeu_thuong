@@ -18,8 +18,10 @@ export default function NeighborhoodModal({
   slug: string;
   content: SiteContentData;
   onClose: () => void;
-  /** "Viết lời nhắc cho xóm mình" — đóng popup rồi cuộn xuống khối góc phố */
-  onWrite: () => void;
+  /** "Viết lời nhắc cho xóm mình" — đóng popup rồi mở popup "Chọn góc phố"
+   *  (giống CTA "+ Viết câu nhắc của riêng bạn" ở tab 2), truyền TÊN khu phố đang
+   *  xem để góc phố của chính khu đó được xếp lên nhóm đầu. */
+  onWrite: (neighborhoodName: string) => void;
 }) {
   const [nb, setNb] = useState<NeighborhoodDetail | null>(null);
   const [missing, setMissing] = useState(false);
@@ -52,7 +54,7 @@ export default function NeighborhoodModal({
         <NeighborhoodView
           nb={nb}
           footer={
-            <button onClick={onWrite} className="kp-btn kp-btn-solid tap px-5 py-2.5">
+            <button onClick={() => onWrite(nb.name)} className="kp-btn kp-btn-solid tap px-5 py-2.5">
               Viết lời nhắc cho xóm mình
             </button>
           }

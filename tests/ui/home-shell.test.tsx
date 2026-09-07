@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import HomeShell from "@/components/home/HomeShell";
 import type { Me, NotificationItem } from "@/components/home/types";
-import { homeData } from "./helpers";
+import { homeData, issue } from "./helpers";
 
 const apiGet = vi.fn();
 const apiSend = vi.fn();
@@ -202,5 +202,59 @@ describe("HomeShell · A — chân trang không còn khối KV", () => {
     const box = container.querySelector("footer > div")!;
     expect(box.className).toContain("text-black");
     expect(box.className).not.toContain("text-ink");
+  });
+});
+
+// ── QC 7/9 · nút "Viết lời nhắc cho xóm mình" trong popup "Thông tin khu phố" ──
+// Trước đây nút chỉ đóng popup rồi cuộn xuống #goc-xom nên người dùng đọc là "không
+// chạy". Nay đi ĐÚNG luồng của CTA "+ Viết câu nhắc của riêng bạn" ở tab 2: mở popup
+// "Chọn góc phố" — và vì đang xem hồ sơ một khu phố cụ thể, góc phố của CHÍNH khu đó
+// phải được xếp lên nhóm đầu (không phải khu phố của người đã định danh).
+describe("HomeShell · popup khu phố → 'Viết lời nhắc cho xóm mình'", () => {
+  const DETAIL = {
+    id: "nb-9", name: "Phường Tân Định", slug: "phuong-tan-dinh",
+    ward: "Phường Tân Định", city: "Thành phố Hồ Chí Minh",
+    certified_4n: false, certified_at: null, photo_urls: [], certificate_url: null,
+    map_url: null, total_issues: 1, signed_issues: 0, suggestions_total: 0,
+    progress_pct: 0, notes: [],
+  };
+
+  /** Mở popup khu phố qua deep-link `/?khu-pho=<slug>` rồi bấm nút đáy */
+  async function openAndClickWrite() {
+    window.history.replaceState(null, "", "/?khu-pho=phuong-tan-dinh");
+    mockApi();
+    const prev = apiGet.getMockImplementation()!;
+    apiGet.mockImplementation(async (path: string) => {
+      if (path.startsWith("/api/v1/neighborhoods/")) return { neighborhood: DETAIL };
+      return prev(path);
+    });
+
+    render(
+      <HomeShell
+        initial={homeData({
+          issues: [
+            issue({ id: "is-tan-dinh", location_text: "Hẻm 5 Trần Quang Khải",
+                    neighborhood_id: "nb-9", neighborhood_name: "Phường Tân Định" }),
+            issue({ id: "is-lo-gom", location_text: "Hẻm 42 Lê Lợi" }),
+          ],
+        })}
+      />
+    );
+    fireEvent.click(await screen.findByText("Viết lời nhắc cho xóm mình"));
+  }
+
+  it("mở popup 'Chọn góc phố' thay vì chỉ cuộn trang", async () => {
+    await openAndClickWrite();
+    expect(await screen.findByText("Chọn góc phố")).toBeTruthy();
+    // popup khu phố đã đóng — không mở chồng hai popup
+    expect(screen.queryByText("Thông tin khu phố")).toBeNull();
+  });
+
+  it("nhóm đầu là góc phố của KHU PHỐ ĐANG XEM, không phải khu của người định danh", async () => {
+    await openAndClickWrite();
+    await screen.findByText("Chọn góc phố");
+    expect(screen.getByText("📍 Góc phố ở Phường Tân Định")).toBeTruthy();
+    // me.neighborhood_name = "Xóm Lò Gốm" — không được dùng làm nhóm đầu ở luồng này
+    expect(screen.queryByText("📍 Góc phố ở Xóm Lò Gốm")).toBeNull();
   });
 });

@@ -83,7 +83,13 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
               hero
               nb={nb}
               footer={
-                <a href={withBase("/")} className="kp-btn kp-btn-solid tap px-5 py-2.5">
+                /* Cùng luồng với popup ở trang chủ (NeighborhoodModal): về trang chủ
+                   và mở thẳng popup "Chọn góc phố" ĐÚNG khu phố này, thay vì thả người
+                   dùng ở đầu trang chủ mất ngữ cảnh. */
+                <a
+                  href={withBase(`/?viet-loi-nhac=${encodeURIComponent(nb.name)}`)}
+                  className="kp-btn kp-btn-solid tap px-5 py-2.5"
+                >
                   Viết lời nhắc cho xóm mình
                 </a>
               }

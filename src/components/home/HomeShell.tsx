@@ -43,8 +43,19 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   const pendingAction = useRef<(() => void) | null>(null);
   const [proposeOpen, setProposeOpen] = useState(false);
   const [suggestIssueId, setSuggestIssueId] = useState<string | null>(null);
-  // Popup chọn góc phố trước khi viết câu (CTA đáy tab 2 — chốt 4/9)
+  // Popup chọn góc phố trước khi viết câu (CTA đáy tab 2 — chốt 4/9). Mở từ popup
+  // "Thông tin khu phố" thì mang theo TÊN khu phố đang xem để nhóm góc phố của khu đó
+  // lên đầu; mở từ tab 2 thì rơi về khu phố của người đã định danh.
   const [spotPickerOpen, setSpotPickerOpen] = useState(false);
+  const [spotPickerNb, setSpotPickerNb] = useState<string | null>(null);
+  const openSpotPicker = (neighborhoodName?: string | null) => {
+    setSpotPickerNb(neighborhoodName ?? null);
+    setSpotPickerOpen(true);
+  };
+  const closeSpotPicker = () => {
+    setSpotPickerOpen(false);
+    setSpotPickerNb(null);
+  };
   const [toast, setToast] = useState<string | null>(null);
   const [notifs, setNotifs] = useState<NotificationItem[]>([]);
   const [leadPromptOpen, setLeadPromptOpen] = useState(false);
@@ -117,14 +128,23 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
   }, []);
 
   // Deep-link `/?khu-pho=<slug>`: link chia sẻ khu phố mở thẳng popup trên trang chủ.
-  // Dọn luôn query khỏi URL (replaceState) để F5 không mở lại popup ngoài ý muốn.
+  // `/?viet-loi-nhac=<tên khu phố>`: nút "Viết lời nhắc cho xóm mình" ở TRANG SHARE
+  // `/khu-pho/[slug]` — trang share là server component, không mở popup tại chỗ được
+  // nên trả người dùng về trang chủ vào ĐÚNG popup "Chọn góc phố" của khu phố đó.
+  // Mang theo TÊN chứ không phải slug: `myNeighborhood` của SpotPickerModal so theo
+  // `issues[].neighborhood_name` (cùng cột DB), khỏi phải fetch thêm rồi nhóm nhảy.
+  // Cả hai dọn query khỏi URL (replaceState) để F5 không mở lại popup ngoài ý muốn.
   useEffect(() => {
     const url = new URL(window.location.href);
     const slug = url.searchParams.get("khu-pho");
-    if (!slug) return;
-    setNbSlug(slug);
+    const writeFor = url.searchParams.get("viet-loi-nhac");
+    if (!slug && !writeFor) return;
+    if (slug) setNbSlug(slug);
+    else if (writeFor) openSpotPicker(writeFor);
     url.searchParams.delete("khu-pho");
+    url.searchParams.delete("viet-loi-nhac");
     window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /** Chạy hành động cần định danh; chưa có → mở modal, xong tự chạy tiếp */
@@ -416,7 +436,7 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
         ambassadors={data.ambassadors}
         onWrite={(id) => setSuggestIssueId(id)}
         onVoteNote={voteNote}
-        onPickSpot={() => setSpotPickerOpen(true)}
+        onPickSpot={() => openSpotPicker()}
         onPropose={openPropose}
         onOpenAmbassador={(slug) => setAmbassadorSlug(slug)}
       />
@@ -508,10 +528,10 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
       {spotPickerOpen && (
         <SpotPickerModal
           issues={data.issues.filter((it) => it.status !== "signed")}
-          myNeighborhood={me?.neighborhood_name ?? null}
-          onPick={(id) => { setSpotPickerOpen(false); setSuggestIssueId(id); }}
-          onPropose={() => { setSpotPickerOpen(false); openPropose(); }}
-          onClose={() => setSpotPickerOpen(false)}
+          myNeighborhood={spotPickerNb ?? me?.neighborhood_name ?? null}
+          onPick={(id) => { closeSpotPicker(); setSuggestIssueId(id); }}
+          onPropose={() => { closeSpotPicker(); openPropose(); }}
+          onClose={closeSpotPicker}
         />
       )}
       {nbSlug && (
@@ -519,7 +539,10 @@ export default function HomeShell({ initial }: { initial: HomeData }) {
           slug={nbSlug}
           content={data.content}
           onClose={() => setNbSlug(null)}
-          onWrite={() => { setNbSlug(null); scrollTo("goc-xom"); }}
+          /* Trước đây chỉ cuộn xuống #goc-xom — người dùng đọc là "nút không chạy".
+             Nay đi ĐÚNG luồng của CTA "+ Viết câu nhắc của riêng bạn": chọn góc phố
+             rồi mới sang form viết câu (chốt 4/9 — không tự đoán góc phố đầu tiên). */
+          onWrite={(name) => { setNbSlug(null); openSpotPicker(name); }}
         />
       )}
       {leadPromptOpen && (
