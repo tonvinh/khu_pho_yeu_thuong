@@ -65,7 +65,8 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
 - Notification in-web thêm 4 type: issue/suggestion × approved/rejected (wording #15 trong copy.ts).
 - Popup lead "Tôi muốn nhận ưu đãi" (`LeadPromptModal`) hiện 1 lần/thiết bị sau đề xuất/viết câu/vote.
 - Modal định danh z-50 (PHẢI trên drawer z-40) — fix vote "Thương" mobile bị che (#16).
-- TVC/KV demo ở `CampaignMedia.tsx` (YOUTUBE_ID placeholder, chờ final design).
+- ~~TVC/KV demo ở `CampaignMedia.tsx`~~ — component XOÁ 2/9 (khối TVC bỏ khỏi trang chủ từ 18/8),
+  4 khoá `campaign_*` gỡ nốt 4/9. Xem §"Dọn sau QC 4/9".
 - Còn CHỜ ASSET từ team Design/trade: ảnh 20 khu phố (#1), biển bảng 6 chủ đề (#3),
   bảng chứng nhận chính thức (#9, #10) — flow upload theo sheet ORDER chưa dựng.
 
@@ -369,7 +370,8 @@ hoặc đọc trực tiếp như dưới đây.
   khỏi `SITE_CONTENT_DEFAULTS`, `SiteContentData`, màn `/admin/noi-dung`; route
   `/api/admin/site-content/kv` đã XOÁ; `SITE_KV_KEY`, `LEGACY_VIDEO_KEY`,
   `parseYoutubeIds` cũng bỏ. Hàng cũ trong bảng `site_content` chỉ bị lơ đi — không
-  migration. `site_content` giờ đúng **13 khoá** (test khoá `tests/site-content.test.ts`).
+  migration. `site_content` giờ đúng **13 khoá TEXT** (test khoá `tests/site-content.test.ts`) —
+  từ 8/9 bảng này còn giữ thêm 3 khoá SỐ `counter_*` nằm ngoài `SITE_TEXT_KEYS`.
 - **Tiêu đề tab riêng từng màn admin** (D4): layout `(panel)` khai
   `title: { template: "%s — Admin Khu Phố" }`, mỗi route con có `layout.tsx` chỉ khai tên
   ngắn. Trang admin là client component nên KHÔNG tự khai `metadata` được — nhớ tạo

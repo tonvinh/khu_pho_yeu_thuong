@@ -53,6 +53,28 @@ trắng; tất cả chuyển thành ghi chú có ngày hoặc gom vào khối l�
 **Không sửa**: `docs/CLAUDE.md` (quy tắc cứng do PM giữ — xem §4 câu hỏi 6, 7), `21`, `22`, `23`,
 `24`, `QC-02-09-2026.md`, `TONG-HOP-KIEM-DUYET.md` (đều là nhật ký phiên, đúng với thời điểm viết).
 
+### 2b. Bổ sung CUỐI NGÀY 8/9 (sau khi §2 đã chốt)
+
+Hai việc xảy ra **sau** lượt rà ở §2, đã đồng bộ vào tài liệu trong cùng ngày:
+
+**(a) Tính năng mới — admin ghi đè dải 3 con số ở hero** (commit `feat(admin/noi-dung)`).
+Đây là thứ duy nhất trong phiên này **code đi trước tài liệu**; đã bổ sung vào:
+
+| File | Bổ sung |
+|---|---|
+| `03-DATA-MODEL.md` | Khối ghi chú dưới §counters (2 đường `getCounters` / `getRealCounters`) + sửa bảng route `/counters` từ "4 bộ đếm" → 3 |
+| `04-ADMIN-SPEC.md` | §8c-bis mới + sửa bảng màn admin thành "13 khoá text + 3 con số hero" |
+| `12-DATA-DICTIONARY.md` | §2.1e: 3 khoá `counter_*` nằm cùng bảng `site_content` nhưng **ngoài** `SITE_TEXT_KEYS` |
+| `13-API-REFERENCE.md` | §2.2 (trả số đã ghi đè) · §3.2 (**dashboard dùng `getRealCounters()`** — dòng cũ nói dùng chung `getCounters()` đã SAI) · §3.5c (nhóm `counters` trong body PATCH) |
+| `17-VAN-HANH-ADMIN.md` | §6b thêm hướng dẫn vận hành cho người dùng admin |
+| `19-KIEM-THU…md` | 2 test mới: `tests/counters.test.ts`, `tests/ui/admin-site-counters.test.tsx` |
+| `16-FRONTEND-UI.md` | Chú thích ở cây component `Counters` |
+
+**(b) Dọn repo** — gỡ toàn bộ nguồn thô/ảnh design khỏi git (30MB, kể cả lịch sử: `.git` 68MB →
+2.7MB, clone 7MB). Hệ quả với tài liệu: `docs/README.md` §C là **bảng tra "file nào ở Drive"**;
+`22`, `23` không còn trỏ vào ảnh export nữa; quy trình QC bằng ảnh nay phải xin `.fig` ở Drive
+hoặc dump lại bằng `scripts/figma/`. Chi tiết trong `CLAUDE.md` §"Dọn repo 8/9".
+
 ---
 
 ## 3. Bảng đối chiếu nhanh — thứ tài liệu cũ nói vs code hôm nay
@@ -61,7 +83,7 @@ trắng; tất cả chuyển thành ghi chú có ngày hoặc gom vào khối l�
 |---|---|---|
 | 8 chủ đề (`toc_do`, `trom_cap`…) | **6 chủ đề** | `src/lib/taxonomy.ts` · `db/migrations/002_dieuchinh_1_8.sql` |
 | Trang chủ có bản đồ + pin | Không có bản đồ; `pin_x/pin_y` mồ côi | `src/app/page.tsx` · `src/components/home/` |
-| 4 bộ đếm | **3** (`signs_installed`, `neighborhoods_joined`, `suggestions_total`) | `src/lib/counters.ts` |
+| 4 bộ đếm | **3** (`signs_installed`, `neighborhoods_joined`, `suggestions_total`), **admin ghi đè được** (8/9) | `src/lib/counters.ts` |
 | Bấm "Thương" là toggle | **409 `ALREADY_VOTED`**, không rút phiếu | `src/app/api/v1/suggestions/[id]/vote/route.ts` |
 | `POST /api/admin/import` | **Không tồn tại** → 2 route import riêng | `find src/app/api -name route.ts` |
 | `GET /api/admin/scores` + `/admin/diem` | **Không tồn tại** | idem |

@@ -13,7 +13,7 @@ giao diện admin do team dev tự dựng, mô tả thực tế ở [`16-FRONTEN
 > | `/admin/loi-nhac` | Duyệt lời nhắc 4N · tab **Chọn câu & vòng đời biển** | §3, §4 — đổi tên từ `/admin/cau-nhac`, gộp `/admin/bien` (4/8) |
 > | `/admin/voting` | **Theo dõi thương** — sửa số lượt thương của câu/người | §8b (MỚI) |
 > | `/admin/leads` | Quản lý leads | §6 |
-> | `/admin/noi-dung` | **Nội dung trang chủ** — 13 khoá `site_content` | §8c (MỚI) |
+> | `/admin/noi-dung` | **Nội dung trang chủ** — 13 khoá text + **3 con số hero** | §8c (MỚI) |
 > | `/admin/gian-lan` | Chống gian lận | §7 |
 >
 > **Đã XOÁ**: ~~`/admin/de-xuat`~~ · ~~`/admin/cau-nhac`~~ · ~~`/admin/bien`~~ (gộp 4/8) ·
@@ -161,9 +161,23 @@ Sửa text hiển thị trang chủ: hero (tiêu đề, mô tả, placeholder ô
 khối ưu đãi, chân trang. Bảng `site_content` **chỉ lưu ghi đè** — để trống hoặc trùng mặc định là
 **xoá ghi đè** (quay về copy gốc trong `src/lib/site-content-defaults.ts`).
 
-Hiện đúng **13 khoá**. Đã gỡ: 4 khoá `campaign_*` (khối TVC/KV, 4/9 — route ảnh KV
+Hiện đúng **13 khoá text**. Đã gỡ: 4 khoá `campaign_*` (khối TVC/KV, 4/9 — route ảnh KV
 `/api/admin/site-content/kv` cũng xoá) và 4 khoá `sign_promo_*` / `sign_sale_phone` / `sign_hotline`
 (dải khuyến mãi trên biển, 3/9). Ghi `audit_logs` action `site_content_update`.
+
+### 8c-bis. Ghi đè dải 3 con số ở hero (MỚI 8/9)
+
+Cùng màn `/admin/noi-dung`, một khối riêng cho `Biển đã treo` · `Khu phố` · `Câu đóng góp`.
+
+- **Vì sao có**: chiến dịch trao biển ngoài đời thường đi trước dữ liệu trên web; số hiển thị ở
+  trang chủ là con số truyền thông, không nhất thiết bằng số bản ghi trong DB.
+- Mỗi ô có **placeholder là số đếm thật** — để trống nghĩa là "cứ tự đếm".
+- Nhập số ⇒ trang chủ và `GET /api/v1/counters` hiện đúng số đó. **Xoá ô ⇒ quay lại tự đếm.**
+- Chỉ nhận **số nguyên 0…1.000.000**; ngoài khoảng đó API trả 400.
+- **Dashboard `/admin` KHÔNG bị ảnh hưởng** — nó đọc `getRealCounters()` để admin luôn thấy dữ
+  liệu thật. Đây là điểm phải giữ khi sửa code sau này.
+- Lưu trong bảng `site_content` (3 khoá `counter_*`), **không có migration**, cùng audit
+  `site_content_update`.
 
 ## 9. Phân quyền
 

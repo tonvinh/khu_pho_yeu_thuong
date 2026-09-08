@@ -35,7 +35,7 @@
 | `/admin/loi-nhac` | Client | Duyệt lời nhắc với checklist 4N (đổi tên từ `/admin/cau-nhac`) · tab **Chọn câu & vòng đời biển** (gộp `/admin/bien` cũ, 4/8) |
 | `/admin/voting` | Client | Theo dõi thương — sửa số lượt thương của câu/người |
 | `/admin/leads` | Client | Quản lý leads |
-| `/admin/noi-dung` | Client | Sửa 13 khoá text trang chủ (`site_content`) |
+| `/admin/noi-dung` | Client | Sửa 13 khoá text + **3 con số hero** (`site_content`) |
 | `/admin/gian-lan` | Client | Chống gian lận |
 
 **Route admin đã XOÁ** (đừng dựng lại link tới chúng): ~~`/admin/de-xuat`~~ ·
@@ -64,6 +64,7 @@ app/page.tsx  (Server — 8 truy vấn song song, force-dynamic)
     │   ├── KV khu phố 3D + skyline + sàn gạch + 3 hình rời (public/brand/*.webp)
     │   └── (ngoài <header>) HeroLookup  ô tra cứu 4N + dropdown NỔI 3 trạng thái (§4b)
     ├── Counters                 3 con số: Biển đã treo · Khu phố · Câu đóng góp
+    │                            (8/9: admin ghi đè được từng ô ở /admin/noi-dung)
     ├── IssueBoard  #goc-xom     1 card sọc cam, 3 tab (§3.6)
     ├── SignGallery              6 biển mới nhất — SignCard render bằng HTML/CSS
     ├── #uu-dai LeadSection      họ tên · SĐT · TỈNH THÀNH (bắt buộc) · địa chỉ · 6 lựa chọn · opt-in
@@ -424,7 +425,7 @@ Component dùng chung: `Card`, `Btn` (4 biến thể), `ImportModal`, và **`tab
 | `/admin/loi-nhac` | 4 checkbox 4N kèm **gợi ý tiêu chí ngay trên UI**; nút "Duyệt hiển thị" **disabled** đến khi đủ 4 ô (server vẫn kiểm lại) |
 | `/admin/loi-nhac?tab=bien` | Nhóm câu theo góc phố, xếp theo số thương; câu đầu bấm chọn thẳng, câu khác bắt buộc nhập lý do. Ô "ngày treo" là `Record<id, string>` — **riêng cho từng dòng** (B2) |
 | `/admin/voting` | Sửa số thương của câu / của người; ô số phải bắn `input` **và `focusout`** mới lưu |
-| `/admin/noi-dung` | Sửa 13 khoá text; để trống hoặc trùng mặc định = xoá ghi đè |
+| `/admin/noi-dung` | Sửa 13 khoá text + ghi đè 3 con số hero (8/9); để trống hoặc trùng mặc định = xoá ghi đè |
 | `/admin/leads` | SĐT dạng `090***567`, bấm mới hiện (kèm cảnh báo có log); thêm 2 cột **Tỉnh/thành** + **Địa chỉ**, lọc theo tỉnh |
 | Mọi màn | Cờ `loaded` → hiện "Đang tải…" thay vì **loé thông báo rỗng** ở khung hình đầu (B3) |
 

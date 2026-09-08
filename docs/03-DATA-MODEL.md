@@ -194,6 +194,14 @@ Bộ khoá hiện tại đúng **13** (test khoá `tests/site-content.test.ts`):
 ### counters (cache trong RAM tiến trình, 15s)
 **Còn 3 chỉ số** (Figma 2/9 · B2 — `src/lib/counters.ts`):
 
+> **8/9 — admin ghi đè được cả 3 con số.** Chiến dịch có biển treo ngoài đời / khu phố tham gia
+> mà web chưa kịp có dữ liệu, nên `/admin/noi-dung` cho nhập số hiển thị. Ghi đè lưu trong bảng
+> `site_content` dưới 3 khoá `counter_signs_installed` · `counter_neighborhoods_joined` ·
+> `counter_suggestions_total` (**không migration** — cùng cơ chế "ô rỗng → xoá hàng → về mặc định"
+> như text, chỉ khác mặc định là số đếm thật). Hai đường tách bạch:
+> `getCounters()` = số công khai (đã áp ghi đè) · `getRealCounters()` = số đếm thật cho dashboard
+> admin. Cả hai dùng chung một lượt truy vấn + cache 15s; PATCH gọi `resetCountersCache()`.
+
 | Khoá | Nhãn hiển thị | Định nghĩa |
 |---|---|---|
 | `signs_installed` | Biển đã treo | `suggestions.status = 'installed'` |
@@ -255,7 +263,7 @@ khôi phục là về nguyên trạng. Mọi truy vấn công khai mới đụng
 ### Public (không cần auth)
 | Method | Path | Mô tả |
 |--------|------|-------|
-| GET | /counters | 4 bộ đếm |
+| GET | /counters | 3 bộ đếm (đã áp ghi đè của admin nếu có) |
 | GET | /map | Danh sách pins: issues (id, category, status, x, y) + neighborhoods certified |
 | GET | /issues?status=&neighborhood= | Danh sách thẻ vấn đề (kèm suggestion_count, top_votes) |
 | GET | /issues/:id | Chi tiết + suggestions approved (content, author display_name, votes) |

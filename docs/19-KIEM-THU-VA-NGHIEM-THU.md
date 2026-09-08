@@ -24,6 +24,7 @@ server trả 500 cho mọi route và không tự hồi. Tắt dev server trướ
 | `tests/four-n.test.ts` | `passes4N()`: đủ 4 ô mới true; thiếu bất kỳ ô nào, null, undefined đều false. Fixtures câu chuẩn ≤120 ký tự | Quy tắc cứng 2 — chốt chặn duyệt nội dung |
 | `tests/phone.test.ts` | `normalizePhone` (5 dạng nhập), từ chối đầu số sai, `looksFake`, `maskPhone`, `redactPhonesInText` | Quy tắc cứng 3b — bảo vệ SĐT |
 | `tests/site-content.test.ts` | Bộ khoá `site_content` đúng **13** — khoá `campaign_*` đã gỡ hẳn (QC 4/9 · D3) | Không để admin sửa thứ không hiển thị ở đâu |
+| `tests/counters.test.ts` | Ghi đè 3 con số (8/9): ô rỗng → đếm thật · số hợp lệ → thắng · hàng rác (chữ/âm/lẻ) bị lơ đi · `getRealCounters()` **không** áp ghi đè | Dashboard admin phải thấy số thật, trang chủ thấy số PR |
 | `tests/spreadsheet.test.ts` | `readWorkbook`: **CSV UTF-8 không BOM** phải ra đúng dấu tiếng Việt (QC 2/9 · B1) | Sai bảng mã ⇒ lỗi giả "Tỉnh/Thành phố không có trong danh mục" |
 | `tests/globals-css.test.ts` | Đọc thẳng `globals.css`: khai báo có tồn tại **và có đứng ĐÚNG THỨ TỰ không** (`.kp-hero-title` sau `.kp-h2`; `.kp-input-lg` cuối cụm) | Họ bẫy C1/C2 — rule sau thắng khi cùng specificity |
 | `tests/stylize.test.ts` | `stylizeMap()` cho ra ảnh **có màu** (R > G > B), không phải đen trắng | Guard hồi quy sharp 0.34. ⚠️ Hàm này nay **mồ côi** (trang chủ bỏ bản đồ) |
@@ -54,6 +55,7 @@ Dev-dep: `jsdom`, `@testing-library/react`, `@testing-library/dom`. `testTimeout
 | `tests/ui/slider-slots.test.tsx` | Slider lấy `is_featured` và cắt đúng **10 slot**, theo `featured_position` |
 | `tests/ui/admin-neighborhoods.test.tsx` | 3 trạng thái bật/tắt tự do · 10 slot (hoán đổi) · xoá mềm + tab 🗑 Đã xoá |
 | `tests/ui/signs-panel.test.tsx` | Ô "ngày treo" **riêng từng dòng** |
+| `tests/ui/admin-site-counters.test.tsx` | Màn `/admin/noi-dung`: khối 3 con số, placeholder là số đếm thật, ô rỗng gửi `""` để xoá ghi đè |
 | `tests/ui/admin-loading.test.tsx` | Cờ `loaded` → "Đang tải…" thay vì loé thông báo rỗng |
 
 > ⚠️ **jsdom KHÔNG tính layout và KHÔNG hiểu media query.** Số đo px / breakpoint /

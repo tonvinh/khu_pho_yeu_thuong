@@ -4,10 +4,15 @@
 > và chốt thêm **F3 = tab "Cây bút của khu phố" liệt kê NGƯỜI (đại sứ)**, không phải góc phố.
 > Bảng §F giờ là **nhật ký quyết định** — muốn đổi mục nào thì sửa mục đó, không làm lại từ đầu.
 >
-> Còn tồn đọng (không chặn chạy, cần Design cấp file):
-> · font chính thức của skin (đang dùng Baloo 2 IN HOA) · logo tròn "Khu phố Biết Thương"
-> và logo FPT Telecom trên biển (đang dựng bằng chữ + khối màu) · **bản thiết kế mobile**
-> (hiện dev tự quy đổi từ bản desktop) · ảnh banner cầu thủ ở chân biển.
+> Còn tồn đọng lúc viết (18/8) — **cập nhật 8/9**:
+> · ~~font chính thức của skin (đang dùng Baloo 2 IN HOA)~~ → Design đã cấp, **FPT SongVui**
+>   6 face ở `public/fonts/*.woff2` (Baloo 2 chỉ còn là fallback)
+> · ~~logo tròn "Khu phố Biết Thương" và logo FPT Telecom trên biển (đang dựng bằng chữ + khối
+>   màu)~~ → đã có `public/brand/logo-khu-pho.svg` và `sign-logos.webp` cắt từ artwork thật
+> · **bản thiết kế mobile** — **VẪN CHƯA CÓ**; dev tự đặt quy chuẩn (xem `CLAUDE.md`
+>   §"Quy chuẩn mobile" và `docs/22`)
+> · ~~ảnh banner cầu thủ ở chân biển~~ → **không còn cần**: bản Figma 2/9 bỏ hẳn dải khuyến mãi
+>   ở đáy biển (xem `CLAUDE.md` §"Khối biển: bản 2/9 BỎ dải khuyến mãi")
 >
 > Chưa làm (đúng như khuyến nghị F8): cơ chế admin **ghim tay** 6 biển — hiện lấy tự động
 > 6 câu duyệt mới nhất. Muốn ghim tay thì làm tiếp D5.
@@ -295,7 +300,7 @@ audit log — **giữ nguyên**.
 
 # PHẦN E — Dữ liệu, API, migration
 
-### E1 · Migration `010_lp_redesign.sql`
+### E1 · Migration `010_lp_redesign.sql` → **tên thật khi làm là `010_lead_address.sql`**
 - [ ] `ALTER TABLE leads ADD COLUMN province varchar(120), ADD COLUMN address varchar(300);`
 - [ ] *(nếu F8 = ghim tay)* `ALTER TABLE suggestions ADD COLUMN home_position smallint;`
       + unique partial index.

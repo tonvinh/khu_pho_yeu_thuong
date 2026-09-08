@@ -8,7 +8,7 @@ Phiên bản 1.1 — cập nhật wording 28/7/2026 theo `khupho_dieuchinh_28_7.
 > trong `src/lib/copy.ts`** để bật lại được nếu PM đổi ý; §2 dưới đây giữ nguyên bản duyệt.
 >
 > Ngoài `copy.ts`, một phần text trang chủ nay **admin sửa được** ở `/admin/noi-dung`
-> (bảng `site_content`, **13 khoá**) — mặc định của chúng lấy từ `copy.ts` nên copy gốc
+> (bảng `site_content`, **13 khoá text** — bảng này còn 3 khoá SỐ ghi đè bộ đếm, xem `12` §2.1e) — mặc định của chúng lấy từ `copy.ts` nên copy gốc
 > vẫn là nguồn chuẩn. Xem §2.4.
 
 ---
@@ -156,7 +156,7 @@ checkbox đồng ý + ghi chú tuỳ chọn, ô SĐT hiện khi tick nhận ưu 
 Ngoài ra, ô **"Viết câu nhắc thương của bạn (nếu có)"** trong popup đề xuất (thêm 1/8 theo
 `dieuchinh.1.8` #5) cũng đã **bỏ** ngày 7/9 vì `.fig` bản 2/9 không vẽ — xem câu hỏi §6.
 
-### 2.4 Text admin sửa được (`/admin/noi-dung` — bảng `site_content`, **13 khoá**)
+### 2.4 Text admin sửa được (`/admin/noi-dung` — bảng `site_content`, **13 khoá text**)
 
 `hero_title` · `hero_body` · `hero_search_placeholder` · `board_title` · `board_hint` ·
 `signs_title` · `lead_title` · `lead_body` · `lead_privacy` · `footer_line1` · `footer_line2` ·

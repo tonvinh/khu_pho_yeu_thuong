@@ -73,6 +73,9 @@ Khởi tạo token CSRF. Không tạo mới nếu cookie đã tồn tại.
 **3** bộ đếm trang chủ (cache 15 giây trong RAM tiến trình). ~~4 ô~~ → 18/8 rút còn 3, Figma 2/9 · B2
 đổi ý nghĩa hai ô cuối; `issues_waiting` và `contributors` **đã gỡ khỏi cả truy vấn**.
 
+> **8/9**: route này trả số **đã áp ghi đè của admin** (`getCounters()`). Ô nào admin không ghi đè
+> thì vẫn là số đếm thật theo bảng dưới. Xem §3.5c để biết cách đặt/xoá ghi đè.
+
 ```json
 { "signs_installed": 2, "neighborhoods_joined": 5, "suggestions_total": 7 }
 ```
@@ -398,8 +401,9 @@ Thu hồi phiên / trả `{ "admin": { "email": "…" } }`.
   "daily": [ { "day": "2026-07-15", "suggestions": 3, "votes": 12, "leads": 1 } ]
 }
 ```
-`daily` = 14 ngày gần nhất (kể cả ngày không có dữ liệu). `counters` dùng chung `getCounters()`
-với trang chủ nên cũng chỉ còn **3 chỉ số**. Dashboard `/admin` hiện đọc `GET /api/admin/analytics`
+`daily` = 14 ngày gần nhất (kể cả ngày không có dữ liệu). `counters` vẫn là **3 chỉ số** nhưng
+từ 8/9 route này gọi **`getRealCounters()`** — số ĐẾM THẬT, **không** áp ghi đè của admin: dashboard
+phải thấy dữ liệu thật chứ không phải con số PR đang hiển thị ngoài trang chủ. Dashboard `/admin` hiện đọc `GET /api/admin/analytics`
 (§3.5d) là chính; route này giữ cho khối KPI vận hành/thương mại.
 
 ### 3.3 Đề xuất góc phố
@@ -508,10 +512,22 @@ Dữ liệu cho `/admin/voting`: `{ suggestions: [...], users: [...] }` (mỗi b
 
 ### 3.5c `GET` · `PATCH /api/admin/site-content` — Nội dung trang chủ (MỚI)
 
-- `GET` → `{ defaults: {...}, overrides: {...} }` cho **13 khoá** hiện hành.
+- `GET` → `{ defaults, overrides, counters: { real, overrides } }`. `overrides` là **13 khoá text**;
+  `counters.real` là số đếm thật (dùng làm placeholder "để trống thì trang chủ ra số này"),
+  `counters.overrides` là ghi đè đang lưu (`""` = đang tự đếm).
 - `PATCH` nhận các khoá text (≤1000 ký tự). Giá trị **rỗng hoặc trùng mặc định ⇒ XOÁ hàng ghi đè**
   (quay về copy gốc). Không có khoá hợp lệ nào → 400. Ghi audit `site_content_update` kèm danh sách khoá.
 - `SITE_TEXT_KEYS` sinh **từ** `SITE_CONTENT_DEFAULTS` ⇒ gỡ khoá khỏi file là API tự bỏ theo.
+- **Nhóm `counters` (MỚI 8/9)** — ghi đè dải 3 con số ở hero, gửi trong body như một object riêng:
+
+  ```json
+  { "hero_title": "…", "counters": { "signs_installed": "1200", "neighborhoods_joined": "", "suggestions_total": 350 } }
+  ```
+
+  Nhận cả chuỗi lẫn số. Ô **rỗng ⇒ xoá ghi đè** (về đếm thật). Không phải số nguyên 0…1.000.000 → 400.
+  `counters` không phải object → 400. Ghi cùng bảng `site_content` (khoá `counter_*`) và cùng audit
+  `site_content_update`; sau khi ghi gọi `resetCountersCache()` nên **trang chủ đổi số ngay**, không
+  đợi hết cache 15s.
 
 ~~`POST` / `DELETE /api/admin/site-content/kv`~~ (ảnh KV chiến dịch) — **route đã XOÁ** ngày 4/9
 cùng khối TVC/KV.

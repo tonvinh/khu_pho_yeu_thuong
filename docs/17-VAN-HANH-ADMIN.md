@@ -194,6 +194,18 @@ khối đóng góp, tiêu đề khối biển, tiêu đề + mô tả + dòng b�
 - Khối "Câu chuyện chiến dịch / video TVC / ảnh KV" và các dòng khuyến mãi trên biển **đã gỡ khỏi
   màn này** cùng lúc với việc gỡ khỏi trang chủ — không còn ô nào sửa thứ không hiển thị ở đâu.
 
+### Ba con số ở đầu trang chủ (thêm 8/9)
+
+Cuối màn có khối chỉnh **`Biển đã treo` · `Khu phố` · `Câu đóng góp`** — dùng khi số thật trên web
+chưa theo kịp thực tế chiến dịch (đã trao biển ngoài đời, khu phố đã tham gia nhưng chưa nhập liệu).
+
+- Mỗi ô hiện sẵn **số đếm thật làm gợi ý**. **Để trống = cứ để hệ thống tự đếm.**
+- Gõ số vào rồi Lưu ⇒ trang chủ đổi **ngay lập tức**. Xoá số đi ⇒ quay lại tự đếm.
+- Chỉ nhận số nguyên từ 0 đến 1.000.000.
+- **Dashboard `/admin` vẫn luôn hiện số thật**, không đổi theo ô này — để bạn biết dữ liệu thực sự
+  đang ở đâu. Đừng dùng dashboard để kiểm tra xem ghi đè đã ăn chưa, hãy mở trang chủ.
+- Mỗi lần lưu vẫn ghi nhật ký `site_content_update` như các ô chữ.
+
 ## 6c. Theo dõi thương (`/admin/voting`)
 
 Sửa **số lượt thương** của một câu nhắc hoặc của một người.

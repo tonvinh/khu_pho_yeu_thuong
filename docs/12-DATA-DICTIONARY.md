@@ -99,7 +99,14 @@ server validate bằng `geoError()` async trong `src/lib/geo.ts` (file tĩnh `vn
 Mặc định nằm ở `src/lib/site-content-defaults.ts` (`SITE_CONTENT_DEFAULTS`, phần lớn lấy lại từ
 `copy.ts` nên copy gốc vẫn là nguồn chuẩn). `SITE_TEXT_KEYS` sinh **từ** bộ mặc định ⇒ gỡ một khoá
 khỏi file là API admin tự bỏ khoá đó, hàng cũ trong bảng chỉ bị lơ đi (không cần migration).
-Hiện đúng **13 khoá**; đã gỡ 4 khoá `campaign_*` (4/9) và 4 khoá `sign_promo_*`/`sign_sale_phone`/`sign_hotline` (3/9).
+Hiện đúng **13 khoá text**; đã gỡ 4 khoá `campaign_*` (4/9) và 4 khoá `sign_promo_*`/`sign_sale_phone`/`sign_hotline` (3/9).
+
+**Ngoài 13 khoá text, bảng này còn chứa 3 khoá SỐ** (thêm 8/9, không migration):
+`counter_signs_installed` · `counter_neighborhoods_joined` · `counter_suggestions_total` — ghi đè
+dải 3 con số ở hero. Chúng **không** nằm trong `SITE_TEXT_KEYS` (nên bộ khoá text vẫn đúng 13);
+danh mục ở `src/lib/counters.ts` (`COUNTER_KEYS`), API admin nhận ở nhóm riêng `counters` của body
+PATCH và validate số nguyên 0…`COUNTER_MAX` (1.000.000). Hàng rác (chữ, số âm, số lẻ) bị **lơ đi**
+→ rơi về số đếm thật, trang chủ không ra `NaN`. Sửa thẳng bằng SQL thì phải chờ hết cache 15s.
 
 ### 2.2 `users` — cư dân (KHÔNG chứa admin)
 
