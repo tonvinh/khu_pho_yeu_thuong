@@ -12,7 +12,8 @@ WORKDIR /app
 RUN npm install -g pnpm@9
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# basePath truyền lúc build (Q5): '' cho khupho.fpt.vn, '/khu-pho-de-thuong' cho fpt.vn/...
+# basePath truyền lúc build (Q5): '' cho domain riêng, '/khu-pho-biet-thuong' cho
+# fpt.vn/khu-pho-biet-thuong (chốt 8/9). Giá trị NƯỚNG vào image — đổi là phải build lại.
 ARG BASE_PATH=""
 ENV BASE_PATH=$BASE_PATH
 ENV NEXT_TELEMETRY_DISABLED=1

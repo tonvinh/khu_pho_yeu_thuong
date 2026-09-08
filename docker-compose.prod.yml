@@ -8,7 +8,7 @@ services:
       context: .
       args:
         # Đọc từ .env (như docker-compose.yml) — KHÔNG hardcode. basePath là BUILD ARG:
-        # deploy dưới subpath (vd fpt.vn/khu-pho-yeu-thuong) mà file này chốt cứng "" thì
+        # deploy dưới subpath (fpt.vn/khu-pho-biet-thuong) mà file này chốt cứng "" thì
         # CI build lại là mất subpath, site 404 toàn bộ asset. Bỏ trống = domain riêng.
         BASE_PATH: ${BASE_PATH:-}
     restart: unless-stopped

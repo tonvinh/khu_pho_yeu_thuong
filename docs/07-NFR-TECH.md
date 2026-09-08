@@ -33,7 +33,7 @@ Phiên bản 1.0
 | ~~Bản đồ~~ | ~~Ảnh upload + filter cách điệu + pins toạ độ %~~ → **ĐÃ GỠ khỏi sản phẩm 1/8**, thay bằng slider ảnh khu phố (`NeighborhoodSlider`) | Q3 hết hiệu lực — xem `20` §1 |
 | Ảnh | Upload lên object storage (MinIO S3-compatible), resize/WebP tự động | Ảnh tổng quan khu phố (4/khu, chuẩn hoá 1280×720), ảnh chứng nhận, ảnh biển. **Biển trên trang chủ nay render bằng HTML/CSS** (`SignCard`), không phải ảnh upload |
 | OG image | Route render ảnh động (@vercel/og hoặc satori + resvg) | Phục vụ share MXH (Q8) |
-| Deploy | **Toàn bộ infra chạy Docker** trên hạ tầng FPT · domain: **một trong hai** — `khupho.fpt.vn` **hoặc** `fpt.vn/khu-pho-de-thuong` (chốt phương án sau) | Đã chốt — chi tiết §2.2. `basePath` cấu hình bằng biến env (`''` cho subdomain, `'/khu-pho-de-thuong'` cho path); mọi link/asset/OG qua helper URL, không hard-code |
+| Deploy | **Toàn bộ infra chạy Docker** trên hạ tầng FPT · domain **chốt 8/9**: `fpt.vn/khu-pho-biet-thuong` (chạy dưới path) | Đã chốt — chi tiết §2.2. `basePath` cấu hình bằng biến env (`''` cho subdomain, `'/khu-pho-biet-thuong'` cho path); mọi link/asset/OG qua helper URL, không hard-code |
 | Font/màu | ~~`Khu Pho Yeu Thuong.dc.html`: nền kem, đỏ gạch primary~~ → **skin cam FPT** (`#FF8206` primary, nhấn xanh `#2323FF`) + font **FPT SongVui** (Light 300 / Regular 400 / Bold 700 — **không có 600/800**). Nguồn design chuẩn: `docs/lp/LandingpageFCM.fig` | Chi tiết token + bẫy CSS: `16-FRONTEND-UI.md` §5 |
 
 ## 2.1 Kiến trúc bảo mật định danh (ƯU TIÊN CAO — không OTP)
@@ -110,7 +110,7 @@ Phiên bản 1.0
 | Q2 | Chấm 4N | **Người duyệt trực tiếp.** Không có engine chấm tự động; admin tick checklist 4N khi duyệt (04 §3); client chỉ giới hạn 120 ký tự |
 | Q3 | Bản đồ | **Upload 1 ảnh bản đồ → tự động cách điệu** (filter duotone theo bảng màu chiến dịch); admin click đặt pin; bấm pin hiển thị **ảnh thật địa điểm** + thông tin (02 §1, 04 §10) |
 | Q4 | Lead | **Export CSV thủ công** có log |
-| Q5 | Hosting/domain | Hạ tầng FPT; domain là **một trong hai**: **khupho.fpt.vn** hoặc **fpt.vn/khu-pho-de-thuong** (phương án cuối chốt trước go-live). Code hỗ trợ `basePath` qua biến env để chuyển giữa hai phương án không cần sửa code |
+| Q5 | Hosting/domain | ~~Hạ tầng FPT; domain là **một trong hai**: **khupho.fpt.vn** hoặc **fpt.vn/khu-pho-de-thuong** (phương án cuối chốt trước go-live)~~ → **CHỐT 8/9: phương án B, `https://fpt.vn/khu-pho-biet-thuong`** ⇒ `BASE_PATH=/khu-pho-biet-thuong`, `SITE_ORIGIN=https://fpt.vn`. Code hỗ trợ `basePath` qua biến env nên không phải sửa code, nhưng đây là **build arg** — đổi là phải build lại image |
 | Q6 | Pilot | **20 khu phố đầu tiên**, import 1 lần bằng Excel template `import-template.xlsx` qua trình bulk import (04 §11) |
 | Q7 | Chính quyền | **Không có tài khoản gov_viewer trong MVP** — báo cáo offline (export từ admin) |
 | Q8 | Vinh danh Đại sứ | **Leaderboard + chức năng share MXH** (URL công khai + OG image động, Facebook/Zalo) — 02 §11. Chưa hiển thị giải thưởng hiện vật |

@@ -197,7 +197,7 @@ Chuẩn bị: DB sạch → `pnpm migrate && pnpm seed`, hoặc môi trường s
 | 6 | Copy nguyên văn | So `src/lib/copy.ts` với `06-CONTENT-COPY.md` §2 (và bản duyệt 28/7) |
 | 7 | `/admin` chặn index + đăng nhập chuẩn | E2E-2 bước 6–9 |
 | 8 | Không SMS | Rà toàn repo: không có SDK/nhà cung cấp SMS nào. E2E-1 bước 14 |
-| 9 | `basePath` bằng env | Build thử với `BASE_PATH=/khu-pho-de-thuong` → mọi link/asset/OG vẫn đúng |
+| 9 | `basePath` bằng env | Build với `BASE_PATH=/khu-pho-biet-thuong` (giá trị production, chốt 8/9) → mọi link/asset/OG vẫn đúng. Kiểm cả `docker-compose.prod.yml` có truyền biến (CI build bằng file này) |
 | 10 | Ảnh prefix `private/` chỉ admin đọc được | E2E-2 bước 5. *(Bản đồ + pin đã gỡ khỏi sản phẩm từ 1/8 — quy tắc vẫn áp cho mọi ảnh `private/`)* |
 | 11 | Toàn bộ infra Docker, chỉ proxy mở port | `docker compose up -d` từ máy sạch chỉ với Docker + `.env`; `docker compose ps` xác nhận chỉ `proxy` publish port |
 

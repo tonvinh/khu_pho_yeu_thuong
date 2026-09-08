@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
-// Quy tắc 9 (CLAUDE.md): basePath cấu hình bằng biến env — '' cho khupho.fpt.vn,
-// '/khu-pho-de-thuong' cho fpt.vn/khu-pho-de-thuong. Đổi phương án = đổi 1 biến env.
+// Quy tắc 9 (CLAUDE.md): basePath cấu hình bằng biến env — '' cho domain riêng,
+// '/khu-pho-biet-thuong' cho fpt.vn/khu-pho-biet-thuong (phương án ĐÃ CHỐT 8/9).
+// Đổi phương án = đổi 1 biến env, nhưng là BUILD ARG nên bắt buộc build lại image.
 const basePath = process.env.BASE_PATH || "";
 
 const nextConfig: NextConfig = {

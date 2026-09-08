@@ -40,7 +40,7 @@ Cách đọc + bẫy: [`16-FRONTEND-UI.md`](16-FRONTEND-UI.md) đầu file.
 | D4 | **Duyệt 4N thủ công (Q2).** Admin tick đủ 4 ô mới duyệt; không engine chấm tự động; client chỉ giới hạn 120 ký tự | 04 §3 · 06 §3 |
 | D5 | ~~**Bản đồ (Q3):** upload 1 ảnh → tự động cách điệu; admin click đặt pin~~ → **ĐÃ GỠ khỏi sản phẩm 1/8**, thay bằng slider ảnh khu phố | 02 §1 · 04 §10 · `20` §1 |
 | D6 | **Lead export CSV thủ công (Q4)**, có log | 04 §6 |
-| D7 | **Domain (Q5):** MỘT trong hai — khupho.fpt.vn HOẶC fpt.vn/khu-pho-de-thuong; basePath qua biến env | 07 §2 · CLAUDE.md quy tắc 9 |
+| D7 | **Domain (Q5):** ~~MỘT trong hai — khupho.fpt.vn HOẶC fpt.vn/khu-pho-de-thuong~~ → **chốt 8/9: `fpt.vn/khu-pho-biet-thuong`**; basePath qua biến env | 07 §2 · CLAUDE.md quy tắc 9 |
 | D8 | **Pilot 20 khu phố (Q6):** bulk import 1 lần bằng import-template.xlsx (validate → preview → commit all-or-nothing) | 04 §11 |
 | D9 | **Không gov_viewer (Q7):** chính quyền nhận báo cáo offline | 04 §9 |
 | D10 | **Vinh danh (Q8):** leaderboard + share MXH (URL công khai + OG image động, FB/Zalo) | 02 §11 |

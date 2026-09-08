@@ -62,8 +62,8 @@ Bảng đầy đủ + cách sinh/backup secrets: [docs/18 §2](docs/18-TRIEN-KHA
 | `POSTGRES_PASSWORD` | ✅ | Mật khẩu Postgres (user/db mặc định `khupho`). |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | ✅ | Credentials MinIO. |
 | `DATABASE_URL` | dev | Chỉ cần khi chạy ngoài Docker. Trong compose bị override thành `@db:5432`. |
-| `BASE_PATH` | | `""` cho domain riêng; `/khu-pho-de-thuong` nếu chạy dưới path. Là **build arg** — đổi phải rebuild. |
-| `SITE_ORIGIN` | | Origin tuyệt đối cho OG tag / share link. Production: `https://khupho.ailab.city`. |
+| `BASE_PATH` | | **Chốt 8/9: `/khu-pho-biet-thuong`** (`https://fpt.vn/khu-pho-biet-thuong`); `""` nếu dùng domain riêng. Là **build arg** — đổi phải rebuild. |
+| `SITE_ORIGIN` | | Origin tuyệt đối cho OG tag / share link — **chỉ origin, KHÔNG kèm path** (code tự ghép `basePath`). Production dự kiến: `https://fpt.vn`; bản đang chạy thử: `https://khupho.ailab.city`. |
 | `SITE_ADDRESS` | | Chỉ dùng cho mode 4-service: `:80` local, hoặc domain để Caddy tự cấp TLS. |
 | `MINIO_BUCKET` | | Mặc định `khupho` (bucket tự tạo ở lần upload đầu). |
 | `SEED_ADMIN_PASSWORD` | | Tuỳ chọn, cho `pnpm seed`. |

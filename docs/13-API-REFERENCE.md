@@ -1,7 +1,7 @@
 # 13 — Tham chiếu API
 
 > Cập nhật: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9.
-> Tất cả endpoint hiện có trong `src/app/api` (đối chiếu bằng `find src/app/api -name route.ts`). Đường dẫn dưới đây **chưa gồm `basePath`** — nếu chạy dưới path (`BASE_PATH=/khu-pho-de-thuong`) thì tiền tố thêm vào đầu.
+> Tất cả endpoint hiện có trong `src/app/api` (đối chiếu bằng `find src/app/api -name route.ts`). Đường dẫn dưới đây **chưa gồm `basePath`** — chạy dưới path (`BASE_PATH=/khu-pho-biet-thuong`, chốt 8/9) thì tiền tố thêm vào đầu.
 > Định dạng: JSON UTF-8. Thông báo lỗi là **tiếng Việt, dành cho người dùng cuối** — có thể hiển thị thẳng lên UI.
 
 ## 1. Quy ước chung

@@ -70,6 +70,14 @@ Hai việc xảy ra **sau** lượt rà ở §2, đã đồng bộ vào tài li�
 | `19-KIEM-THU…md` | 2 test mới: `tests/counters.test.ts`, `tests/ui/admin-site-counters.test.tsx` |
 | `16-FRONTEND-UI.md` | Chú thích ở cây component `Counters` |
 
+**(a-bis) Chốt tên miền (Q5)** — production là **`https://fpt.vn/khu-pho-biet-thuong`**, tức
+phương án **chạy dưới path** ⇒ `BASE_PATH=/khu-pho-biet-thuong` + `SITE_ORIGIN=https://fpt.vn`.
+Kèm theo phát hiện một lỗi chặn deploy: `docker-compose.prod.yml` — file mà **CI dùng để build**
+(`deploy.yml:163`) — chốt cứng `BASE_PATH: ""` trong khi `docker-compose.yml` đọc từ `.env`. Deploy
+subpath mà không sửa thì build tay có thể đúng nhưng **mọi lần CI build lại đều mất basePath**,
+site 404 toàn bộ asset. Đã sửa để cả hai file cùng đọc `${BASE_PATH:-}` (mặc định vẫn `""` nên
+bản đang chạy `khupho.ailab.city` không đổi hành vi).
+
 **(b) Dọn repo** — gỡ toàn bộ nguồn thô/ảnh design khỏi git (30MB, kể cả lịch sử: `.git` 68MB →
 2.7MB, clone 7MB). Hệ quả với tài liệu: `docs/README.md` §C là **bảng tra "file nào ở Drive"**;
 `22`, `23` không còn trỏ vào ảnh export nữa; quy trình QC bằng ảnh nay phải xin `.fig` ở Drive
@@ -127,6 +135,7 @@ hoặc dump lại bằng `scripts/figma/`. Chi tiết trong `CLAUDE.md` §"Dọn
 |---|---|---|
 | **11** | **Quy tắc cứng 10** — *"Bản đồ (Q3): ảnh gốc chỉ admin thấy; public luôn là bản cách điệu; pin dùng toạ độ %"* | Bản đồ **đã gỡ khỏi sản phẩm từ 1/8**. Vế "ảnh gốc chỉ admin thấy" vẫn đúng cho mọi ảnh prefix `private/` và vẫn được ép ở `/api/img`; hai vế còn lại **không còn đối tượng áp dụng**. |
 | **12** | **§"Nguồn sự thật về UI"** trỏ tới `Khu Pho Yeu Thuong.dc.html` và `Admin Khu Pho.dc.html` | Hai file này **không có trong `docs/`**. Nguồn design chuẩn hiện nay là **`docs/lp/LandingpageFCM.fig`** (chốt 4/9). |
+| **14** | **Quy tắc cứng 9** — *"site chạy ở MỘT trong hai: `khupho.fpt.vn` hoặc `fpt.vn/khu-pho-de-thuong` (**chưa chốt phương án nào**)"* | **Q5 ĐÃ CHỐT 8/9**: phương án B, đường dẫn thật là **`https://fpt.vn/khu-pho-biet-thuong`** (không phải `khu-pho-de-thuong`). Đã cập nhật `07` §Q5, `00` D7, `README`, `.env.example`, `18` §2.1, `13`, `19`. `docs/CLAUDE.md` để PM sửa. |
 | **13** | **Definition of Done** còn hạng mục *"Upload ảnh bản đồ → hiển thị bản cách điệu + đặt pin bằng click; bấm pin hiện ảnh thật địa điểm"* | Hạng mục này đã rút khỏi phạm vi. Đề nghị thay bằng: *"Upload 4 ảnh tổng quan + 1 ảnh chứng nhận cho khu phố; slider hero hiển thị đúng 10 slot theo thứ tự admin xếp."* |
 
 ### 4.3 Việc kỹ thuật còn nợ (không cần BA trả lời)
