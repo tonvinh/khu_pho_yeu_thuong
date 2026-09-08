@@ -1,5 +1,6 @@
 # 11 — Kiến trúc hệ thống
 
+> Cập nhật: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9 (đổi ở §6 pipeline ảnh).
 > Mô tả kiến trúc **như đã triển khai**. Yêu cầu kiến trúc gốc ở `07-NFR-TECH.md` §2.
 
 ## 1. Sơ đồ tổng thể
@@ -125,31 +126,40 @@ tx(fn)     // BEGIN → fn(client) → COMMIT, lỗi thì ROLLBACK, luôn releas
 Quy ước:
 
 - **Luôn dùng tham số hoá `$1, $2…`** — không nối chuỗi SQL từ input người dùng.
-- Thao tác nhiều bảng phải nằm trong `tx()`: duyệt đề xuất, duyệt câu, bỏ/ghi phiếu, treo biển, bulk import.
+- Thao tác nhiều bảng phải nằm trong `tx()`: duyệt đề xuất, duyệt câu, ghi phiếu, treo biển, import,
+  **admin sửa số thương** (`/api/admin/votes`) và **xếp slot slide** (PATCH khu phố — 3 bước hoán đổi).
 - Khoá hàng bằng `SELECT … FOR UPDATE` trước khi chuyển trạng thái (chống double-submit).
 - Ghi điểm chỉ qua `recordScoreEvent` / `invalidateScoreEvent` (nhận `PoolClient` để nằm chung transaction).
 
 ## 6. Pipeline ảnh
 
-```
-Admin upload ảnh bản đồ (jpg/png/webp ≤10MB)
-   ├─ toWebp(buf, 2400, q90)   → private/maps/{nbId}/original.webp   ← CHỈ admin đọc được
-   └─ stylizeMap(buf)          → public/maps/{nbId}/stylized.webp    ← public thấy cái này
-        grayscale → median(3) → normalise → gamma(1.2)
-        → tint đỏ gạch #B23A2E → modulate(brightness 1.18, saturation .85) → webp q78
+**Đang chạy** (mọi upload đều `requireAdmin` + CSRF, ≤10MB, chỉ nhận jpg/png/webp):
 
-Ảnh địa điểm / ảnh biển / ảnh khu phố
-   └─ toWebp(buf, 1400, q80)   → public/issues/{id}/photo.webp
-                                 public/signs/{id}/photo.webp
-                                 public/neighborhoods/{id}/photo.webp
+```
+Ảnh tổng quan khu phố — tối đa 4/khu, slot 1..4
+   └─ toCover(buf, 1280, 720)  → public/neighborhoods/{id}/{ts}.webp   (bảng neighborhood_photos)
+        chuẩn hoá CÙNG CỠ nên slider không nhấp nhô; key có timestamp vì ảnh public
+        cache immutable 1 ngày — thay ảnh phải đổi URL
+
+Ảnh chứng nhận 4N — tối đa 1/khu
+   └─ toWebp(buf, 1600, q85)   → public/neighborhoods/{id}/certificate-{ts}.webp
+        ảnh cũ bị removeObject sau khi ghi DB
+
+Ảnh biển (1 hình duy nhất cho mỗi câu)
+   └─ toWebp(buf, 1400, q80)   → public/signs/{id}/photo.webp          (suggestions.image_key)
 ```
 
-Quy tắc truy cập (quy tắc cứng 10):
+~~Pipeline ảnh bản đồ (`toWebp` 2400/q90 → `private/maps/…` + `stylizeMap` → `public/maps/…`)~~ —
+**không còn route nào chạy**: trang chủ bỏ bản đồ từ 1/8, hai route `map-image` đã xoá.
+Hàm `stylizeMap()` (duotone đỏ gạch) vẫn nằm trong `src/lib/stylize.ts` nhưng **mồ côi**, chỉ
+`scripts/seed-images.mjs` và `tests/stylize.test.ts` còn gọi.
+
+Quy tắc truy cập (quy tắc cứng 10) — **vẫn nguyên vẹn cho mọi ảnh `private/`**:
 
 - Bucket MinIO **private**; không expose MinIO ra internet.
 - `/api/img/[...key]` chỉ phục vụ key bắt đầu bằng `public/` và chặn `..` → mọi thứ khác trả 404.
-- Ảnh bản đồ gốc chỉ đọc được qua `GET /api/admin/neighborhoods/[id]/map-image` (có `requireAdmin`).
-- Pin lưu **toạ độ %** (0–100) nên đổi ảnh bản đồ không làm lệch pin — nhưng admin được cảnh báo kiểm tra lại vị trí.
+- ~~Ảnh bản đồ gốc đọc qua `GET /api/admin/neighborhoods/[id]/map-image`~~ — route đã xoá; hiện
+  **không có ảnh `private/` nào được sinh ra nữa** (chỉ seed cũ còn lại).
 
 ## 7. Cấu hình theo môi trường
 

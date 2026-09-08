@@ -1,5 +1,6 @@
 # 10 — Tổng quan dự án "Khu Phố Của Tôi"
 
+> Cập nhật: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9.
 > Tài liệu hệ thống · mô tả **hệ thống như đã triển khai**. Đặc tả yêu cầu gốc ở `01-PRD.md`, `02-FUNCTIONAL-SPEC.md`.
 
 ## 1. Sản phẩm là gì
@@ -20,10 +21,10 @@ Song song, website là kênh thu **lead** (khách quan tâm dịch vụ FPT) the
 
 | Vai trò | Định danh | Làm được gì |
 |---|---|---|
-| **Khách vãng lai** | Không | Xem bản đồ, đọc câu nhắc đã duyệt, xem bảng xếp hạng, tra chứng nhận khu phố |
+| **Khách vãng lai** | Không | Xem slider khu phố tiêu biểu, đọc câu nhắc đã duyệt, xem tab cây bút, **tra chứng nhận khu phố** (ô tra cứu 4N ở hero). ~~Xem bản đồ~~ — gỡ 1/8 |
 | **Cư dân** | SĐT băm + cookie `kp_session` (180 ngày) | Đề xuất góc xóm, viết câu nhắc, bấm "Thương", nhận thông báo in-web, để lại lead |
-| **Admin chiến dịch** | Email `@fpt.com` + mật khẩu Argon2id (+TOTP tuỳ chọn), cookie `kp_admin_session` (8h) | Duyệt đề xuất, duyệt 4N, chọn câu, quản lý vòng đời biển, bản đồ & pin, leads, chống gian lận, bulk import |
-| **Hệ thống** | — | Ghi sổ cái điểm, cách điệu ảnh bản đồ, sinh OG image, gắn cờ gian lận |
+| **Admin chiến dịch** | Email `@fpt.com` + mật khẩu Argon2id (+TOTP tuỳ chọn), cookie `kp_admin_session` (8h) | Duyệt đề xuất, duyệt 4N, chọn câu, quản lý vòng đời biển, **khu phố (ảnh · 3 trạng thái · 10 slot slide · xoá mềm)**, **theo dõi thương**, **nội dung trang chủ**, leads, chống gian lận, import file. ~~bản đồ & pin~~ — gỡ 1/8 |
+| **Hệ thống** | — | Ghi sổ cái điểm, chuẩn hoá ảnh khu phố (1280×720 WebP), sinh OG image, gắn cờ gian lận |
 
 Không có vai trò `gov_viewer` (đã chốt bỏ — Q7). Bảng `users` (cư dân) và `admin_users` **tách hoàn toàn**, không dùng chung cơ chế đăng nhập.
 
@@ -77,7 +78,7 @@ Chi tiết ở [`CLAUDE.md`](CLAUDE.md). Vi phạm bất kỳ điều nào = l�
 7. `/admin` chặn index; đăng nhập email `@fpt.com` + Argon2id; khoá 15 phút sau 5 lần sai.
 8. **Không có SMS** trong toàn hệ thống — báo tin vui bằng `notifications` + banner in-web.
 9. `basePath` cấu hình bằng env, không hard-code đường dẫn gốc.
-10. Ảnh bản đồ gốc chỉ admin thấy; public luôn là bản cách điệu; pin dùng toạ độ %.
+10. Ảnh prefix `private/` chỉ admin thấy (`/api/img` chỉ phục vụ `public/`). *(Vế bản đồ cách điệu + pin toạ độ % không còn đối tượng áp dụng — bản đồ gỡ khỏi sản phẩm 1/8.)*
 11. Toàn bộ infra chạy Docker; chỉ service proxy mở port; migration là lệnh riêng.
 
 ## 5. Bản đồ repo
@@ -134,7 +135,7 @@ Dockerfile                      Multi-stage, standalone, non-root, healthcheck
 | Style | TailwindCSS 4 (`@theme` token trong `globals.css`) | Font Be Vietnam Pro + Baloo 2 (self-host) |
 | DB | PostgreSQL 16 | driver `pg`, pool max 10, `pgcrypto` cho `gen_random_uuid()` |
 | Ảnh | MinIO (S3-compatible) | prefix `public/` (stream qua app) và `private/` (chỉ admin) |
-| Xử lý ảnh | sharp | cách điệu duotone bản đồ + convert WebP |
+| Xử lý ảnh | sharp | convert WebP + `toCover` chuẩn hoá 1280×720 cho ảnh khu phố. *(`stylizeMap` duotone nay mồ côi)* |
 | Mật khẩu | @node-rs/argon2 (Argon2id, m=19456, t=2, p=1) | chỉ dùng cho admin |
 | 2FA | otplib (TOTP) | tuỳ chọn từng tài khoản admin |
 | Excel/Zip | xlsx + adm-zip | bulk import khu phố |
@@ -159,8 +160,11 @@ Dockerfile                      Multi-stage, standalone, non-root, healthcheck
 | **Lead tầng 2** | Điền form ở khối "Quà dành cho cư dân" | `source = 'active_section'` |
 | **Shadow-ban** | Chặn im lặng: phiếu/điểm không tính, UI người đó không đổi | `users.is_shadow_banned` |
 | **Sổ cái điểm** | Bảng append-only ghi từng lần cộng điểm | `score_events` |
-| **Pin** | Điểm đánh dấu góc xóm trên bản đồ, toạ độ **%** | `issues.pin_x/pin_y` |
-| **Bản cách điệu** | Ảnh bản đồ đã duotone hoá cho public xem | `neighborhoods.map_stylized_key` |
+| ~~**Pin**~~ | ~~Điểm đánh dấu góc xóm trên bản đồ~~ — **không còn dùng** từ 1/8 | `issues.pin_x/pin_y` (cột mồ côi) |
+| ~~**Bản cách điệu**~~ | Nay chỉ là **ảnh dự phòng** khi khu chưa có `neighborhood_photos` | `neighborhoods.map_stylized_key` |
+| **Slot slide** | 1 trong **10 chỗ** của slider hero, admin xếp | `neighborhoods.featured_position` (unique, 1–10) |
+| **Xoá mềm** | Khu phố bị ẩn khỏi toàn bộ web nhưng dữ liệu còn nguyên | `neighborhoods.deleted_at` |
+| **Lời nhắc chờ bình chọn** | Câu đã duyệt của góc phố chưa treo biển — nguồn tab 2 | `src/lib/notes.ts` → `getVotingNotes()` |
 
 ## 8. Màu trạng thái (thống nhất toàn hệ thống)
 

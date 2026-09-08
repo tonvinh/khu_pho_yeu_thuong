@@ -2,6 +2,11 @@
 Dự án: Website "Khu Phố Của Tôi" · Chiến dịch "Khu phố biết thương" · FPT Telecom
 Phiên bản tài liệu: **1.0-RC (chờ ký duyệt)** · Ngày: 17/07/2026 · Soạn: Product Manager Website
 
+> Cập nhật: 8/9/2026 — bộ tài liệu đã được đồng bộ lại với code sau các đợt 18/8, 2–4/9, 7/9.
+> Nhật ký đồng bộ + danh sách câu hỏi còn treo: [`25-DONG-BO-TAI-LIEU-08-09.md`](25-DONG-BO-TAI-LIEU-08-09.md).
+> Hai quyết định làm lệch đặc tả gốc nhiều nhất: **bỏ bản đồ khỏi trang chủ** (1/8) và
+> **DESIGN THẮNG SPEC** (2/9) — xem [`20`](20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md) §2.
+
 ---
 
 ## 1. Bộ tài liệu (9 file + 1 template)
@@ -9,17 +14,21 @@ Phiên bản tài liệu: **1.0-RC (chờ ký duyệt)** · Ngày: 17/07/2026 ·
 | File | Nội dung | Trạng thái |
 |------|----------|-----------|
 | 01-PRD.md | Mục tiêu, personas, phạm vi MVP, KPI, nguyên tắc | ✅ Hoàn chỉnh |
-| 02-FUNCTIONAL-SPEC.md | Đặc tả từng màn hình & flow (bản đồ, câu nhắc, lead, định danh, share) | ✅ Hoàn chỉnh |
+| 02-FUNCTIONAL-SPEC.md | Đặc tả từng màn hình & flow (~~bản đồ~~ → slider khu phố, câu nhắc, lead, định danh, share) | ✅ Hoàn chỉnh · đã đối chiếu code 8/9 |
 | 03-DATA-MODEL.md | Schema DB, state machines, API, chống gian lận | ✅ Hoàn chỉnh |
-| 04-ADMIN-SPEC.md | Trang quản trị: duyệt, biển, lead, bản đồ, bulk import, đăng nhập | ✅ Hoàn chỉnh |
+| 04-ADMIN-SPEC.md | Trang quản trị: duyệt, biển, lead, ~~bản đồ~~ → khu phố/slot/xoá mềm, import file, nội dung, theo dõi thương, đăng nhập | ✅ Hoàn chỉnh · đã đối chiếu code 8/9 |
 | 05-SCORING-RULES.md | Công thức điểm Đại sứ (nguồn xlsx đã duyệt) + test case | ⚠️ Có 1 điểm lệch cần ký lại (mục 3) |
 | 06-CONTENT-COPY.md | Copy chuẩn, định nghĩa 4N cho người duyệt, seed data | ✅ Hoàn chỉnh |
 | 07-NFR-TECH.md | Bảo mật, kiến trúc Docker, stack, quyết định đã chốt | ✅ Hoàn chỉnh |
 | CLAUDE.md | Quy tắc cứng + Definition of Done cho Claude Code | ✅ Hoàn chỉnh |
-| import-template.xlsx | Template import 20 khu phố pilot (3 sheet, có dropdown + validate) | ✅ Hoàn chỉnh |
+| ~~import-template.xlsx~~ | Template 2 sheet của đặc tả gốc — **không dùng**: mỗi màn admin tự sinh template riêng (3 cột cho khu phố, 5 cột cho lời nhắc) | ⚠️ Đã thay |
 
-Design tham chiếu UI (nguồn sự thật về giao diện):
-`Khu Pho Yeu Thuong.dc.html` (public) · `Admin Khu Pho.dc.html` (admin) tại claude.ai/design.
+~~Design tham chiếu UI: `Khu Pho Yeu Thuong.dc.html` (public) · `Admin Khu Pho.dc.html` (admin) tại claude.ai/design.~~
+
+**Nguồn sự thật về giao diện từ 4/9: `docs/lp/LandingpageFCM.fig`** trong repo (frame chuẩn
+`7217:1990`, đọc bằng bộ giải mã `scripts/figma/`). Hai file `.dc.html` nêu trên **không có trong
+repo**; bản prototype kem `KhuPhoCuaToi-prototype-v4.html` chỉ còn giá trị lịch sử.
+Cách đọc + bẫy: [`16-FRONTEND-UI.md`](16-FRONTEND-UI.md) đầu file.
 
 ## 2. Nhật ký quyết định đã chốt
 
@@ -29,7 +38,7 @@ Design tham chiếu UI (nguồn sự thật về giao diện):
 | D2 | **Bảo mật ưu tiên cao:** SĐT gốc không bao giờ ở client/URL/log; mã hoá AES-256-GCM chỉ khi lead opt-in; CSRF mọi POST; PDPD NĐ13 | 07 §2.1 · CLAUDE.md quy tắc 3b |
 | D3 | **Không SMS (Q1).** Báo tin vui = thông báo in-web (banner khi quay lại) | 02 §7.1 · 03 (notifications) |
 | D4 | **Duyệt 4N thủ công (Q2).** Admin tick đủ 4 ô mới duyệt; không engine chấm tự động; client chỉ giới hạn 120 ký tự | 04 §3 · 06 §3 |
-| D5 | **Bản đồ (Q3):** upload 1 ảnh → tự động cách điệu; admin click đặt pin; bấm pin hiện ảnh thật địa điểm | 02 §1 · 04 §10 |
+| D5 | ~~**Bản đồ (Q3):** upload 1 ảnh → tự động cách điệu; admin click đặt pin~~ → **ĐÃ GỠ khỏi sản phẩm 1/8**, thay bằng slider ảnh khu phố | 02 §1 · 04 §10 · `20` §1 |
 | D6 | **Lead export CSV thủ công (Q4)**, có log | 04 §6 |
 | D7 | **Domain (Q5):** MỘT trong hai — khupho.fpt.vn HOẶC fpt.vn/khu-pho-de-thuong; basePath qua biến env | 07 §2 · CLAUDE.md quy tắc 9 |
 | D8 | **Pilot 20 khu phố (Q6):** bulk import 1 lần bằng import-template.xlsx (validate → preview → commit all-or-nothing) | 04 §11 |

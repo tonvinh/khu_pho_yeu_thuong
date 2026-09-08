@@ -3,6 +3,11 @@
 > Đây là tài liệu **thao tác**: làm theo đúng thứ tự, mỗi bước có *lệnh chạy*, *kết quả mong đợi*
 > và *nếu sai thì làm gì*. Bản tóm tắt copy-paste nhanh ở [`../README.md`](../README.md).
 > Kiến trúc & lý do thiết kế: [`11-KIEN-TRUC-HE-THONG.md`](11-KIEN-TRUC-HE-THONG.md).
+>
+> Cập nhật: 8/9/2026 — soát nhanh sau các đợt 18/8, 2–4/9, 7/9. Thay đổi duy nhất ảnh hưởng runbook:
+> **khối video TVC đã gỡ khỏi sản phẩm** (component xoá 2/9, 4 khoá `campaign_*` gỡ 4/9) ⇒ mọi mục
+> nói về iframe YouTube nay chỉ còn giá trị lịch sử. `frame-src` trong CSP **vẫn nên giữ** phòng khi
+> Design khôi phục khối này; giữ nó không làm CSP yếu đi đáng kể.
 
 **Mục lục**
 
@@ -243,9 +248,17 @@ sudo chmod 0755 /etc/caddy /etc/caddy/conf.d
 sudo chmod 0644 /etc/caddy/Caddyfile /etc/caddy/conf.d/khupho-headers.caddy
 ```
 
-> `frame-src` trong snippet **không được bỏ**. Thiếu nó thì iframe TVC rơi về `default-src 'self'`
+> ⚠️ **Cập nhật 8/9**: khối video TVC **đã gỡ khỏi trang chủ và khỏi `/admin/noi-dung`** (2/9 và 4/9)
+> nên hiện **không còn iframe YouTube nào** trên site — `frame-src` không còn bắt buộc về mặt chức năng.
+> Vẫn khuyến nghị **giữ nguyên** dòng đó để không phải sửa lại proxy nếu Design khôi phục khối này.
+>
+> <details><summary>Ghi chú cũ (khi còn khối TVC)</summary>
+>
+> `frame-src` trong snippet không được bỏ. Thiếu nó thì iframe TVC rơi về `default-src 'self'`
 > và Chrome chặn — trang chủ lẫn ô "Xem trước video" ở `/admin/noi-dung` chỉ còn ô xám
 > *"This content is blocked."*. Đó là lỗi cấu hình proxy, không phải lỗi ID video.
+>
+> </details>
 
 ### B6. Build image + khởi động
 
@@ -610,10 +623,12 @@ rồi chạy lại `migrate.mjs` (dump cũ có thể thiếu migration mới).
 | `web` unhealthy | `docker compose -f $F logs web`. Thường do thiếu `PHONE_PEPPER`/`PHONE_AES_KEY` (app ném lỗi lúc khởi động ở production) hoặc `db` chưa healthy |
 | 502 từ Caddy host | `web` chưa lên hoặc lệch port. Kiểm `curl 127.0.0.1:3001/api/v1/counters` và site block trỏ đúng `127.0.0.1:3001` |
 | Sửa CSP trong repo mà production không đổi | Host nối **nửa vời**: thiếu `import khupho_headers` trong site block ([B5.3](#b5-caddy-trên-host--security-header-một-lần)). Job `sync-headers` sẽ fail và chỉ đúng dòng thiếu |
-| Video TVC là ô xám "This content is blocked" (trang chủ + `/admin/noi-dung`) | CSP của Caddy **host** thiếu `frame-src https://www.youtube-nocookie.com`. Kiểm `curl -sI https://<domain>/ \| grep -i content-security`, sửa theo [B5](#b5-caddy-trên-host--security-header-một-lần) → `caddy validate` + `reload`. Không cần rebuild app |
-| Video TVC ra "Error 153 — Video player configuration error" | Iframe nạp được nhưng thiếu `referrerPolicy="strict-origin-when-cross-origin"` trên thẻ. Site đặt `Referrer-Policy: no-referrer` nên YouTube không xác thực được domain nhúng. **Không phải** lỗi ID video — đổi ID khác vẫn lỗi y hệt |
+| *(lịch sử — khối TVC đã gỡ 2–4/9)* Video TVC là ô xám "This content is blocked" | CSP của Caddy **host** thiếu `frame-src https://www.youtube-nocookie.com`. Kiểm `curl -sI https://<domain>/ \| grep -i content-security`, sửa theo [B5](#b5-caddy-trên-host--security-header-một-lần) → `caddy validate` + `reload`. Không cần rebuild app |
+| *(lịch sử)* Video TVC ra "Error 153 — Video player configuration error" | Iframe nạp được nhưng thiếu `referrerPolicy="strict-origin-when-cross-origin"` trên thẻ. Site đặt `Referrer-Policy: no-referrer` nên YouTube không xác thực được domain nhúng. **Không phải** lỗi ID video — đổi ID khác vẫn lỗi y hệt |
 | Ảnh không hiện | `storage` healthy chưa? `MINIO_*` khớp chưa? Ảnh public đi qua `/api/img/…`, không truy cập MinIO trực tiếp. Bucket tự tạo ở lần upload đầu |
-| Ảnh bản đồ 404 với admin | Ảnh gốc nằm ở prefix `private/`, chỉ đọc qua route admin — không phải `/api/img/` |
+| Ảnh prefix `private/` trả 404 | Đúng như thiết kế: `/api/img/…` **chỉ** phục vụ key `public/`. *(Route đọc ảnh bản đồ gốc dành cho admin đã xoá cùng khối bản đồ 1/8 — hiện không còn ảnh `private/` nào được sinh ra.)* |
+| Slider hero trống dù admin đã bật "tiêu biểu" | Từ 7/9 slider lấy khu `is_featured` và **cắt đúng 10 slot**. Kiểm: khu có `hidden=false`, `deleted_at IS NULL`, và `featured_position` nằm trong 1–10 (hoặc NULL nhưng 10 slot chưa đầy) |
+| Khu phố biến mất khỏi toàn bộ web | Có thể đã bị **xoá mềm**: `SELECT name, deleted_at FROM neighborhoods WHERE deleted_at IS NOT NULL;` → khôi phục ở tab 🗑 Đã xoá của `/admin/khu-pho` |
 | Migration lỗi giữa chừng | Mỗi file chạy trong 1 transaction và idempotent — sửa nguyên nhân rồi chạy lại là đủ |
 | Đổi domain | Đổi A record + site block Caddy + `SITE_ORIGIN` trong `.env` → `up -d web`. Chuyển sang chạy dưới path thì đổi `BASE_PATH` và **rebuild** |
 | Người dùng mất hết tài khoản sau deploy | Gần như chắc chắn `PHONE_PEPPER` đã bị thay. Khôi phục pepper cũ → dữ liệu trở lại (hash trong DB không đổi) |
@@ -643,9 +658,10 @@ Dữ liệu & tài khoản
 Ứng dụng
 
 - [ ] `pnpm test` xanh trên đúng commit đang deploy.
-- [ ] Đã thử end-to-end trên production: định danh → đề xuất → duyệt 4N → viết câu → thương → chọn câu → treo biển → banner tin vui + trang share.
+- [ ] Đã thử end-to-end trên production: định danh → đề xuất (popup 2 bước) → duyệt → viết câu → duyệt 4N → **bình chọn (không rút lại được)** → chọn câu → treo biển → banner tin vui + trang share.
 - [ ] Đã test preview link share bằng Facebook Sharing Debugger và Zalo debugger.
-- [ ] Mobile 360px không vỡ layout; video TVC phát được (không phải ô xám).
+- [ ] Mobile 360px không vỡ layout. ~~video TVC phát được~~ (khối TVC đã gỡ).
+- [ ] **Đo LCP trang chủ trên bản production** (`pnpm build && pnpm start`) — mục **C4 của QC 2/9 vẫn CHƯA làm**; DoD yêu cầu < 2.5s.
 
 CI/CD
 

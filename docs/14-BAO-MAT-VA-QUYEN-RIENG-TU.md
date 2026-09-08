@@ -2,6 +2,10 @@
 
 > Đây là tài liệu **bắt buộc đọc trước khi sửa bất cứ thứ gì chạm số điện thoại, phiên đăng nhập hoặc quyền admin.**
 > Yêu cầu gốc: `07-NFR-TECH.md` §2.1 và quy tắc cứng 3, 3b, 7 trong `CLAUDE.md`.
+> Cập nhật: 8/9/2026 — soát sau các đợt 18/8, 2–4/9, 7/9. **Không có thay đổi nào nới lỏng bảo mật
+> SĐT.** Ba điểm mới: `leads` thêm cột `province` + `address` (không nhạy cảm hơn `neighborhood_text`);
+> CSV export thêm 2 cột tương ứng; `audit_logs` có thêm 4 action (`votes_adjust`, `issue_approve`,
+> `issue_reject`, `site_content_update`).
 
 ## 1. Nguyên tắc nền
 
@@ -146,8 +150,10 @@ Quy tắc vận hành:
 
 | Loại ảnh | Prefix | Ai xem được |
 |---|---|---|
-| Bản đồ **gốc** | `private/maps/{nbId}/original.webp` | **Chỉ admin**, qua `GET /api/admin/neighborhoods/{id}/map-image` (`Cache-Control: private, no-store`) |
-| Bản đồ cách điệu | `public/maps/{nbId}/stylized.webp` | Công khai |
+| ~~Bản đồ **gốc**~~ | `private/maps/{nbId}/original.webp` | Route đọc đã **xoá** cùng khối bản đồ (1/8). Ảnh cũ từ seed vẫn nằm ở prefix `private/` và **không đường nào đọc được từ web** — `/api/img` chỉ phục vụ `public/` |
+| ~~Bản đồ cách điệu~~ | `public/maps/{nbId}/stylized.webp` | Công khai — nay chỉ dùng làm ảnh dự phòng cho slider/popup |
+| Ảnh tổng quan khu phố | `public/neighborhoods/{id}/{ts}.webp` | Công khai, tối đa 4/khu |
+| Ảnh chứng nhận 4N | `public/neighborhoods/{id}/certificate-{ts}.webp` | Công khai |
 | Ảnh địa điểm / biển / khu phố | `public/…` | Công khai |
 
 `/api/img/[...key]` **chỉ** phục vụ key bắt đầu `public/` và chặn `..` — không có đường nào từ internet chạm tới `private/`. Bucket MinIO không expose ra ngoài; mọi ảnh đều đi qua ứng dụng.

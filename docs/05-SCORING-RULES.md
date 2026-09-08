@@ -1,6 +1,10 @@
 # Quy định điểm — "Đại sứ khu phố"
 Nguồn chuẩn: `QuydinhdiemDaisukhupho.xlsx` (đã được phê duyệt) · Chiến dịch Khu Phố Biết Thương · nền tảng Khu Phố Của Tôi
 
+> Cập nhật: 8/9/2026 — **đã đối chiếu với `src/lib/scoring.ts` và `src/lib/score-service.ts`:
+> công thức và 4 trọng số KHÔNG đổi**, 3 test case §4 vẫn pass (`tests/scoring.test.ts`).
+> Chỉ có §5 đổi: bỏ thương không còn (Q6) và thêm đường ghi/thu hồi điểm khi admin chỉnh phiếu.
+
 ---
 
 ## 1. Công thức
@@ -41,5 +45,17 @@ Nguồn chuẩn: `QuydinhdiemDaisukhupho.xlsx` (đã được phê duyệt) · C
 
 - Điểm ghi dạng **sổ cái append-only** (`score_events`, xem 03-DATA-MODEL) — không lưu tổng cứng; tổng = SUM(events hợp lệ). Cho phép vô hiệu event lặng lẽ khi phát hiện gian lận.
 - Trần 3 đề xuất/tuần: tính theo **tuần ISO**, đề xuất duyệt thứ 4 trở đi vẫn hiển thị công khai nhưng ghi event points=0.
-- Bỏ thương (toggle off) → vô hiệu event `vote_received` tương ứng.
+- ~~Bỏ thương (toggle off) → vô hiệu event `vote_received` tương ứng.~~
+  → **Quyết định Q6 (2/9): cư dân KHÔNG rút phiếu được nữa** (route trả 409 `ALREADY_VOTED`), nên
+  không còn đường "bỏ thương" nào từ phía người dùng.
+- **Admin chỉnh số thương** (`/admin/voting`, `PATCH /api/admin/votes`) là đường duy nhất còn lại làm
+  thay đổi số phiếu, và **luôn kèm điểm**: tăng → `recordVoteReceivedBulk` (+1đ/phiếu cho tác giả);
+  giảm → `invalidateVoteReceivedBulk` (thu hồi đúng 1 event `vote_received` cho mỗi phiếu gỡ, gom
+  theo câu). Phiếu admin (`source='admin'`) bị xoá hẳn, phiếu cư dân chỉ `is_valid=false`.
+  Mỗi lần chỉnh ghi `audit_logs` action `votes_adjust`.
+- **Import câu bằng file** (`/api/admin/suggestions/import`) coi câu là **đã duyệt** nhưng
+  **KHÔNG cộng điểm** — dữ liệu admin nhập hộ, không phải đóng góp qua web. Bulk import khu phố
+  cũng không sinh điểm (issue không có `proposed_by`).
+- **Xoá mềm khu phố** (7/9) **không đụng tới điểm**: `score_events` giữ nguyên, khôi phục là về
+  nguyên trạng. Chỉ `neighborhood_name` của người dùng trong bảng xếp hạng về `null` khi khu bị xoá.
 - Bảng xếp hạng Đại sứ hiển thị: hạng, tên, "{n} câu được treo · {m} lượt thương", tổng điểm (đơn vị "đ" theo design — VD "82đ").

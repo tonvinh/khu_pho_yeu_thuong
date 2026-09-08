@@ -1,5 +1,6 @@
 # 15 — Điểm, bảng xếp hạng & chống gian lận
 
+> Cập nhật: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9. **Công thức và 4 trọng số không đổi.**
 > Công thức gốc: `05-SCORING-RULES.md` (KHÔNG tự chế trọng số). Cài đặt: `src/lib/scoring.ts`, `src/lib/score-service.ts`, `src/lib/leaderboard.ts`.
 
 ## 1. Công thức điểm
@@ -45,14 +46,16 @@ Ai được cộng điểm, khi nào:
 |---|---|---|---|
 | Admin duyệt đề xuất | `issues.proposed_by` | `issue_approved` (+2, có trần) | `PATCH /api/admin/issues/{id}` |
 | Admin tick đủ 4N và duyệt câu | `suggestions.author_id` | `suggestion_approved` (+5) | `PATCH /api/admin/suggestions/{id}` action `approve` |
-| Ai đó bấm "Thương" | **tác giả câu**, không phải người bấm | `vote_received` (+1) | `POST /api/v1/suggestions/{id}/vote` |
+| Ai đó bấm "Bình chọn" | **tác giả câu**, không phải người bấm | `vote_received` (+1) | `POST /api/v1/suggestions/{id}/vote` · `POST /api/v1/issues/{id}/vote` |
+| **Admin TĂNG số thương** (`/admin/voting`) | tác giả câu | `vote_received` (+1 mỗi phiếu) | `recordVoteReceivedBulk()` trong `PATCH /api/admin/votes` |
 | Admin xác nhận đã treo biển | `suggestions.author_id` | `sign_installed` (+30) | `applyInstalledSideEffects()` |
 
 Khi nào điểm bị vô hiệu:
 
 | Sự kiện | Hiệu ứng |
 |---|---|
-| Người bấm thương **bỏ thương** | Xoá hàng `votes` + vô hiệu 1 event `vote_received` của tác giả |
+| ~~Người bấm thương **bỏ thương**~~ | **KHÔNG CÒN** — quyết định Q6 (2/9): bình chọn xong là chốt, cả hai route vote trả 409 `ALREADY_VOTED`. Cư dân không có đường nào rút phiếu |
+| **Admin GIẢM số thương** (`/admin/voting`) | Xoá hẳn phiếu `source='admin'` trước, hết mới `is_valid=false` phiếu cư dân mới nhất; thu hồi đúng 1 event `vote_received` cho mỗi phiếu gỡ (`invalidateVoteReceivedBulk`). Ghi `audit_logs` action `votes_adjust` |
 | Admin bấm "Vô hiệu phiếu" của một tài khoản | Vô hiệu toàn bộ phiếu hợp lệ của tài khoản đó **và** đúng 1 event `vote_received` tương ứng mỗi phiếu |
 | Người nhận điểm đang bị shadow-ban | Event mới ghi thẳng với `is_valid = false` (điểm cũ giữ nguyên) |
 | Người bấm thương bị shadow-ban | Phiếu ghi `is_valid=false` và **không sinh event** nào |
@@ -160,7 +163,14 @@ Không phụ thuộc heuristic — luôn đúng:
 
 ### 6.4 Đối soát khi trao giải
 
-Màn **Sổ cái điểm** (`/admin/diem`) là công cụ giải trình:
+~~Màn **Sổ cái điểm** (`/admin/diem`)~~ — **màn này và route `GET /api/admin/scores` KHÔNG có trong
+code**. Mô tả dưới đây là đặc tả chưa triển khai; hiện đối soát bằng tab "Cây bút của khu phố" trên
+trang chủ, màn `/admin/voting`, màn `/admin/gian-lan` và truy vấn `score_events` bằng psql.
+
+<details>
+<summary>Đặc tả màn sổ cái điểm (chưa triển khai)</summary>
+
+Màn **Sổ cái điểm** là công cụ giải trình:
 
 1. Danh sách xếp theo điểm, **bao gồm cả tài khoản đã shadow-ban** (đánh dấu rõ).
 2. Bấm vào một người → 500 event gần nhất, ghi rõ loại, số điểm, ngày; event bị vô hiệu hiển thị **gạch ngang**.
@@ -169,6 +179,22 @@ Màn **Sổ cái điểm** (`/admin/diem`) là công cụ giải trình:
 Quy trình đề xuất trước mỗi kỳ trao giải:
 
 - [ ] Xem `/admin/gian-lan`, xử lý các cảnh báo còn tồn.
-- [ ] Mở `/admin/diem`, kiểm tra top 10: điểm có đến từ nhiều nguồn khác nhau không, hay chỉ toàn `vote_received` trong vài giờ?
+</details>
+
+- [ ] Kiểm tra top 10 (tab "Cây bút của khu phố"): điểm có đến từ nhiều nguồn khác nhau không, hay chỉ toàn `vote_received` trong vài giờ?
 - [ ] Với trường hợp nghi ngờ: xem thời gian các phiếu (`created_at` sát nhau bất thường?) và tuổi tài khoản người bấm.
 - [ ] Chốt xong mới công bố; nếu phải xử lý, dùng `invalidate_votes` **trước** khi chụp bảng xếp hạng.
+
+---
+
+## Thay đổi ảnh hưởng tới điểm/xếp hạng (18/8 → 7/9)
+
+| Thay đổi | Ảnh hưởng |
+|---|---|
+| **Bảng xếp hạng thành tab 3 của `IssueBoard`** (18/8) | Cùng truy vấn `getAmbassadors(10)` với `GET /api/v1/leaderboard`; SSR `page.tsx` gọi cùng hàm — **sửa một bên mà quên bên kia là dòng nhảy chữ sau 20s polling** |
+| `getAmbassadors` trả thêm `suggestions_count` (2/9) | Dòng meta tab 3 hiện "N câu đóng góp · N Bình chọn" |
+| **Bỏ "Khu phố dễ thương nhất tháng"** (18/8) | `/api/v1/leaderboard` không còn `neighborhood_of_month`; `month_snapshots` vẫn chưa dùng |
+| **Cấm rút phiếu** (Q6, 2/9) | Không còn đường bỏ thương ⇒ điểm `vote_received` chỉ giảm khi admin can thiệp |
+| **Phiếu admin** (`source='admin'`, migration 007) | Mọi truy vấn đếm votes hiện có tự đúng vì đây là phiếu thật; điểm đi kèm qua `recordVoteReceivedBulk` / `invalidateVoteReceivedBulk` |
+| **Xoá mềm khu phố** (7/9) | `getAmbassadors` / `getViewerRank` lọc `n.deleted_at IS NULL` ở JOIN khu phố ⇒ tên khu về `null`, **điểm không đổi** |
+| **Import câu bằng file** | Câu vào thẳng `approved` nhưng **không sinh event điểm nào** |

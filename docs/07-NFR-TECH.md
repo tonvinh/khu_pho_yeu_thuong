@@ -17,20 +17,24 @@ Phiên bản 1.0
 | SEO/Share | OG image theo khu phố (khoe chứng nhận/biển mới) — quan trọng cho lan toả MXH. `/admin` noindex. |
 | Ngôn ngữ | Tiếng Việt duy nhất. |
 
+> Cập nhật: 8/9/2026 — soát nhanh sau các đợt 18/8, 2–4/9, 7/9. Ba mục đã lệch thực tế:
+> **bản đồ** (gỡ khỏi sản phẩm 1/8), **font/màu** (skin cam FPT + font FPT SongVui, nguồn design là
+> `docs/lp/LandingpageFCM.fig`), và **Next.js 15** thay vì 14. Chi tiết ghi ngay trong bảng dưới.
+
 ## 2. Tech stack đề xuất (cho Claude Code)
 
 | Lớp | Đề xuất | Lý do |
 |-----|---------|-------|
-| Frontend | **Next.js 14+ (App Router) + TailwindCSS** | SSR cho SEO/tốc độ, 1 codebase cho public + admin |
+| Frontend | **Next.js 15 (App Router) + Tailwind 4** *(đặc tả ghi 14+)* · React 19 | SSR cho SEO/tốc độ, 1 codebase cho public + admin |
 | Backend | Next.js API routes (hoặc tách NestJS nếu đội backend FPT yêu cầu) | MVP gọn, deploy 1 nơi |
 | DB | **PostgreSQL** (Supabase hoặc RDS nội bộ FPT) | Quan hệ rõ, sổ cái điểm, unique constraints chống gian lận |
 | Auth | Định danh SĐT băm (HMAC-SHA256 + pepper) + session cookie server-side | Không OTP — quyết định PM; chi tiết 02 §8, bảo mật §2.1 |
 | Realtime | Polling 15–30s (MVP) → SSE nếu cần | Đơn giản, đủ dùng |
-| Bản đồ | Ảnh upload + lớp filter cách điệu (CSS/SVG duotone) + pins toạ độ % | Đã chốt Q3 |
-| Ảnh | Upload lên object storage (S3-compatible của FPT), resize/WebP tự động | Bản đồ, ảnh địa điểm, ảnh biển |
+| ~~Bản đồ~~ | ~~Ảnh upload + filter cách điệu + pins toạ độ %~~ → **ĐÃ GỠ khỏi sản phẩm 1/8**, thay bằng slider ảnh khu phố (`NeighborhoodSlider`) | Q3 hết hiệu lực — xem `20` §1 |
+| Ảnh | Upload lên object storage (MinIO S3-compatible), resize/WebP tự động | Ảnh tổng quan khu phố (4/khu, chuẩn hoá 1280×720), ảnh chứng nhận, ảnh biển. **Biển trên trang chủ nay render bằng HTML/CSS** (`SignCard`), không phải ảnh upload |
 | OG image | Route render ảnh động (@vercel/og hoặc satori + resvg) | Phục vụ share MXH (Q8) |
 | Deploy | **Toàn bộ infra chạy Docker** trên hạ tầng FPT · domain: **một trong hai** — `khupho.fpt.vn` **hoặc** `fpt.vn/khu-pho-de-thuong` (chốt phương án sau) | Đã chốt — chi tiết §2.2. `basePath` cấu hình bằng biến env (`''` cho subdomain, `'/khu-pho-de-thuong'` cho path); mọi link/asset/OG qua helper URL, không hard-code |
-| Font/màu | Theo design file `Khu Pho Yeu Thuong.dc.html`: nền kem, đỏ gạch (primary), cam, xanh lá, xanh dương; heading dạng chữ nét thanh đậm | Design là nguồn sự thật về UI |
+| Font/màu | ~~`Khu Pho Yeu Thuong.dc.html`: nền kem, đỏ gạch primary~~ → **skin cam FPT** (`#FF8206` primary, nhấn xanh `#2323FF`) + font **FPT SongVui** (Light 300 / Regular 400 / Bold 700 — **không có 600/800**). Nguồn design chuẩn: `docs/lp/LandingpageFCM.fig` | Chi tiết token + bẫy CSS: `16-FRONTEND-UI.md` §5 |
 
 ## 2.1 Kiến trúc bảo mật định danh (ƯU TIÊN CAO — không OTP)
 

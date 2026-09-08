@@ -1,6 +1,11 @@
 # 17 — Cẩm nang vận hành admin
 
+> Cập nhật: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9.
 > Dành cho **đội vận hành chiến dịch**, không cần biết code. Đặc tả gốc: `04-ADMIN-SPEC.md`. Tiêu chí 4N: `06-CONTENT-COPY.md` §3.
+>
+> **Menu hiện có 7 mục**: 📊 Dashboard · 🏘️ Khu phố · ✍️ Lời nhắc · 💛 Theo dõi thương · 🧧 Leads ·
+> 📝 Nội dung · 🛡️ Chống gian lận. Ba màn cũ đã **gộp/xoá**: duyệt đề xuất → tab trong *Khu phố*;
+> vòng đời biển → tab trong *Lời nhắc*; **Bản đồ & pin** và **Sổ cái điểm** không còn.
 
 ## 0. Đăng nhập & nguyên tắc chung
 
@@ -22,10 +27,10 @@ Ba nguyên tắc nghề nghiệp:
 
 | Khối | Đọc thế nào |
 |---|---|
-| 4 KPI công khai | Giống hệt số trên trang chủ: biển đã treo · góc phố đang chờ · người đóng góp · khu phố tham gia |
+| 3 KPI công khai | Giống hệt số trên trang chủ: **biển đã treo · khu phố · câu đóng góp** |
 | 4 KPI vận hành | **Đề xuất chờ duyệt · Câu chờ duyệt · Đã chọn chưa sản xuất · Đang sản xuất** — đây là hàng chờ công việc của bạn |
 | Thương mại | Lead tầng 1/tầng 2 và trạng thái new/contacted/converted (chỉ admin thấy) |
-| Biểu đồ 14 ngày | 3 cột mỗi ngày: câu nhắc · lượt thương · lead. Dùng để thấy nhịp chiến dịch, phát hiện ngày bất thường |
+| Biểu đồ theo ngày | Câu nhắc · lượt thương · lead. Lọc được **7 / 30 / 90 ngày**, theo khu phố và chủ đề; kỳ so sánh là cùng độ dài liền trước. Leads và cư dân mới không có chủ đề, leads không gắn khu phố ⇒ hai khối đó bỏ qua bộ lọc tương ứng |
 
 **Thói quen hằng ngày:** mở dashboard → nếu "Đề xuất chờ duyệt" hoặc "Câu chờ duyệt" > 0 thì xử lý trước; sau đó xem "Đã chọn chưa sản xuất" để thúc tiến độ biển.
 
@@ -44,12 +49,19 @@ Ba nguyên tắc nghề nghiệp:
 
 | Hành động | Hậu quả |
 |---|---|
-| **Duyệt** | Góc xóm hiện công khai với pin **đỏ "Đang chờ"**; người đề xuất được **+2 điểm** (nếu chưa vượt trần 3 đề xuất/tuần) |
+| **Duyệt** | Góc xóm hiện công khai ở trạng thái **"Đang chờ"**; người đề xuất được **+2 điểm** (nếu chưa vượt trần 3 đề xuất/tuần). Khu phố do dân tự nhập cũng **hiện công khai** từ đây |
 | **Từ chối** | Ẩn vĩnh viễn khỏi công khai; nhập lý do nội bộ (bắt buộc về mặt quy trình, dù hệ thống không ép) |
 
 Ví dụ nên từ chối: *"Nhà số 12 hay mất đồ, nghi người trong xóm lấy — đề nghị gắn camera theo dõi nhà bên cạnh."* → vi phạm tiêu chí 2, dễ gây mâu thuẫn hàng xóm.
 
-Sau khi duyệt, nhớ sang **Bản đồ** để đặt pin cho góc xóm đó (§6) — chưa có pin thì góc xóm không xuất hiện trên bản đồ, chỉ nằm trong danh sách.
+Từ chối cũng **kéo theo câu nhắc gửi kèm** (nếu đề xuất cũ có) sang "Từ chối" — bạn không phải xử lý
+riêng, và câu đó cũng không kẹt lại trong hàng chờ.
+
+~~Sau khi duyệt, nhớ sang **Bản đồ** để đặt pin~~ — **không còn bước này**: trang chủ đã bỏ bản đồ
+từ 1/8, góc xóm duyệt xong là hiện ngay trong khối "Đóng góp một câu".
+
+> Tab này xem được **mọi trạng thái**, không chỉ hàng chờ. Có bộ lọc chủ đề / khu phố / tỉnh-thành,
+> ô tìm kiếm và phân trang; con số trên tab đếm theo đúng bộ lọc đang chọn.
 
 ---
 
@@ -68,7 +80,7 @@ Màn hình hiển thị sẵn số ký tự (`n/120`), tên tác giả, góc xó
 
 | Hành động | Hậu quả |
 |---|---|
-| **Duyệt hiển thị** (đủ 4 ô) | Câu hiện công khai và **mở bình chọn**; tác giả **+5 điểm**; góc xóm chuyển "Đang chờ" → **"Đang bình chọn"** (pin cam) |
+| **Duyệt hiển thị** (đủ 4 ô) | Câu hiện công khai và **mở bình chọn**; tác giả **+5 điểm**; góc xóm chuyển "Đang chờ" → **"Đang bình chọn"** |
 | **Từ chối** | Câu ẩn vĩnh viễn; nhập lý do nội bộ |
 
 Mẹo thực hành: đọc to câu lên. Nếu nghe như **hàng xóm nói với hàng xóm** thì thường đạt; nếu nghe như **loa phường hoặc bảng cấm** thì trượt.
@@ -96,52 +108,104 @@ Khi đã gửi file cho xưởng in/gia công, bấm **"Đưa sản xuất"** �
 
 Chỉ bấm khi **biển đã thật sự treo ngoài đời**. Trước khi bấm:
 
-1. Upload **ảnh biển thật** (nút "Ảnh biển…") — ảnh này hiện trên trang share và trong drawer góc xóm.
-2. Chọn **ngày treo** (bỏ trống = hôm nay).
+1. Upload **ảnh biển thật** (nút "Ảnh biển…") — ảnh này hiện trên trang share `/bien/{id}`.
+2. Chọn **ngày treo** (bỏ trống = hôm nay) — ô ngày **riêng cho từng dòng**, nhập ở dòng nào áp cho dòng đó.
 3. Bấm **"Đã treo biển"**.
 
 Hệ thống lập tức và **không thể hoàn tác bằng giao diện**:
 
-- Góc xóm chuyển **"Đã có biển"**, pin đổi **xanh lá**.
+- Góc xóm chuyển **"Đã có biển"**.
 - Bộ đếm "biển đã treo" +1.
 - Tác giả câu **+30 điểm**.
 - Tạo **banner báo tin vui in-web** cho tác giả kèm link chia sẻ `/bien/{id}` (**không có SMS** — đúng quyết định Q1).
 
 ---
 
-## 5. Khu phố & chứng nhận (`/admin/khu-pho`)
+## 5. Khu phố (`/admin/khu-pho`)
 
 - Danh sách khu phố kèm thanh tiến độ `signed/total biển · %`.
-- **Thêm khu phố mới**: gõ tên → hệ thống tự sinh slug (bỏ dấu). Trùng tên → báo lỗi.
-- **Cấp chứng nhận 4N**: nút chỉ xuất hiện khi khu phố đạt **100% biển đã treo** (và có ít nhất 1 vấn đề). Cấp xong khu phố được huy hiệu 🏅 trên bản đồ, trang chủ và có trang share `/khu-pho/{slug}`.
-- Nếu cấp nhầm, kỹ thuật có thể thu hồi qua API (`{"revoke": true}`) — chưa có nút trên giao diện.
+- **Thêm khu phố mới**: gõ tên + **chọn Tỉnh/thành phố** và **Phường/Xã** từ danh mục chính quy
+  (34 tỉnh · 3.321 phường/xã, hiệu lực 1/7/2025 — **không còn quận/huyện**). Hệ thống tự sinh slug.
+  Trùng tên → báo lỗi; nếu tên đó thuộc khu **đã xoá** thì hệ thống nói rõ *"vào tab 🗑 Đã xoá để
+  khôi phục thay vì tạo mới"*.
+- **Import file**: nút "📥 Import file" nhận Excel/CSV **3 cột** `Tên khu phố | Tỉnh/Thành phố |
+  Phường/Xã`, có nút tải template. Quy trình validate → commit, **tất cả hoặc không gì cả**.
+- **Ảnh**: tối đa **4 ảnh tổng quan** cho mỗi khu (trang chủ chỉ dùng ảnh #1) + tối đa **1 ảnh
+  chứng nhận**. Hệ thống tự cắt ảnh tổng quan về cùng cỡ nên slider không bị nhấp nhô.
 
-⚠️ Lưu ý nghiệp vụ: mẫu số là **tất cả vấn đề đã duyệt** của khu. Duyệt thêm một đề xuất mới sau khi đã chứng nhận sẽ làm tỉ lệ tụt xuống dưới 100% (nhưng **không** tự thu hồi chứng nhận đã cấp).
+### 5.1 Ba công tắc — bật/tắt tự do (từ 7/9)
 
----
+| Công tắc | Tác dụng |
+|---|---|
+| **Hiển thị website** | Khu phố có xuất hiện trên web hay không |
+| **Khu phố tiêu biểu** | Đưa khu vào **slider ở đầu trang chủ** |
+| **Đạt chuẩn 4N** | Gắn chứng nhận "Khu phố biết thương" |
 
-## 6. Trình quản lý bản đồ (`/admin/khu-pho/{id}/ban-do`)
+~~Trước đây: bật tiêu biểu bắt buộc khu đang hiển thị; ẩn website thì tiêu biểu tự tắt theo;
+chứng nhận 4N chỉ bật được khi 100% biển đã treo.~~ **Nay cả ba bật/tắt độc lập.**
 
-### 6.1 Upload ảnh bản đồ
+Lý do bỏ điều kiện 4N: chứng nhận là **quyết định vận hành** của ban tổ chức (có buổi trao biển
+ngoài đời), không phải hệ quả tự động của dữ liệu trên web. Màn hình vẫn hiện tiến độ biển để bạn
+tham khảo.
 
-- Nhận jpg/png/webp, tối đa **10MB**.
-- Hệ thống lưu **hai bản**: bản gốc (chỉ admin xem được) và **bản cách điệu** (duotone kem–đỏ gạch) — người dân **chỉ thấy bản cách điệu**.
-- Sau khi upload, màn hình hiện đúng bản cách điệu để bạn kiểm tra trước khi công khai.
-- Có link **"Xem ảnh gốc (chỉ admin)"** khi cần đối chiếu.
+⚠️ Khu đang **ẩn** mà bạn bật "tiêu biểu" thì cờ vẫn được lưu **nhưng khu chưa ra slider** — trang
+công khai vẫn lọc khu đang ẩn. Tooltip trên màn hình có nhắc điều này.
 
-### 6.2 Đặt pin
+Cấp nhầm chứng nhận thì **tắt lại được ngay trên giao diện** (thu hồi không xoá ảnh chứng nhận).
 
-1. Ở danh sách "Vấn đề trong khu", bấm **"Đặt pin"** ở dòng cần đặt → con trỏ thành dấu cộng.
-2. Click đúng vị trí trên ảnh bản đồ → toạ độ lưu theo **phần trăm**, báo lại ví dụ "Đã đặt pin tại 35.4%, 60.1%".
-3. Muốn sửa: bấm **"Đặt lại pin"** rồi click chỗ mới.
+### 5.2 Vị trí slide — 10 slot
 
-⚠️ **Thay ảnh bản đồ không xoá pin.** Vì pin lưu theo %, ảnh mới có bố cục khác sẽ làm pin lệch — hệ thống nhắc bạn kiểm tra lại, hãy rà từng pin sau khi thay ảnh.
+Cột **"Vị trí tiêu biểu"** là **slot slide của trang chủ**, đúng **10 chỗ (1–10)** và **không trùng nhau**.
 
-### 6.3 Ảnh địa điểm
+- Bỏ cờ "tiêu biểu" ⇒ khu tự nhả slot.
+- Xếp một khu vào slot đang có khu khác giữ ⇒ hệ thống **đổi chỗ hai khu**, không báo lỗi. Thông báo
+  nói rõ chuyện gì vừa xảy ra:
 
-Mỗi vấn đề có thể gắn **ảnh thật của góc xóm** — người dân bấm pin sẽ thấy ảnh này ở đầu drawer. Ảnh nên chụp ngang, rõ bối cảnh, **không có mặt người nhận diện được**.
+| Trường hợp | Bạn sẽ thấy |
+|---|---|
+| Slot còn trống | *Đã xếp vào slot slide số N ✓* |
+| Khu vừa xếp đang giữ slot khác | *đổi chỗ với "X" (giờ ở slot cũ)* |
+| Khu vừa xếp chưa có slot nào | *"X" bị đẩy ra khỏi 10 slot* |
 
----
+### 5.3 Xoá khu phố = **xoá mềm**, khôi phục được
+
+- Nút **🗑 Xoá** không xoá dữ liệu: khu phố chuyển sang tab **🗑 Đã xoá**, đồng thời bị ẩn khỏi
+  website, tắt tiêu biểu và nhả slot.
+- Khu đã xoá **biến mất cả cụm khỏi web**: trang chủ, ô tra cứu 4N, danh sách góc phố, khối biển,
+  popup khu phố, link chia sẻ `/khu-pho/…` (báo 404) và cả ảnh preview khi chia sẻ.
+- **Điểm, lượt thương và câu nhắc KHÔNG bị xoá.** Bấm khôi phục là mọi thứ trở lại nguyên trạng —
+  nhưng khu về trạng thái **ẩn**, bạn kiểm rồi mới bật hiển thị.
+- Khu đã xoá **không sửa được** — phải khôi phục trước.
+
+## 6. ~~Trình quản lý bản đồ~~ — KHÔNG CÒN
+
+Trang chủ đã bỏ bản đồ từ 1/8 (thay bằng slider ảnh khu phố), nên màn bản đồ & đặt pin **không còn
+trong hệ thống**. Ảnh khu phố nay quản lý ngay ở màn Khu phố (§5): 4 ảnh tổng quan + 1 ảnh chứng nhận.
+
+Ảnh nên chụp ngang, rõ bối cảnh, **không có mặt người nhận diện được**.
+
+## 6b. Nội dung trang chủ (`/admin/noi-dung`)
+
+Sửa được **13 khối chữ** của trang chủ: tiêu đề + mô tả hero, placeholder ô tra cứu, tiêu đề + mô tả
+khối đóng góp, tiêu đề khối biển, tiêu đề + mô tả + dòng bảo mật của khối ưu đãi, và 4 dòng chân trang.
+
+- Để **trống** một ô (hoặc gõ đúng y như bản mặc định) = **quay về bản gốc**.
+- Mỗi lần lưu đều ghi nhật ký (`site_content_update`).
+- Khối "Câu chuyện chiến dịch / video TVC / ảnh KV" và các dòng khuyến mãi trên biển **đã gỡ khỏi
+  màn này** cùng lúc với việc gỡ khỏi trang chủ — không còn ô nào sửa thứ không hiển thị ở đâu.
+
+## 6c. Theo dõi thương (`/admin/voting`)
+
+Sửa **số lượt thương** của một câu nhắc hoặc của một người.
+
+- Tăng ⇒ hệ thống thêm phiếu do admin ghi; giảm ⇒ gỡ phiếu admin trước, hết mới vô hiệu phiếu cư dân
+  mới nhất (người đã bấm vẫn thấy "đã bình chọn" như cũ).
+- **Điểm đi kèm luôn được cộng/thu hồi tương ứng** — không cần chỉnh tay chỗ nào khác.
+- **Mỗi lần chỉnh đều ghi nhật ký** (`votes_adjust`, kèm số cũ → số mới). Đây là hành động nhạy cảm
+  ngang với việc hiện số điện thoại lead — chỉ dùng khi có lý do vận hành rõ ràng.
+
+⚠️ Mẹo thao tác: sau khi lưu, thanh thông báo tự ẩn sau 6 giây làm **trôi cả bảng** — đừng bấm theo
+thói quen vị trí cũ, hãy tìm lại đúng dòng trước khi bấm tiếp.
 
 ## 7. Leads (`/admin/leads`)
 
@@ -150,6 +214,7 @@ Danh sách **chỉ gồm người đã tick đồng ý** (`opt-in`). Người đ
 | Cột | Ghi chú |
 |---|---|
 | SĐT | Hiển thị dạng `090***567`. **Bấm mới hiện đầy đủ — mỗi lần bấm đều ghi nhật ký ai xem, lúc nào** |
+| Tỉnh/thành · Địa chỉ | Hai cột mới (18/8) — **lọc được theo tỉnh** cho sale chia vùng, CSV cũng xuất 2 cột này |
 | Nguồn | *Tầng 1 (drawer)* = tick khi viết câu nhắc · *Tầng 2 (ưu đãi)* = điền form cuối trang |
 | Quan tâm | Dịch vụ người dùng chọn |
 | Trạng thái | `Mới → Đã liên hệ → Chuyển đổi / Đóng` — cập nhật ngay trên bảng |
@@ -187,42 +252,45 @@ Ba hành động:
 
 ---
 
-## 9. Sổ cái điểm (`/admin/diem`)
+## 9. ~~Sổ cái điểm (`/admin/diem`)~~ — CHƯA CÓ MÀN HÌNH
 
-Dùng để **giải trình khi trao giải Đại sứ**.
+Màn sổ cái điểm **không tồn tại trong hệ thống**. Khi cần giải trình trước lúc trao giải:
 
-- Cột trái: xếp hạng theo điểm, **bao gồm cả tài khoản đã shadow-ban** (có nhãn đỏ).
-- Bấm một người → cột phải hiện từng lần cộng điểm: loại, số điểm, ngày. Event đã bị vô hiệu hiện **gạch ngang, mờ**.
-- Công thức in sẵn trên màn: `2×đề xuất duyệt + 5×câu 4N duyệt + 1×lượt thương + 30×câu treo`.
+- Xem tab **"Cây bút của khu phố"** trên trang chủ (top 10 theo điểm, đã tự loại tài khoản shadow-ban).
+- Đối chiếu với màn **Chống gian lận** (§8) và **Theo dõi thương** (§6c).
+- Cần bảng điểm chi tiết từng lần cộng ⇒ **nhờ kỹ thuật truy vấn** bảng `score_events`.
 
-Trước khi công bố giải: đối chiếu top 10 với màn chống gian lận (§8) và xử lý xong các cảnh báo còn tồn.
+Công thức không đổi: `2×đề xuất duyệt + 5×câu 4N duyệt + 1×lượt thương + 30×câu treo`.
 
----
+## 10. Import từ file
 
-## 10. Bulk import khu phố (`/admin/import`)
+Không còn màn `/admin/import` riêng — mỗi màn có nút **"📥 Import file"** của mình, kèm nút tải
+template đúng định dạng. Nhận cả **`.xlsx` lẫn `.csv`**.
 
-Dùng khi khởi động chiến dịch với danh sách khu phố pilot.
+### 10.1 Import khu phố (nút ở màn **Khu phố**)
 
-**Chuẩn bị file** — dùng đúng `docs/import-template.xlsx`, 2 sheet:
+Template 3 cột: `Tên khu phố` · `Tỉnh/Thành phố` · `Phường/Xã` — tỉnh và phường phải **đúng tên
+trong danh mục chính quy** (34 tỉnh · 3.321 phường/xã, hiệu lực 1/7/2025).
 
-| Sheet `KhuPho` | Sheet `VanDe` |
-|---|---|
-| `ten`, `phuong`, `quan`, `thanhpho`, `anh_ban_do`, `anh_khu_pho` | `ten_khu_pho`, `loai`, `vi_tri`, `mo_ta`, `pin_x`, `pin_y`, `anh_dia_diem` |
+Lỗi hay gặp: tên trùng khu đã có · tên trùng **khu đã xoá** (hệ thống bảo bạn vào tab 🗑 Đã xoá để
+khôi phục) · sai tên tỉnh/phường.
 
-- `loai` phải là 1 trong 8 mã: `toc_do`, `trom_cap`, `an_toan_tre_em`, `chieu_sang`, `ve_sinh`, `phong_chay`, `giup_nhau`, `nguoi_gia`.
-- `pin_x`, `pin_y` là số **0–100** (phần trăm), có thể bỏ trống rồi đặt pin sau bằng chuột.
-- `ten_khu_pho` ở sheet VanDe phải **khớp chính xác** tên ở sheet KhuPho.
-- Ảnh: nén tất cả vào 1 file `.zip`, **tên file phải khớp** giá trị ghi trong ô Excel. Không có zip cũng được — bổ sung ảnh sau qua trình quản lý bản đồ.
+### 10.2 Import lời nhắc (nút ở màn **Lời nhắc**)
 
-**Quy trình 3 bước:**
+Template 5 cột: `Câu (≤120 ký tự)` · `Tên khu phố (đã có trong hệ thống)` · `Vị trí treo biển` ·
+`Chủ đề (mã hoặc tên)` · `Người đăng`.
 
-1. Chọn file Excel (+ zip ảnh nếu có).
-2. **Validate & Preview** — hệ thống báo lỗi **theo từng dòng**: thiếu trường, trùng tên trong file, trùng tên với dữ liệu đã có, sai mã danh mục, pin ngoài 0–100, thiếu ảnh trong zip.
-3. **Commit** — nút chỉ bật khi **sạch lỗi**. Ghi **tất cả hoặc không ghi gì** (all-or-nothing).
+- Câu import **coi như đã duyệt** (4N tick đủ) và **không cộng điểm cho ai** — đây là dữ liệu nhập hộ.
+- Góc phố chưa có thì hệ thống tạo mới rồi mở bình chọn; người đăng chưa có thì tạo cư dân mới
+  (không có số điện thoại thật).
 
-Sau import: các vấn đề vào thẳng trạng thái **"Đang chờ"** (admin nhập ⇒ coi như đã duyệt) và **không sinh điểm** cho ai. Việc còn lại là upload/đặt pin và chờ người dân viết câu.
+### 10.3 Quy trình chung — 3 bước
 
----
+1. Chọn file.
+2. **Validate & Preview** — báo lỗi **theo từng dòng**.
+3. **Commit** — nút chỉ bật khi **sạch lỗi**. Ghi **tất cả hoặc không ghi gì**.
+
+Việc import có ghi nhật ký.
 
 ## 11. Nhịp vận hành gợi ý
 
@@ -230,6 +298,6 @@ Sau import: các vấn đề vào thẳng trạng thái **"Đang chờ"** (admin
 |---|---|
 | **Hằng ngày** | Dọn sạch 2 hàng chờ: đề xuất + câu nhắc 4N. Trả lời hàng chờ trong ngày để người dân không nản |
 | **2–3 lần/tuần** | Xem `/admin/loi-nhac?tab=bien`: chọn câu cho những góc xóm đã đủ lượt thương; thúc sản xuất |
-| **Hằng tuần** | Lướt `/admin/gian-lan`; cập nhật trạng thái leads; kiểm tra pin của khu phố mới |
+| **Hằng tuần** | Lướt `/admin/gian-lan`; cập nhật trạng thái leads; kiểm tra **ảnh + slot slide** của khu phố mới |
 | **Khi treo biển xong** | Upload ảnh biển + xác nhận "Đã treo biển" **ngay trong ngày** (người dân đang chờ banner báo tin vui) |
 | **Hằng tháng** | Đối soát sổ cái điểm, chốt "Khu phố dễ thương nhất tháng", rà khu phố nào sắp đạt 100% để chuẩn bị lễ trao chứng nhận |

@@ -2,6 +2,10 @@
 Chiến dịch **"Khu phố biết thương"** · FPT Telecom
 Phiên bản 1.0 · 17/07/2026 · Owner: Product Manager Website
 
+> Cập nhật: 8/9/2026 — chỉ ghi chú những chỗ mâu thuẫn thực tế; **mục tiêu, personas, KPI giữ nguyên**.
+> Thay đổi lớn nhất so với PRD: trang chủ **không còn bản đồ** (gỡ 1/8) nên "dữ liệu bản đồ cho chính
+> quyền" hiện chỉ tồn tại dưới dạng dữ liệu trong DB, không có màn hình bản đồ nào.
+
 ---
 
 ## 1. Bối cảnh & Tầm nhìn
@@ -16,7 +20,7 @@ FPT Telecom triển khai chiến dịch treo biển nhắc nhở dễ thương (
 |---|---------|-------|
 | 1 | **Xây dựng Brand Love** | Người dân là đồng tác giả câu nhắc → gắn bó cảm xúc sâu hơn nhiều so với biển phát sẵn |
 | 2 | **Gamification giữ chân** | Bảng xếp hạng "Đại sứ khu phố", thi đua hoàn thiện "Khu phố biết thương" |
-| 3 | **Dữ liệu cho chính quyền** | Bản đồ vấn đề do dân nêu = dữ liệu thật về điểm nóng, giá trị nghiệp vụ cho công an xã/phường |
+| 3 | **Dữ liệu cho chính quyền** | Danh sách góc phố do dân nêu = dữ liệu thật về điểm nóng, giá trị nghiệp vụ cho công an xã/phường. *(Không còn màn hình bản đồ — dữ liệu xuất offline theo Q7.)* |
 | 4 | **Kênh core chuẩn 4N** | "Một cửa" để mọi hoạt động truyền thông (đại sứ, biệt đội treo biển, trend MXH) quy về |
 
 **Một CTA duy nhất cho mọi hoạt động:** *"Lên Khu Phố Của Tôi, viết câu nhắc cho xóm mình."*
@@ -28,14 +32,14 @@ FPT Telecom triển khai chiến dịch treo biển nhắc nhở dễ thương (
 | Persona | Mô tả | Nhu cầu chính |
 |---------|-------|---------------|
 | **Cư dân đóng góp** (Cô Tám tạp hoá, Anh Dũng, Minh lớp 11) | Người dân trong khu phố, mọi lứa tuổi, dùng điện thoại là chính | Nêu vấn đề khu mình, viết câu nhắc, bình chọn, khoe khi câu được treo |
-| **Người xem thụ động** | Vào từ MXH/QR trên biển | Xem bản đồ, đọc câu hay, có thể để lại lead |
+| **Người xem thụ động** | Vào từ MXH/QR trên biển | Đọc câu hay, tra chứng nhận khu phố, có thể để lại lead. ~~Xem bản đồ~~ |
 | **Admin FPT (vận hành)** | Đội chiến dịch FPT Telecom | Duyệt đề xuất, duyệt câu, quản lý sản xuất & treo biển, quản lý leads |
 | **Chính quyền** | Công an xã/phường, tổ dân phố | Nhận báo cáo offline (export từ admin) — KHÔNG có tài khoản trong MVP (Q7) |
 
 ## 4. Phạm vi (Scope)
 
 ### 4.1 In scope — MVP (sprint 4 tuần)
-1. **Trang chủ công khai** (mobile-first): hero + CTA, bản đồ khu phố (ảnh upload → cách điệu tự động), bộ đếm thời gian thực, danh sách vấn đề, bảng xếp hạng Đại sứ (kèm share MXH), section Ưu đãi cư dân.
+1. **Trang chủ công khai** (mobile-first): hero + slider khu phố tiêu biểu + ô tra cứu 4N, **3 con số**, khối đóng góp 3 tab (góc phố · lời nhắc chờ bình chọn · cây bút), 6 biển mới, section Ưu đãi cư dân, chân trang. *(~~bản đồ khu phố~~ gỡ 1/8; bảng xếp hạng Đại sứ thành tab 3.)*
 2. **Luồng 4 bước**: Đề xuất vấn đề → Viết & bình chọn câu nhắc (chấm 4N tự động) → Duyệt nội dung (admin) → Lên biển & cập nhật.
 3. **Định danh bằng SĐT băm + cookie phiên, KHÔNG dùng OTP** (1 SĐT = 1 tài khoản = 1 phiếu thương/câu; SĐT gốc chỉ lưu server-side dạng mã hoá — xem 02-FUNCTIONAL-SPEC §8).
 4. **Hệ thống điểm & bảng xếp hạng** theo Quy định điểm Đại sứ (xem 05-SCORING-RULES).
