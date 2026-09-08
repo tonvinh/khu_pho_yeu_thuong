@@ -169,12 +169,13 @@ export function FilterTabs<K extends string>({
           <button
             key={t.key}
             onClick={() => onChange(t.key)}
-            /* Tab: cao 39, r hết cỡ, gap 10 — đang chọn nền #FF8206 viền #E86305,
-               tab thường viền #3D3D3D 1.5px (không phải viền kem).
-               Lề trong LỆCH theo design: trái 20, PHẢI 8 — chip số gần như chạm mép
-               phải (đo trên `docs/lp/Landing page.png`: mép chip → mép pill = 7.5px,
-               trong khi chữ cách mép trái 20px). Lề đều 20/20 làm chip trôi vào giữa. */
-            className={`tap tap-sm-auto inline-flex h-[44px] flex-none cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-full border-[1.5px] pl-4 pr-2 text-[14px] transition sm:h-[39px] sm:pl-5 sm:text-[16px] ${
+            /* Tab (.fig `Tab` — 7367:20672/20649): cao 40, r hết cỡ, gap 10, chữ
+               18px Regular ls -2%; đang chọn nền #FF8206 viền #E86305, tab thường
+               viền #3D3D3D 1.5px. Lề trong LỆCH: trái 16, PHẢI 8 (instance đè
+               `stackHorizontalPadding: 16`, master giữ `stackPaddingRight: 8`) —
+               chip số gần chạm mép phải. Bề rộng kiểm chéo được: 16 + chữ + 10 +
+               chip 25 + 8 = 271/278/224 đúng ba tab trong .fig. */
+            className={`tap tap-sm-auto inline-flex h-[44px] flex-none cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-full border-[1.5px] pl-4 pr-2 text-[14px] tracking-[-0.02em] transition sm:h-[40px] sm:text-[18px] ${
               isActive
                 ? "border-brick-dark bg-brick text-white shadow-kp-s"
                 : "border-ink bg-transparent text-ink hover:border-brick hover:text-brick-dark"
@@ -189,14 +190,16 @@ export function FilterTabs<K extends string>({
               t.label
             )}
             <span
-              /* Chip số trong tab (.fig): tab thường = tròn đặc #3D3D3D chữ trắng,
-                 tab đang chọn = tròn trắng chữ cam. Ø24 (đo trên ảnh export: 24.5),
-                 chữ 13px — bản cũ Ø22/11.5px nên chip nhỏ hơn design thấy rõ. */
-              className={`grid h-[24px] min-w-[24px] place-items-center rounded-full px-1 text-[13px] font-bold leading-none ${
+              /* Chip số trong tab (.fig `Frame 167`/`Text`): tab thường = tròn đặc
+                 #3D3D3D chữ trắng, tab đang chọn = tròn trắng chữ cam. Ø25, chữ
+                 16px REGULAR (bản cũ Ø24/13px Bold nên nhỏ và đậm hơn design).
+                 `.kp-num-mid` kéo số xuống 0.077em cho nằm ĐÚNG giữa vòng tròn —
+                 QC 8/9: "số không nằm giữa ô tròn" (xem globals.css). */
+              className={`inline-flex h-[25px] min-w-[25px] items-center justify-center rounded-full px-[5px] text-[16px] leading-[1.3] ${
                 isActive ? "bg-white text-brick" : "bg-ink text-white"
               }`}
             >
-              {t.count}
+              <span className="kp-num-mid">{t.count}</span>
             </span>
           </button>
         );

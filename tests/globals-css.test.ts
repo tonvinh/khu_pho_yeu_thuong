@@ -112,3 +112,12 @@ describe("Dropdown ô tra cứu — .fig `Frame 261`", () => {
     expect(b).toContain("margin-top: 8px");
   });
 });
+
+describe("Chip số của tab — QC 8/9 'số không nằm giữa ô tròn'", () => {
+  it(".kp-num-mid kéo số xuống 0.077em để nằm đúng tâm vòng tròn", () => {
+    const b = block(".kp-num-mid");
+    expect(b).toContain("translateY(0.077em)");
+    // phải là block, nếu không transform trên inline không dịch được hộp dòng
+    expect(b).toContain("display: block");
+  });
+});

@@ -696,3 +696,51 @@ nên mọi hash commit trước 8/9 đã đổi — ai còn bản clone cũ ph�
 **BẪY `.gitignore`**: file này KHÔNG có chú thích cuối dòng — `docs/*.xlsx  # ghi chú`
 biến cả cụm thành pattern nên không khớp gì cả. Ghi chú phải nằm ở dòng riêng.
 
+
+## Sửa 8/9 sau QC — chip số của tab + huy hiệu TOP (file `.fig` MỚI upload 8/9)
+
+`docs/lp/LandingpageFCM.fig` được thay bản mới ngày 8/9 → phải
+`rm scripts/figma/nodes.pkl && python3 scripts/figma/parse.py` rồi mới dump. Node id
+giữ nguyên (11 frame "Landing page"): `7217:1990` (tab 1) · `7651:1537` (tab 2) ·
+`7458:38738` (tab 3, chứa huy hiệu TOP) — 5 ảnh export cũ ở `docs/lp/export-02-09/*.webp`
+vẫn khớp bản mới ở khối này nên dùng để đối chiếu nét chữ.
+
+**Chip số trong tab** (`Tab` = `7367:20672` Selected / `7367:20649` Default):
+Ø**25** nền trắng (đang chọn) hoặc `#3D3D3D`, chữ **16px REGULAR** — bản cũ Ø24/13px
+**Bold** nên nhỏ và đậm hơn design. Pill cao **40**, chữ nhãn **18px ls -2%**, lề trong
+**trái 16 / phải 8** (instance đè `stackHorizontalPadding: 16`, master giữ
+`stackPaddingRight: 8`). Kiểm chéo được bằng bề rộng: 16 + chữ + 10 + 25 + 8 =
+271/278/224 đúng ba tab trong `.fig` (đo chữ bằng canvas: 211.2/217.9/164.3).
+
+**BẪY chữ SỐ không nằm giữa vòng tròn** (chính là điểm QC khoanh đỏ): FPT SongVui có
+ascent 0.75em / descent 0.25em, mà chữ số KHÔNG có phần chìm ⇒ căn giữa HỘP DÒNG
+(`place-items-center`, `leading-none`…) luôn đẩy số cao hơn tâm ô đúng **0.077em**
+(= (0.75−0.25)/2 − 0.654/2, đo bằng `canvas.measureText`). Class `.kp-num-mid`
+(globals.css) kéo xuống đúng chừng đó — dùng lại cho MỌI số đặt trong ô tròn/vuông.
+
+**Huy hiệu hạng** (`Text button` 40×50 trong `7458:38738`):
+- Nền là **GRADIENT DỌC mờ dần xuống đáy**, KHÔNG phải màu đặc — đây là "shadow bên
+  dưới box" mà QC nhắc. TOP1 `#2323FF` (1 → .6 ở mốc 66.35% → 0), TOP2 `#FF8206` và
+  TOP3 `#3EAF3F` (1 → .5 → 0), hạng ≥4 `#EEEEEE` (1 → 0).
+- **KHÔNG bo góc** (`cornerRadius` vắng ⇒ 0) — bản cũ `rounded-[8px]`.
+- Hộp autolayout có lề dọc 5 và **gap ÂM −10** (TOP chồng lên số) nên khoảng cách
+  TOP↔số không suy ra được từ `items-center`; dựng bằng absolute theo baseline:
+  TOP 14px hộp dòng 15 top 5 (baseline 16) · số 30px hộp dòng 45 top 10 (baseline 40).
+- **Hạng ≥4 KHÔNG có chữ TOP**: chỉ còn số 30px **Light** màu `#C9C9C9`, top 0
+  (baseline 30). Bản cũ vẫn in "TOP 4"/"TOP 5".
+- Kiểm chéo trên `landing-page-2.webp` (huy hiệu TOP 1 bắt đầu ở y=1612): nét chữ TOP
+  nằm 7→15.5, nét số nằm 21→39.5 — khớp hai baseline trên.
+
+**BẪY letter-spacing**: Chrome **không** cộng letter-spacing sau ký tự cuối, nên chữ
+`text-center` có `tracking` âm KHÔNG bị lệch phải — bù thêm `padding-right` là hỏng
+(đo ra lệch trái đúng nửa khoảng). Khác với giả định thường gặp.
+
+**Nhịp dọc danh sách** (cả ba tab giống nhau trong `.fig`): dòng đầu bắt đầu ở y=**42**
+tính từ mép card, bước lặp 82 = dòng 50 + 16 + kẻ + 16, và **CÓ kẻ sau dòng CUỐI** ở cả
+ba tab (`Line 9` tab 1, `Line 6` tab 2 và 3) — trước đây chỉ tab 1 có. Vì ruột dòng canh
+giữa hộp 82 nên mỗi dòng tự mang 16px đệm trên ⇒ lề trong TRÊN của card là **18**
+(18 + 16 = 34 của `.fig`), và khoảng tab → card là **40** (không phải 43).
+
+**Còn lệch, chấp nhận có chủ ý**: tab 1/2 khối chữ mỗi dòng cao ~54 vs 50 của `.fig`
+(tiêu đề 18px + meta 14px theo line-height body); tab 1 và tab 3 vẫn giữ thanh phân
+trang mà `.fig` không vẽ (chốt 7/9 — cần xem hạng 6–10) nên card cao hơn 550.

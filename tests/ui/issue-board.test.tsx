@@ -96,6 +96,17 @@ describe("IssueBoard · B4 — tab 1 'Góc phố mới cần treo biển'", () =
     expect(screen.getByText(TAB1).closest("button")!.textContent).toContain("1");
   });
 
+  it("chip đếm: Ø25, chữ 16px, số bọc .kp-num-mid cho nằm giữa vòng tròn (QC 8/9)", () => {
+    board();
+    const chip = screen.getByText(TAB1).closest("button")!.lastElementChild as HTMLElement;
+    expect(chip.className).toContain("h-[25px]");
+    expect(chip.className).toContain("min-w-[25px]");
+    expect(chip.className).toContain("text-[16px]");
+    expect(chip.className).not.toContain("font-bold"); // .fig: Regular
+    expect(chip.firstElementChild!.className).toContain("kp-num-mid");
+    expect(chip.textContent).toBe("1");
+  });
+
   it("meta CHỈ là 'Chưa có câu đề xuất' — không phường, không lượt thương", () => {
     const { container } = board();
     const row = screen.getByText(/Ngõ 7 Trần Phú/).closest("[data-row]")! as HTMLElement;
@@ -241,19 +252,35 @@ describe("IssueBoard · B4/Q7 — tab 3 'Cây bút của khu phố'", () => {
     expect(onOpenAmbassador).toHaveBeenCalledWith("co-bay-abc");
   });
 
-  it("huy hiệu hạng: TOP 1 xanh dương · TOP 2 cam, đếm tiếp sang trang sau", () => {
+  it("huy hiệu hạng: nền GRADIENT mờ dần (TOP1 xanh · TOP2 cam), đếm tiếp sang trang sau", () => {
     const many = Array.from({ length: 7 }, (_, i) =>
       ambassador({ user_id: `u${i}`, display_name: `Cây bút ${i}`, share_slug: `s${i}` })
     );
     const { container } = board({ ambassadors: many });
     openTab(TAB3);
-    const badges = container.querySelectorAll("[data-rank]");
+    const badges = container.querySelectorAll<HTMLElement>("[data-rank]");
     expect(badges).toHaveLength(5); // 5 dòng/trang
-    expect(badges[0].className).toContain("bg-accent-blue");
-    expect(badges[1].className).toContain("bg-brick");
+    // .fig tô gradient dọc mờ dần xuống đáy — KHÔNG phải màu đặc (QC 8/9)
+    expect(badges[0].style.backgroundImage).toContain("rgba(35, 35, 255, 0)");
+    expect(badges[1].style.backgroundImage).toContain("rgba(255, 130, 6, 0)");
+    // và không bo góc
+    expect(badges[0].className).not.toContain("rounded");
     fireEvent.click(screen.getByText("›"));
     expect(screen.getByText("Cây bút 5")).toBeTruthy();
     expect(screen.getByText("6")).toBeTruthy();
+  });
+
+  it("huy hiệu hạng ≥4: KHÔNG có chữ TOP, số xám nhạt (.fig 7856:2708)", () => {
+    const many = Array.from({ length: 5 }, (_, i) =>
+      ambassador({ user_id: `u${i}`, display_name: `Cây bút ${i}`, share_slug: `s${i}` })
+    );
+    const { container } = board({ ambassadors: many });
+    openTab(TAB3);
+    const badges = container.querySelectorAll<HTMLElement>("[data-rank]");
+    expect(badges[0].textContent).toBe("TOP1");
+    expect(badges[3].textContent).toBe("4"); // hạng 4 chỉ còn con số
+    expect(badges[4].textContent).toBe("5");
+    expect(badges[3].innerHTML).toContain("text-[#C9C9C9]");
   });
 
   it("CTA đáy là '+ Đề xuất góc phố mới'", () => {
@@ -271,6 +298,16 @@ describe("IssueBoard · B4 — kẻ ngăn dòng và biên", () => {
     const row = screen.getByText(/Ngõ 7 Trần Phú/).closest("[data-row]")!;
     expect(row.className).toContain("kp-row-sep");
     expect(container.querySelector(".border-b.border-cream-dark")).toBeNull();
+  });
+
+  it("CẢ BA tab đều có kẻ SAU dòng cuối (.fig vẽ Line 9 / Line 6 ở cuối danh sách)", () => {
+    const { container } = board();
+    const last = () => [...container.querySelectorAll("[data-row]")].at(-1)!;
+    expect(last().className).toContain("kp-row-sep-b");
+    openTab(TAB2);
+    expect(last().className).toContain("kp-row-sep-b");
+    openTab(TAB3);
+    expect(last().className).toContain("kp-row-sep-b");
   });
 
   it("đổi tab thì quay về trang 1", () => {

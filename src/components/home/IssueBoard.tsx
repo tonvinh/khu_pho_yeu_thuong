@@ -49,18 +49,48 @@ const EMPTY_HINT: Record<TabKey, string> = {
   writers: "Chưa có cây bút nào được vinh danh — viết câu đầu tiên cho xóm mình nhé!",
 };
 
-/** Huy hiệu hạng 40×50 (.fig): TOP1 xanh dương · TOP2 cam · TOP3 xanh lá · ≥4 xám */
+/** Nền huy hiệu hạng — .fig dùng GRADIENT DỌC mờ dần xuống đáy (chính là "shadow
+ *  bên dưới box" QC 8/9 nhắc; bản cũ tô màu ĐẶC nên mất hẳn). TOP1 xanh dương giữ
+ *  60% ở mốc 66.35%, TOP2/TOP3 giữ 50%; hạng ≥4 là #EEEEEE tắt dần từ 0% → 100%. */
+const RANK_BG: Record<number, string> = {
+  1: "linear-gradient(180deg, #2323FF 0%, rgba(35,35,255,0.6) 66.35%, rgba(35,35,255,0) 100%)",
+  2: "linear-gradient(180deg, #FF8206 0%, rgba(255,130,6,0.5) 66.35%, rgba(255,130,6,0) 100%)",
+  3: "linear-gradient(180deg, #3EAF3F 0%, rgba(62,175,63,0.5) 66.35%, rgba(62,175,63,0) 100%)",
+};
+const RANK_BG_REST = "linear-gradient(180deg, #EEEEEE 0%, rgba(238,238,238,0) 100%)";
+
+/** Huy hiệu hạng 40×50 (.fig `Text button`, frame 7458:38738) — KHÔNG bo góc.
+ *
+ *  Vị trí chữ lấy thẳng từ hộp autolayout của .fig (lề dọc 5, gap **-10** nên chữ
+ *  TOP và số chồng lấn) → dựng bằng absolute cho khớp từng baseline:
+ *    · TOP  14px, hộp dòng 15, top 5  → baseline y=16
+ *    · số   30px, hộp dòng 45, top 10 → baseline y=40   (hạng 1–3)
+ *    · số   30px Light #C9C9C9, top 0 → baseline y=30   (hạng ≥4, KHÔNG có chữ TOP)
+ *  Đo lại trên ảnh export `landing-page-2.webp` (huy hiệu TOP 1 ở y=1612): nét chữ
+ *  TOP nằm 7→15.5, số nằm 21→39.5 — khớp đúng hai baseline trên.
+ *
+ *  Chrome KHÔNG cộng letter-spacing sau ký tự cuối (đo được: bù `padding-right`
+ *  làm chữ lệch TRÁI đúng nửa khoảng) nên `text-center` là đủ, đừng bù thêm. */
 function RankBadge({ rank }: { rank: number }) {
-  const bg =
-    rank === 1 ? "bg-accent-blue" : rank === 2 ? "bg-brick" : rank === 3 ? "bg-status-signed" : "bg-[#EEEEEE]";
-  const fg = rank > 3 ? "text-ink-soft" : "text-white";
+  const top3 = rank <= 3;
   return (
     <span
       data-rank={rank}
-      className={`grid h-[44px] w-[36px] flex-none place-items-center rounded-[8px] leading-none sm:h-[50px] sm:w-[40px] ${bg} ${fg}`}
+      className="relative block h-[50px] w-[40px] flex-none"
+      style={{ backgroundImage: top3 ? RANK_BG[rank] : RANK_BG_REST }}
     >
-      <span className="text-[9px] font-bold uppercase tracking-[-0.08em] sm:text-[11px]">Top</span>
-      <span className="font-display text-[20px] font-bold tracking-[-0.08em] sm:text-[24px]">{rank}</span>
+      {top3 && (
+        <span className="absolute inset-x-0 top-[5px] text-center text-[14px] font-normal leading-[15px] tracking-[-0.08em] text-white">
+          TOP
+        </span>
+      )}
+      <span
+        className={`absolute inset-x-0 text-center text-[30px] leading-[45px] tracking-[-0.08em] ${
+          top3 ? "top-[10px] font-normal text-white" : "top-0 font-light text-[#C9C9C9]"
+        }`}
+      >
+        {rank}
+      </span>
     </span>
   );
 }
@@ -136,10 +166,13 @@ export default function IssueBoard({
 
   const switchTab = (k: TabKey) => { setTab(k); setPage(0); };
 
-  /* Dòng: cao 50, bước lặp 82 (50 + kẻ + gap 16). Kẻ ngăn là NÉT ĐỨT `.kp-row-sep`
-     — dòng đầu không có kẻ (xem globals.css). Tab 1 có kẻ cả SAU dòng cuối. */
+  /* Dòng: cao 50, bước lặp 82 (50 + 16 + kẻ + 16). Kẻ ngăn là NÉT ĐỨT `.kp-row-sep`
+     — dòng đầu KHÔNG có kẻ, dòng cuối CÓ (cả ba tab: .fig vẽ `Line 9` sau dòng 6 của
+     tab 1, `Line 6` sau dòng 5 của tab 2 và tab 3). Ruột dòng canh giữa hộp 82 nên
+     mỗi dòng tự mang 16px đệm trên/dưới — vì thế lề trong TRÊN của card là 18 chứ
+     không phải 34 của .fig (18 + 16 = 34), xem khối bọc bên dưới. */
   const rowClass = (last: boolean) =>
-    `kp-row-sep${last && tab === "latest" ? " kp-row-sep-b" : ""} flex flex-col gap-2.5 py-4 sm:h-[82px] sm:flex-row sm:items-center sm:gap-4 sm:py-3`;
+    `kp-row-sep${last ? " kp-row-sep-b" : ""} flex flex-col gap-2.5 py-4 sm:h-[82px] sm:flex-row sm:items-center sm:gap-4 sm:py-3`;
 
   const metaRow = "mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 font-light text-[12.5px] text-ink-soft sm:text-[14px]";
   const titleRow = "text-[15px] font-bold leading-snug tracking-[-0.02em] sm:text-[18px]";
@@ -149,7 +182,7 @@ export default function IssueBoard({
       <SectionHead title={title} hint={hint} signpost />
 
       {/* .fig: hint kết ở y=1465 → tab y=1490 → card y=1570 */}
-      <div className="mb-6 sm:mt-[25px] sm:mb-[43px]">
+      <div className="mb-6 sm:mt-[25px] sm:mb-[40px]">
         <FilterTabs
           tabs={(["latest", "to_vote", "writers"] as TabKey[]).map((k) => ({
             key: k,
@@ -167,8 +200,10 @@ export default function IssueBoard({
           thứ tự lớp .fig) — không có nó thì cột đè lên các dòng góc phố */}
       <div className="relative overflow-hidden rounded-[28px] border-[1.9px] border-brick bg-white shadow-kp-s sm:rounded-[40px]">
         <Stripe />
-        {/* .fig: sọc trên 8 → lề trong 34 → danh sách → 24 → sọc dưới 8 (card 550) */}
-        <div className="px-4 py-2 sm:px-[84px] sm:pb-[24px] sm:pt-[34px]">
+        {/* .fig: sọc trên 8 → lề trong 34 → danh sách (dòng đầu bắt đầu ở y=42 tính từ
+            mép card) → kẻ cuối → 24 → sọc dưới 8 (card 550). Hộp dòng đã mang sẵn 16px
+            đệm trên nên lề trong ở đây là 34 − 16 = 18. */}
+        <div className="px-4 py-2 sm:px-[84px] sm:pb-[24px] sm:pt-[18px]">
           {empty && (
             <p className="m-0 px-1 py-8 text-center text-[14px] text-ink-soft">{EMPTY_HINT[tab]}</p>
           )}
@@ -274,7 +309,7 @@ export default function IssueBoard({
 
           {/* CTA đáy card đổi theo tab — .fig KHÔNG vẽ nút nào ở tab 1 */}
           {isNotes && (
-            <div className="flex justify-center py-4 sm:pb-0 sm:pt-6">
+            <div className="flex justify-center py-4 sm:pb-2 sm:pt-6">
               {/* Dòng tab 2 là CÂU NHẮC nên CTA không còn ngữ cảnh góc phố → mở
                   popup chọn góc phố trước (chốt 4/9), không tự đoán góc đầu tiên. */}
               <button
@@ -287,7 +322,7 @@ export default function IssueBoard({
             </div>
           )}
           {tab === "writers" && (
-            <div className="flex justify-center py-4 sm:pb-0 sm:pt-6">
+            <div className="flex justify-center py-4 sm:pb-2 sm:pt-6">
               <button onClick={onPropose} className="kp-btn kp-btn-primary tap h-[50px] px-8 text-[16px] sm:min-w-[289px]">
                 + Đề xuất góc phố mới
               </button>

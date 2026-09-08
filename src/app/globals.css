@@ -460,6 +460,16 @@ textarea.kp-input-lg {
   background-position: top left, bottom left;
 }
 
+/* Số nằm ĐÚNG GIỮA ô tròn (chip đếm của tab) — FPT SongVui có ascent 0.75em /
+   descent 0.25em, mà chữ SỐ không có phần chìm, nên căn giữa HỘP DÒNG luôn đẩy số
+   cao hơn tâm ô đúng 0.077em ((0.75 - 0.25)/2 - inkHeight/2, inkHeight ≈ 0.654em —
+   đo bằng canvas TextMetrics trong Chrome). QC 8/9 bắt được lệch này ở chip đếm.
+   Bù lại bằng translate nên vẫn đúng ở mọi cỡ chữ. */
+.kp-num-mid {
+  display: block;
+  transform: translateY(0.077em);
+}
+
 /* Chú thích dưới chip 4N — .fig Frame 243: 12px Light #969696, khối rộng 147,
    canh giữa, hai dòng (Figma bản 2/9 · B8) */
 .kp-n4note {
