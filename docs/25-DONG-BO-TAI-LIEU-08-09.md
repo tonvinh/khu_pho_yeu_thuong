@@ -129,13 +129,15 @@ hoặc dump lại bằng `scripts/figma/`. Chi tiết trong `CLAUDE.md` §"Dọn
 
 ### 4.2 Về quy tắc cứng — cần PM duyệt trước khi sửa `docs/CLAUDE.md`
 
-`docs/CLAUDE.md` là **nguồn quy tắc cứng do PM giữ**; phiên này **không sửa**, chỉ nêu 3 chỗ đã lệch:
+`docs/CLAUDE.md` là **nguồn quy tắc cứng do PM giữ**. Lượt rà đầu tiên chỉ **nêu** 3 chỗ lệch
+(11–13) chứ không sửa. Cuối ngày 8/9 phát sinh mục **14 (tên miền)** và chủ dự án cho phép sửa
+thẳng — mục 14 **đã áp vào file**, ba mục 11–13 vẫn **chờ PM duyệt**:
 
 | # | Chỗ lệch | Thực tế |
 |---|---|---|
 | **11** | **Quy tắc cứng 10** — *"Bản đồ (Q3): ảnh gốc chỉ admin thấy; public luôn là bản cách điệu; pin dùng toạ độ %"* | Bản đồ **đã gỡ khỏi sản phẩm từ 1/8**. Vế "ảnh gốc chỉ admin thấy" vẫn đúng cho mọi ảnh prefix `private/` và vẫn được ép ở `/api/img`; hai vế còn lại **không còn đối tượng áp dụng**. |
 | **12** | **§"Nguồn sự thật về UI"** trỏ tới `Khu Pho Yeu Thuong.dc.html` và `Admin Khu Pho.dc.html` | Hai file này **không có trong `docs/`**. Nguồn design chuẩn hiện nay là **`docs/lp/LandingpageFCM.fig`** (chốt 4/9). |
-| **14** | **Quy tắc cứng 9** — *"site chạy ở MỘT trong hai: `khupho.fpt.vn` hoặc `fpt.vn/khu-pho-de-thuong` (**chưa chốt phương án nào**)"* | **Q5 ĐÃ CHỐT 8/9**: phương án B, đường dẫn thật là **`https://fpt.vn/khu-pho-biet-thuong`** (không phải `khu-pho-de-thuong`). Đã cập nhật `07` §Q5, `00` D7, `README`, `.env.example`, `18` §2.1, `13`, `19`. `docs/CLAUDE.md` để PM sửa. |
+| **14** | **Quy tắc cứng 9** — *"site chạy ở MỘT trong hai: `khupho.fpt.vn` hoặc `fpt.vn/khu-pho-de-thuong` (**chưa chốt phương án nào**)"* | **Q5 ĐÃ CHỐT 8/9**: phương án B, đường dẫn thật là **`https://fpt.vn/khu-pho-biet-thuong`** (không phải `khu-pho-de-thuong`). ✅ **ĐÃ SỬA XONG** ở `07` §Q5, `00` D7, `README`, `.env.example`, `18` §2.1, `13`, `19`, **và cả `docs/CLAUDE.md` quy tắc 9 + `TONG-HOP-KIEM-DUYET.md`** (chủ dự án cho phép sửa trực tiếp, 8/9) — mục này khép lại, không còn chờ PM. |
 | **13** | **Definition of Done** còn hạng mục *"Upload ảnh bản đồ → hiển thị bản cách điệu + đặt pin bằng click; bấm pin hiện ảnh thật địa điểm"* | Hạng mục này đã rút khỏi phạm vi. Đề nghị thay bằng: *"Upload 4 ảnh tổng quan + 1 ảnh chứng nhận cho khu phố; slider hero hiển thị đúng 10 slot theo thứ tự admin xếp."* |
 
 ### 4.3 Việc kỹ thuật còn nợ (không cần BA trả lời)

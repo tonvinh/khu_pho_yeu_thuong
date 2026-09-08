@@ -42,7 +42,7 @@ Design tham chiếu UI (nguồn sự thật về giao diện):
 | D4 | **Duyệt 4N thủ công (Q2).** Admin tick đủ 4 ô mới duyệt; không engine chấm tự động; client chỉ giới hạn 120 ký tự | 04 §3 · 06 §3 |
 | D5 | **Bản đồ (Q3):** upload 1 ảnh → tự động cách điệu; admin click đặt pin; bấm pin hiện ảnh thật địa điểm | 02 §1 · 04 §10 |
 | D6 | **Lead export CSV thủ công (Q4)**, có log | 04 §6 |
-| D7 | **Domain (Q5):** MỘT trong hai — khupho.fpt.vn HOẶC fpt.vn/khu-pho-de-thuong; basePath qua biến env | 07 §2 · CLAUDE.md quy tắc 9 |
+| D7 | **Domain (Q5):** ~~MỘT trong hai — khupho.fpt.vn HOẶC fpt.vn/khu-pho-de-thuong~~ → **chốt 8/9: `fpt.vn/khu-pho-biet-thuong`**; basePath qua biến env | 07 §2 · CLAUDE.md quy tắc 9 |
 | D8 | **Pilot 20 khu phố (Q6):** bulk import 1 lần bằng import-template.xlsx (validate → preview → commit all-or-nothing) | 04 §11 |
 | D9 | **Không gov_viewer (Q7):** chính quyền nhận báo cáo offline | 04 §9 |
 | D10 | **Vinh danh (Q8):** leaderboard + share MXH (URL công khai + OG image động, FB/Zalo) | 02 §11 |
@@ -845,7 +845,7 @@ Phiên bản 1.0
 | Bản đồ | Ảnh upload + lớp filter cách điệu (CSS/SVG duotone) + pins toạ độ % | Đã chốt Q3 |
 | Ảnh | Upload lên object storage (S3-compatible của FPT), resize/WebP tự động | Bản đồ, ảnh địa điểm, ảnh biển |
 | OG image | Route render ảnh động (@vercel/og hoặc satori + resvg) | Phục vụ share MXH (Q8) |
-| Deploy | **Toàn bộ infra chạy Docker** trên hạ tầng FPT · domain: **một trong hai** — `khupho.fpt.vn` **hoặc** `fpt.vn/khu-pho-de-thuong` (chốt phương án sau) | Đã chốt — chi tiết §2.2. `basePath` cấu hình bằng biến env (`''` cho subdomain, `'/khu-pho-de-thuong'` cho path); mọi link/asset/OG qua helper URL, không hard-code |
+| Deploy | **Toàn bộ infra chạy Docker** trên hạ tầng FPT · domain **chốt 8/9**: `fpt.vn/khu-pho-biet-thuong` (chạy dưới path) | Đã chốt — chi tiết §2.2. `basePath` cấu hình bằng biến env (`''` cho subdomain, `'/khu-pho-biet-thuong'` cho path); mọi link/asset/OG qua helper URL, không hard-code |
 | Font/màu | Theo design file `Khu Pho Yeu Thuong.dc.html`: nền kem, đỏ gạch (primary), cam, xanh lá, xanh dương; heading dạng chữ nét thanh đậm | Design là nguồn sự thật về UI |
 
 ## 2.1 Kiến trúc bảo mật định danh (ƯU TIÊN CAO — không OTP)
@@ -922,7 +922,7 @@ Phiên bản 1.0
 | Q2 | Chấm 4N | **Người duyệt trực tiếp.** Không có engine chấm tự động; admin tick checklist 4N khi duyệt (04 §3); client chỉ giới hạn 120 ký tự |
 | Q3 | Bản đồ | **Upload 1 ảnh bản đồ → tự động cách điệu** (filter duotone theo bảng màu chiến dịch); admin click đặt pin; bấm pin hiển thị **ảnh thật địa điểm** + thông tin (02 §1, 04 §10) |
 | Q4 | Lead | **Export CSV thủ công** có log |
-| Q5 | Hosting/domain | Hạ tầng FPT; domain là **một trong hai**: **khupho.fpt.vn** hoặc **fpt.vn/khu-pho-de-thuong** (phương án cuối chốt trước go-live). Code hỗ trợ `basePath` qua biến env để chuyển giữa hai phương án không cần sửa code |
+| Q5 | Hosting/domain | ~~Hạ tầng FPT; domain là **một trong hai**: **khupho.fpt.vn** hoặc **fpt.vn/khu-pho-de-thuong** (phương án cuối chốt trước go-live)~~ → **CHỐT 8/9: `https://fpt.vn/khu-pho-biet-thuong`**. Code hỗ trợ `basePath` qua biến env để chuyển giữa hai phương án không cần sửa code |
 | Q6 | Pilot | **20 khu phố đầu tiên**, import 1 lần bằng Excel template `import-template.xlsx` qua trình bulk import (04 §11) |
 | Q7 | Chính quyền | **Không có tài khoản gov_viewer trong MVP** — báo cáo offline (export từ admin) |
 | Q8 | Vinh danh Đại sứ | **Leaderboard + chức năng share MXH** (URL công khai + OG image động, Facebook/Zalo) — 02 §11. Chưa hiển thị giải thưởng hiện vật |
@@ -963,7 +963,7 @@ Bám sát bố cục, màu (nền kem, đỏ gạch primary, cam/xanh lá/xanh d
 6. Copy tiếng Việt lấy nguyên văn từ 06-CONTENT-COPY §2.
 7. `/admin` chặn index; chỉ admin (Q7: không có gov_viewer). Đăng nhập admin: email đuôi **@fpt.com** (regex server-side) + mật khẩu ≥12 ký tự hash Argon2id; khoá 15 phút sau 5 lần sai; lỗi chung không lộ email tồn tại; TOTP khuyến nghị; session admin riêng (SameSite=Strict, TTL 8h).
 8. **Không có SMS** trong toàn hệ thống (Q1) — báo tin vui qua bảng `notifications` + banner in-web.
-9. Domain: site chạy ở **MỘT trong hai** — `khupho.fpt.vn` **hoặc** `fpt.vn/khu-pho-de-thuong` (chưa chốt phương án nào). Vì vậy cấu hình Next.js `basePath` bằng biến môi trường, mọi URL/asset/OG qua helper, không hard-code đường dẫn gốc — đổi phương án chỉ là đổi 1 biến env.
+9. Domain: ~~site chạy ở **MỘT trong hai** — `khupho.fpt.vn` **hoặc** `fpt.vn/khu-pho-de-thuong` (chưa chốt phương án nào)~~ → **CHỐT 8/9/2026: `https://fpt.vn/khu-pho-biet-thuong`** (chạy dưới path) ⇒ `BASE_PATH=/khu-pho-biet-thuong`, `SITE_ORIGIN=https://fpt.vn`. Lưu ý đoạn path thật là **`khu-pho-biet-thuong`**, không phải `khu-pho-de-thuong` như ví dụ cũ. Vẫn giữ nguyên yêu cầu gốc: cấu hình Next.js `basePath` bằng biến môi trường, mọi URL/asset/OG qua helper, không hard-code đường dẫn gốc — đổi phương án chỉ là đổi 1 biến env (nhưng là **build arg**, đổi phải build lại image).
 10. Bản đồ (Q3): ảnh gốc chỉ admin thấy; public luôn là bản cách điệu; pin dùng toạ độ % để không phụ thuộc kích thước ảnh.
 11. **Toàn bộ infra dùng Docker** (07-NFR-TECH §2.2): 1 file `docker-compose.yml` với 4 service — `web` (Next.js multi-stage, non-root), `db` (postgres:16-alpine, không expose port ngoài), `storage` (MinIO cho ảnh), `proxy` (Caddy/nginx — service duy nhất mở port, lo TLS + security headers). Secrets qua `.env` không commit (kèm `.env.example`); healthcheck mọi service; migration là lệnh riêng, không tự chạy khi container start.
 
