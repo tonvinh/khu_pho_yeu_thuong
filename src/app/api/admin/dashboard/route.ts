@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { one, q } from "@/lib/db";
 import { requireAdmin } from "@/lib/api";
-import { getCounters } from "@/lib/counters";
+import { getRealCounters } from "@/lib/counters";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +10,10 @@ export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
   if ("error" in auth) return auth.error;
 
+  // Dashboard phải thấy SỐ THẬT: dải 3 con số ngoài trang chủ có thể đang bị
+  // ghi đè ở /admin/noi-dung (8/9).
   const [counters, ops, leads, daily] = await Promise.all([
-    getCounters(),
+    getRealCounters(),
     one(`SELECT
       (SELECT count(*)::int FROM issues WHERE status='pending_review') AS issues_pending,
       (SELECT count(*)::int FROM suggestions WHERE status='submitted') AS suggestions_pending,

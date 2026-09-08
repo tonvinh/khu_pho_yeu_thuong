@@ -658,3 +658,22 @@ element chưa thực sự được focus).
 **BẪY môi trường (mất 5 phút phiên này)**: `pnpm build` khi `pnpm dev` đang chạy sẽ ghi đè
 `.next` của dev server → dev server trả 500 cho mọi route và không tự hồi. Muốn build thử
 thì tắt dev server trước (hoặc chấp nhận `rm -rf .next` rồi khởi động lại dev).
+
+## Sửa 8/9 — admin ghi đè được dải 3 con số ở hero
+
+QC khoanh đỏ dải `Biển đã treo · Khu phố · Câu đóng góp`: "cho phép chỉnh các con số này
+trong admin". Ghi đè lưu ngay trong bảng `site_content` (3 khoá `counter_signs_installed`,
+`counter_neighborhoods_joined`, `counter_suggestions_total`) — **không migration**, cùng cơ
+chế "rỗng → xoá hàng → về mặc định" như ô chữ, chỉ khác mặc định là SỐ ĐẾM THẬT chứ không
+phải copy gốc.
+
+- `src/lib/counters.ts` tách hai đường: `getCounters()` = số CÔNG KHAI (đã áp ghi đè, dùng ở
+  `page.tsx` + `/api/v1/counters`) · `getRealCounters()` = số đếm thật (dashboard admin phải
+  thấy dữ liệu thật, không thấy số PR). Cả hai dùng chung một lượt truy vấn + cache 15s.
+- 3 khoá này KHÔNG nằm trong `SITE_TEXT_KEYS` (bộ khoá text vẫn đúng 13) — API admin nhận
+  chúng ở nhóm riêng `counters` của body PATCH, validate số nguyên 0…`COUNTER_MAX` (1.000.000).
+- PATCH gọi `resetCountersCache()` nên trang chủ đổi số ngay, không đợi hết 15s cache.
+  Sửa thẳng bằng SQL thì phải chờ 15s (đã kiểm bằng curl).
+- Hàng rác trong bảng (`abc`, số âm, số lẻ) bị lơ đi → rơi về đếm thật, trang chủ không ra NaN.
+- Test khoá: `tests/counters.test.ts` (6 case logic) · `tests/ui/admin-site-counters.test.tsx`
+  (4 case màn `/admin/noi-dung`).

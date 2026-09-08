@@ -6,10 +6,15 @@
 // khối biển (gồm banner khuyến mãi in trên biển) · khối ưu đãi · footer.
 // Khối TVC hiện TẠM ẨN khỏi trang chủ nhưng vẫn quản lý được ở đây, và nhận NHIỀU
 // link video phát lần lượt (yêu cầu "back up ngầm tool up link video").
+//
+// 8/9 (QC): thêm khối GHI ĐÈ 3 CON SỐ ở hero (biển đã treo · khu phố · câu đóng góp).
+// Cùng cơ chế "để trống = mặc định" như ô chữ, chỉ khác mặc định là SỐ ĐẾM THẬT từ DB
+// chứ không phải copy gốc — nên placeholder là con số đang đếm được.
 import { useCallback, useEffect, useState } from "react";
 import { apiGet, apiSend } from "@/components/client-api";
 import { Btn, Card } from "@/components/admin/AdminShell";
 import SignCard from "@/components/home/SignCard";
+import { COPY } from "@/lib/copy";
 
 type TextKey =
   | "hero_title" | "hero_body" | "hero_search_placeholder"
@@ -18,20 +23,31 @@ type TextKey =
   | "lead_title" | "lead_body" | "lead_privacy"
   | "footer_line1" | "footer_line2" | "footer_support" | "footer_tagline";
 
+/** 3 ô của dải con số — trùng key với CounterData (xem src/lib/counters.ts) */
+const COUNTER_FIELDS = ["signs_installed", "neighborhoods_joined", "suggestions_total"] as const;
+type CounterKey = (typeof COUNTER_FIELDS)[number];
+
 interface ContentPayload {
   defaults: Record<TextKey, string>;
   overrides: Record<TextKey, string>;
+  counters: {
+    /** Số đếm thật từ dữ liệu — dùng làm placeholder */
+    real: Record<CounterKey, number>;
+    /** "" = đang để tự đếm */
+    overrides: Record<CounterKey, string>;
+  };
 }
 
 export default function SiteContentPage() {
   const [data, setData] = useState<ContentPayload | null>(null);
   const [form, setForm] = useState<Record<TextKey, string> | null>(null);
+  const [nums, setNums] = useState<Record<CounterKey, string> | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
   const load = useCallback(() => {
     apiGet<ContentPayload>("/api/admin/site-content")
-      .then((r) => { setData(r); setForm({ ...r.overrides }); })
+      .then((r) => { setData(r); setForm({ ...r.overrides }); setNums({ ...r.counters.overrides }); })
       .catch(() => {});
   }, []);
   useEffect(load, [load]);
@@ -43,18 +59,22 @@ export default function SiteContentPage() {
   const fail = (e: unknown) => notify(e instanceof Error ? e.message : "Có lỗi xảy ra", false);
 
   const save = async () => {
-    if (!form || busy) return;
+    if (!form || !nums || busy) return;
     setBusy(true);
     try {
-      const r = await apiSend<ContentPayload>("PATCH", "/api/admin/site-content", form);
+      const r = await apiSend<ContentPayload>("PATCH", "/api/admin/site-content", {
+        ...form,
+        counters: nums,
+      });
       setData(r);
       setForm({ ...r.overrides });
+      setNums({ ...r.counters.overrides });
       notify("Đã lưu nội dung — trang chủ hiển thị bản mới ngay ✓");
     } catch (e) { fail(e); } finally { setBusy(false); }
   };
 
 
-  if (!data || !form) return <p className="text-sm text-ink-soft">Đang tải…</p>;
+  if (!data || !form || !nums) return <p className="text-sm text-ink-soft">Đang tải…</p>;
 
   const val = (key: TextKey) => form[key].trim() || data.defaults[key];
 
@@ -92,6 +112,41 @@ export default function SiteContentPage() {
     );
   };
 
+  // Ô số của dải 3 con số: để trống = tự đếm từ dữ liệu (placeholder là số đang đếm được)
+  const numField = (key: CounterKey, label: string, hint: string) => {
+    const real = data.counters.real[key];
+    const changed = nums[key].trim() !== "";
+    return (
+      <label className="block">
+        <span className="flex items-baseline justify-between gap-2 text-xs font-bold">
+          <span>{label}{changed && <span className="ml-1.5 rounded-full bg-brick/10 px-1.5 py-0.5 text-[10px] font-bold text-brick">đã ghi đè</span>}</span>
+          {changed && (
+            <button
+              onClick={() => setNums({ ...nums, [key]: "" })}
+              className="text-[11px] font-semibold text-ink-soft underline hover:text-brick"
+            >
+              ↩ Về số tự đếm
+            </button>
+          )}
+        </span>
+        <input
+          value={nums[key]}
+          inputMode="numeric"
+          placeholder={String(real)}
+          // Chỉ nhận chữ số — tránh gõ nhầm dấu chấm/phẩy rồi bị server trả lỗi lúc lưu
+          onChange={(e) => setNums({ ...nums, [key]: e.target.value.replace(/[^0-9]/g, "") })}
+          className={
+            "mt-1 w-full rounded-xl border border-cream-dark bg-cream px-3 py-2 text-sm tabular-nums" +
+            (changed ? " border-brick/60 bg-white" : "")
+          }
+        />
+        <span className="mt-1 block text-[11px] leading-4 text-ink-soft">
+          Đang tự đếm: <b className="text-ink">{real.toLocaleString("vi-VN")}</b> — {hint}
+        </span>
+      </label>
+    );
+  };
+
 
   return (
     <div className="max-w-4xl space-y-4">
@@ -122,6 +177,19 @@ export default function SiteContentPage() {
           {field("hero_search_placeholder", "Chữ mờ trong ô tra cứu khu phố", {
             hint: "Ô tìm kiếm nằm dưới KV khu phố — chính là ô tra cứu “Xóm mình đã đạt chuẩn 4N chưa?”.",
           })}
+        </div>
+      </Card>
+
+      <Card title="Dải 3 con số dưới ô tra cứu">
+        <p className="mb-3 text-[11px] leading-4 text-ink-soft">
+          Để trống → trang chủ tự đếm từ dữ liệu. Điền số → trang chủ hiện ĐÚNG số đã điền
+          (dùng khi chiến dịch đã treo biển / có khu phố tham gia ngoài đời mà web chưa kịp
+          cập nhật). Dashboard admin luôn hiển thị số đếm thật.
+        </p>
+        <div className="grid gap-4 md:grid-cols-3">
+          {numField("signs_installed", COPY.counterLabels[0], "câu nhắc đã lên biển (status “installed”).")}
+          {numField("neighborhoods_joined", COPY.counterLabels[1], "khu phố đang hiển thị, chưa xoá.")}
+          {numField("suggestions_total", COPY.counterLabels[2], "câu nhắc đã duyệt.")}
         </div>
       </Card>
 
