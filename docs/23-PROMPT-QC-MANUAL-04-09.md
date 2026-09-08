@@ -40,6 +40,11 @@ Nguyên tắc bất di bất dịch:
 3. **Ảnh export (theo bản 2/9)**: `docs/lp/Landing page.png` … `Landing page-4.png` (2880×7560 = 1440×3780 @2x),
    `Group 4.png`, `Frame 151.png`, `06 1.png`, `Khu phố 2 1.png`, `123123 1.png`, thư mục
    `docs/lp/vuesax/` (bộ icon) và `docs/lp/FONT v3 SONGVUI/`.
+   **Dọn 8/9 — chỉ còn một phần trong git**: `Landing page*.png` → dùng bản nén cùng thứ tự
+   `docs/lp/export-02-09/landing-page{,-1,-2,-3,-4}.webp` (1440×3780, đo px thoải mái vì
+   đúng khổ 1:1 của .fig); `Khu phố 2 1/123123 1/06 1.png` → `public/brand/{kv-khu-pho,plaza,signpost}.webp`;
+   `vuesax/` gộp còn `tick-circle.svg` (4 bản .png + 3 .svg kia là bản sao y hệt).
+   Bản gốc xin ở Drive team Design — xem `docs/README.md` §C.
 4. **`docs/22-QC-FIGMA-MOI-02-09.md`** — bản QC phiên trước, đã fix xong A + B1–B10 + C1–C5.
    Dùng làm tham chiếu, **không dùng làm bằng chứng "đã đúng"**: phải đo lại.
 5. **Ảnh chú thích của team** (ảnh `k4.png` đính kèm yêu cầu này) và checklist §3 dưới đây.

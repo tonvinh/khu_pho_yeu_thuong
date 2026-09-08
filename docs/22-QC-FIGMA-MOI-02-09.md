@@ -5,6 +5,8 @@
 > Đã parse lại: `rm scripts/figma/nodes.pkl && python3 scripts/figma/parse.py` (~40s),
 > đọc bằng `python3 scripts/figma/dump.py <node-id> [depth]`.
 > Ảnh export kèm theo: `docs/lp/Landing page.png` … `Landing page-4.png` (2880×7560 = **1440×3780** @2x).
+> **Bản .png ở Drive, KHÔNG track trong git** (dọn 8/9) — trong repo dùng bản nén cùng thứ tự
+> `docs/lp/export-02-09/landing-page.webp` … `landing-page-4.webp` (1440×3780, ~430KB/tấm).
 
 ## 0. Bản đồ frame ↔ ảnh export
 
@@ -99,7 +101,7 @@ Dropdown `Frame 261` bắt đầu `x=312 y=1193 w=816`, `r=16`, nền `#FFFFFF`.
 
 **(a) Có kết quả** (`7745:2107`, ảnh `Landing page-3.png`) — panel h=231, gap 24
 - Mỗi dòng: tên `18px Bold #3D3D3D` (x=336) + dòng dưới `pin 16px` + `Phường Bàn Cờ - TP. Hồ Chí Minh` `14px Light #969696` (x=360)
-- Bên phải: **pill xanh** `w≈140 h=35 r=88.9 fill #2323FF`, icon `vuesax/linear/tick-circle` (có sẵn ở `docs/lp/vuesax/linear/*.svg`) + chữ `Đạt chuẩn 4N` 14.2px trắng
+- Bên phải: **pill xanh** `w≈140 h=35 r=88.9 fill #2323FF`, icon `vuesax/linear/tick-circle` (có sẵn ở `docs/lp/vuesax/linear/tick-circle.svg`) + chữ `Đạt chuẩn 4N` 14.2px trắng
 - [ ] Web đang dùng emoji 🥇 cạnh tên → **thay bằng pill này**; bỏ emoji.
 
 **(b) Đúng 1 kết quả** (`7458:38738`, ảnh `Landing page-2.png`) — panel h=184

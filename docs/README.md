@@ -75,7 +75,7 @@ Design/BA khi cần đối chiếu.
 | File nguồn | Nặng | Bản thay thế đang có trong repo |
 |---|---|---|
 | `lp/LandingpageFCM.fig` | 730MB | `lp/figma-frame-7217-1990.txt` (dump) + `scripts/figma/` để đọc lại |
-| `lp/Landing page*.png` | 8.7MB/tấm | `lp/export-02-09/*.webp` (1440px, ~430KB) |
+| `lp/Landing page{,-1,-2,-3,-4}.png` | 8.7MB/tấm | `lp/export-02-09/landing-page{,-1,-2,-3,-4}.webp` — **cùng thứ tự**, 1440×3780 (đúng khổ .fig nên đo px trực tiếp được) |
 | `lp/Khu phố 2 1.png` | 14MB | `public/brand/kv-khu-pho.webp` (372KB) |
 | `lp/123123 1.png` | 2.4MB | `public/brand/plaza.webp` (232KB) |
 | `lp/06 1.png` | 1.1MB | `public/brand/signpost.webp` (44KB) |
@@ -85,7 +85,7 @@ Design/BA khi cần đối chiếu.
 | `admin/admin_v1.pdf` | 4.2MB | Đã áp vào [`21-KE-HOACH-DIEU-CHINH-18-8.md`](21-KE-HOACH-DIEU-CHINH-18-8.md) |
 
 Còn track (nhỏ, cần để đối chiếu số đo): `lp/Frame 151.png`, `lp/Group 4.png`,
-`lp/vuesax/`, `lp/export-02-09/`, `lp/figma-frame-7217-1990.txt`, `import-template.xlsx`.
+`lp/vuesax/tick-circle.svg`, `lp/export-02-09/`, `lp/figma-frame-7217-1990.txt`, `import-template.xlsx`.
 
 ---
 
