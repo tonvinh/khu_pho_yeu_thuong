@@ -70,3 +70,9 @@ docs/*.xlsx
 
 # Email review admin_v1.pdf (4.2MB)
 docs/admin/
+
+# Hai asset mồ côi đã gỡ 8/9 (kv-khu-pho-sm: khối KV chân trang bỏ từ 2/9;
+# sign-fptplay: dải khuyến mãi bỏ từ 3/9). Máy dev còn giữ bản cắt sẵn —
+# chặn để `git add -A` không hút ngược vào repo.
+public/brand/kv-khu-pho-sm.webp
+public/brand/sign-fptplay.webp
