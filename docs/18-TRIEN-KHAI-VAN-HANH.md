@@ -85,7 +85,7 @@ Tạo file từ template: `cp .env.example .env`. File `.env` **không bao giờ
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | ✅ | ✅ | Credentials MinIO. Secret nên ≥ 16 ký tự |
 | `DATABASE_URL` | dev | ✅ | Chỉ cần khi chạy **ngoài** Docker. Trong compose bị override thành `@db:5432` |
 | `SITE_ORIGIN` | | ✅ (cần `up -d web`) | Origin tuyệt đối cho OG tag/share link. Production: `https://khupho.ailab.city`. **Không** liên quan CSRF/auth |
-| `BASE_PATH` | | ❌ **Build arg** | `""` cho domain riêng; `/khu-pho-de-thuong` nếu chạy dưới path. Đổi ⇒ **bắt buộc rebuild image** |
+| `BASE_PATH` | | ❌ **Build arg** | `""` cho domain riêng; `/khu-pho-yeu-thuong` nếu chạy dưới path `fpt.vn/khu-pho-yeu-thuong`. Đổi ⇒ **bắt buộc rebuild image**. Cả 2 file compose đều đọc biến này từ `.env` (sửa 8/9 — `docker-compose.prod.yml` trước đó chốt cứng `""`, làm CI build lại là mất subpath) |
 | `SITE_ADDRESS` | | ✅ | **Chỉ** dùng ở mode A: `:80` cho local, hoặc domain để Caddy tự cấp TLS |
 | `POSTGRES_USER` / `POSTGRES_DB` | | | Mặc định `khupho` |
 | `MINIO_BUCKET` | | ✅ | Mặc định `khupho`. Bucket **tự tạo** ở lần upload đầu (`ensureBucket`) — không phải tạo tay |
