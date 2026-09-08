@@ -51,3 +51,22 @@ docs/lp/font_FPT_songvui.zip
 # Bản NÉN để đối chiếu khi QC nằm ở docs/lp/export-02-09/*.webp (1440px, ~430KB/tấm).
 docs/lp/Landing page*.png
 docs/lp/FONT v3 SONGVUI/
+
+# --- Nguồn thô đã chuyển sang Drive của team (dọn 8/9) ---
+# Cùng chính sách với LandingpageFCM.fig ở trên: file nguồn nặng giữ ngoài git, trong
+# repo chỉ để BẢN ĐÃ XỬ LÝ. Danh sách + nơi tra cứu ghi ở docs/README.md §C.
+# LƯU Ý: .gitignore KHÔNG có chú thích cuối dòng — mọi ghi chú phải ở dòng riêng.
+
+# Ảnh Figma thô (14MB/2.4MB/1.1MB) — bản nén đã có ở public/brand/*.webp
+docs/lp/*.png
+# Trừ 2 tấm nhỏ (8KB/20KB) còn dùng đối chiếu số đo
+!docs/lp/Frame 151.png
+!docs/lp/Group 4.png
+
+# File yêu cầu/wording bản gốc (4.8MB + 1.0MB)
+docs/*.xlsx
+# Trừ template của đặc tả gốc (vài KB)
+!docs/import-template.xlsx
+
+# Email review admin_v1.pdf (4.2MB)
+docs/admin/

@@ -52,7 +52,7 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
   API: GET/PATCH `/api/admin/site-content`, ảnh KV POST/DELETE `/api/admin/site-content/kv`.
   Trang chủ SSR nội dung qua `getSiteContent()` → `HomeData.content`.
 
-## Điều chỉnh 1/8 (docs/dieuchinh.1.8.xlsx — sheet ACTION LIST)
+## Điều chỉnh 1/8 (`dieuchinh.1.8.xlsx` — sheet ACTION LIST; file ở Drive, xem docs/README §C)
 
 - Danh mục còn ĐÚNG 6 chủ đề (`src/lib/taxonomy.ts`); migration 002 remap 8 mã cũ → 6 mã mới.
 - Trang chủ KHÔNG còn bản đồ — thay bằng `NeighborhoodSlider` (slide ảnh khu phố, 3 tag trạng
@@ -69,7 +69,7 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
 - Còn CHỜ ASSET từ team Design/trade: ảnh 20 khu phố (#1), biển bảng 6 chủ đề (#3),
   bảng chứng nhận chính thức (#9, #10) — flow upload theo sheet ORDER chưa dựng.
 
-## Điều chỉnh 18/8 — SKIN MỚI (docs/lp/*.png) + email review (docs/admin/admin_v1.pdf)
+## Điều chỉnh 18/8 — SKIN MỚI (ảnh Figma) + email review (`admin_v1.pdf`) — cả hai ở Drive
 
 Kế hoạch đầy đủ + 14 quyết định đã chốt: `docs/21-KE-HOACH-DIEU-CHINH-18-8.md`.
 
@@ -117,9 +117,10 @@ Từ nay đối chiếu giao diện trang chủ với FILE FIGMA, không đo b�
 - Số chuẩn: khối nội dung rộng **1276** (lề 82) · hero cao **900**, gradient
   `#FF7B00 → #FFEFE6` · thanh nav trắng **10%** viền `#FFEBB8` · chữ `#3D3D3D`,
   chữ mờ `#969696`, kẻ `#DEDEDE`, cam `#FF8206`, xanh `#2323FF`.
-- Asset đã nén sẵn vào `public/brand/`: `skyline` · `plaza` · `kv-khu-pho(-sm)` ·
-  `signpost` · `hero-arc` · `sign-logos` · `sign-fptplay` (2 cái cuối cắt từ layer
-  "INT - EPL-01 1" 4096×2731 để `SignCard` dùng logo FPT + artwork FPT Play thật).
+- Asset đã nén sẵn vào `public/brand/`: `skyline` · `plaza` · `kv-khu-pho` ·
+  `signpost` · `hero-arc` · `sign-logos` (cắt từ layer "INT - EPL-01 1" 4096×2731 để
+  `SignCard` dùng logo FPT thật). `kv-khu-pho-sm` và `sign-fptplay` đã XOÁ ngày 8/9
+  (mồ côi từ 2/9 và 3/9) — lấy lại từ `.fig` trên Drive nếu Design cần.
 - Font **FPT SongVui** (nguồn `docs/lp/font_FPT_songvui.zip`) đã chuyển sang woff2 ở
   `public/fonts/` — 6 face, Light 300 / Regular 400 / Bold 700 (+ nghiêng).
   KHÔNG dùng `font-extrabold`/`font-semibold` ở trang chủ: SongVui không có 600/800 nên
@@ -304,8 +305,8 @@ Quyết định 3/9: bỏ hẳn dải khuyến mãi, **gỡ luôn 4 khoá site_c
 - **Cỡ chữ câu nhắc phải co theo độ dài** (`fontSizeFor`): design chỉ vẽ câu 2 dòng nên
   chữ rất to (~9.6cqw), câu thật tới 120 ký tự sẽ tràn khỏi panel thấp 199 — đo trên
   Chrome thấy câu 3–4 dòng bị cắt cụt đáy. Ba bậc 9.6 / 7.4 / 6.2 cqw.
-- `public/brand/sign-fptplay.webp` (21KB) giờ **mồ côi** — giữ lại phòng Design khôi phục
-  dải khuyến mãi; xoá được nếu chốt là bỏ hẳn.
+- `public/brand/sign-fptplay.webp` (21KB) thành **mồ côi** → đã xoá khỏi repo ngày 8/9.
+  Design muốn khôi phục dải khuyến mãi thì cắt lại từ `.fig` (layer "INT - EPL-01 1").
 - Sau khi sửa: biển 403×198 (Figma 404×199), ô 260 (262), lưới 553 (556), **trang 3853 vs
   3780 — còn dư 73px** (đầu phiên là 887).
 
@@ -677,3 +678,14 @@ phải copy gốc.
 - Hàng rác trong bảng (`abc`, số âm, số lẻ) bị lơ đi → rơi về đếm thật, trang chủ không ra NaN.
 - Test khoá: `tests/counters.test.ts` (6 case logic) · `tests/ui/admin-site-counters.test.tsx`
   (4 case màn `/admin/noi-dung`).
+
+## Dọn repo 8/9 — nguồn thô ra khỏi git
+
+Repo chỉ giữ **bản đã xử lý**; 6 file nguồn nặng (28MB) chuyển sang Drive của team và đã
+được gỡ khỏi **toàn bộ lịch sử** bằng `git filter-repo` (`.git` 68MB → nhẹ hơn ~6×), nên
+mọi hash commit trước 8/9 đã đổi — ai còn bản clone cũ phải clone lại. Danh sách file +
+bản thay thế trong repo: `docs/README.md` §C. `.gitignore` đã chặn để không lọt lại.
+
+**BẪY `.gitignore`**: file này KHÔNG có chú thích cuối dòng — `docs/*.xlsx  # ghi chú`
+biến cả cụm thành pattern nên không khớp gì cả. Ghi chú phải nằm ở dòng riêng.
+

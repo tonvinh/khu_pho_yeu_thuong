@@ -66,6 +66,29 @@ Ngoài `docs/`: [`../README.md`](../README.md) là hướng dẫn cài đặt/de
 
 ---
 
+## C. Nguồn thô KHÔNG nằm trong git (ở Drive của team)
+
+Repo chỉ track **bản đã xử lý**. Sáu file dưới đây là nguồn gốc nặng 28MB, đã gỡ khỏi git
+(kể cả lịch sử) ngày 8/9 và `.gitignore` chặn không cho lọt lại — xin ở Drive của team
+Design/BA khi cần đối chiếu.
+
+| File nguồn | Nặng | Bản thay thế đang có trong repo |
+|---|---|---|
+| `lp/LandingpageFCM.fig` | 730MB | `lp/figma-frame-7217-1990.txt` (dump) + `scripts/figma/` để đọc lại |
+| `lp/Landing page*.png` | 8.7MB/tấm | `lp/export-02-09/*.webp` (1440px, ~430KB) |
+| `lp/Khu phố 2 1.png` | 14MB | `public/brand/kv-khu-pho.webp` (372KB) |
+| `lp/123123 1.png` | 2.4MB | `public/brand/plaza.webp` (232KB) |
+| `lp/06 1.png` | 1.1MB | `public/brand/signpost.webp` (44KB) |
+| `lp/font_FPT_songvui.zip` | — | `public/fonts/FPTSongVui-*.woff2` (6 face) |
+| `dieuchinh.1.8.xlsx` | 4.8MB | Đã áp vào `src/lib/copy.ts`, `db/migrations/002_*.sql`, CLAUDE.md §"Điều chỉnh 1/8" |
+| `khupho_dieuchinh_28_7.xlsx` | 1.0MB | Đã áp vào `src/lib/copy.ts` + [`06-CONTENT-COPY.md`](06-CONTENT-COPY.md) |
+| `admin/admin_v1.pdf` | 4.2MB | Đã áp vào [`21-KE-HOACH-DIEU-CHINH-18-8.md`](21-KE-HOACH-DIEU-CHINH-18-8.md) |
+
+Còn track (nhỏ, cần để đối chiếu số đo): `lp/Frame 151.png`, `lp/Group 4.png`,
+`lp/vuesax/`, `lp/export-02-09/`, `lp/figma-frame-7217-1990.txt`, `import-template.xlsx`.
+
+---
+
 ## Tra nhanh
 
 | Câu hỏi | Xem |
