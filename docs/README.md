@@ -30,9 +30,9 @@ Nếu A và B mâu thuẫn → hệ thống đang lệch đặc tả: sửa code
 | [`05-SCORING-RULES.md`](05-SCORING-RULES.md) | Công thức điểm + 3 test case bắt buộc pass |
 | [`06-CONTENT-COPY.md`](06-CONTENT-COPY.md) | Copy tiếng Việt nguyên văn, chuẩn 4N, seed data |
 | [`07-NFR-TECH.md`](07-NFR-TECH.md) | NFR, tech stack, kiến trúc bảo mật & Docker, quyết định đã chốt |
-| `lp/LandingpageFCM.fig` | **Nguồn design CHUẨN của trang chủ** (chốt 4/9) — đọc bằng `scripts/figma/` |
-| `KhuPhoCuaToi-prototype-v4.html` | Design tham chiếu cũ (chỉ còn giá trị lịch sử) |
-| ~~`import-template.xlsx`~~ | Template 2 sheet của đặc tả gốc — **không dùng**; mỗi màn admin tự sinh template riêng |
+| `lp/LandingpageFCM.fig` | **Nguồn design CHUẨN của trang chủ** (chốt 4/9) — file ở Drive (§C), đọc bằng `scripts/figma/` |
+| ~~`KhuPhoCuaToi-prototype-v4.html`~~ | Design tham chiếu cũ — **đã gỡ khỏi repo 8/9**, bản gốc ở Drive (§C) |
+| ~~`import-template.xlsx`~~ | Template 2 sheet của đặc tả gốc — **không dùng** (mỗi màn admin tự sinh template riêng); **đã gỡ khỏi repo 8/9**, bản gốc ở Drive (§C) |
 | `khupho_dieuchinh_28_7.xlsx` | Bản duyệt wording 28/7 (đã áp vào `src/lib/copy.ts`) |
 | `TONG-HOP-KIEM-DUYET.md` | Biên bản tổng hợp kiểm duyệt |
 
@@ -74,8 +74,8 @@ Design/BA khi cần đối chiếu.
 
 | File nguồn | Nặng | Bản thay thế đang có trong repo |
 |---|---|---|
-| `lp/LandingpageFCM.fig` | 730MB | `lp/figma-frame-7217-1990.txt` (dump) + `scripts/figma/` để đọc lại |
-| `lp/Landing page{,-1,-2,-3,-4}.png` | 8.7MB/tấm | `lp/export-02-09/landing-page{,-1,-2,-3,-4}.webp` — **cùng thứ tự**, 1440×3780 (đúng khổ .fig nên đo px trực tiếp được) |
+| `lp/LandingpageFCM.fig` | 730MB | Không có bản thay thế — dump lại bằng `scripts/figma/` (`parse.py` rồi `dump.py <node-id>`) |
+| `lp/Landing page{,-1,-2,-3,-4}.png` | 8.7MB/tấm | Không có bản thay thế (bản nén `lp/export-02-09/*.webp` cũng gỡ 8/9) — số đo đã chốt nằm trong docs 22/23/24 |
 | `lp/Khu phố 2 1.png` | 14MB | `public/brand/kv-khu-pho.webp` (372KB) |
 | `lp/123123 1.png` | 2.4MB | `public/brand/plaza.webp` (232KB) |
 | `lp/06 1.png` | 1.1MB | `public/brand/signpost.webp` (44KB) |
@@ -84,8 +84,21 @@ Design/BA khi cần đối chiếu.
 | `khupho_dieuchinh_28_7.xlsx` | 1.0MB | Đã áp vào `src/lib/copy.ts` + [`06-CONTENT-COPY.md`](06-CONTENT-COPY.md) |
 | `admin/admin_v1.pdf` | 4.2MB | Đã áp vào [`21-KE-HOACH-DIEU-CHINH-18-8.md`](21-KE-HOACH-DIEU-CHINH-18-8.md) |
 
-Còn track (nhỏ, cần để đối chiếu số đo): `lp/Frame 151.png`, `lp/Group 4.png`,
-`lp/vuesax/tick-circle.svg`, `lp/export-02-09/`, `lp/figma-frame-7217-1990.txt`, `import-template.xlsx`.
+Đợt 2 (8/9, thêm 2.25MB) gỡ nốt phần tham chiếu design còn lại — **repo không giữ ảnh,
+dump hay prototype nào của design nữa**:
+
+| File | Nặng | Vì sao gỡ được |
+|---|---|---|
+| `lp/export-02-09/*.webp` | 2.16MB | Ảnh QC bản 2/9; số đo rút ra từ chúng đã ghi hết vào [`22`](22-QC-FIGMA-MOI-02-09.md), [`23`](23-PROMPT-QC-MANUAL-04-09.md), [`24`](24-QC-04-09.md) |
+| `lp/figma-frame-7217-1990.txt` | 44KB | Dump frame `7217:1990` — sinh lại được bằng `scripts/figma/` |
+| `KhuPhoCuaToi-prototype-v4.html` | 36KB | Prototype kem trước skin cam 18/8, chỉ còn giá trị lịch sử |
+| `import-template.xlsx` | 12KB | Template import đã bị thay bằng 2 route admin tự sinh template |
+
+**Còn track trong `lp/`, đúng 3 file nhỏ**: `Frame 151.png` (dải sọc cam),
+`Group 4.png`, `vuesax/linear/tick-circle.svg`.
+
+> Muốn QC giao diện: xin `.fig` ở Drive, `python3 scripts/figma/parse.py` rồi
+> `dump.py <node-id>`. Quy trình đầy đủ ở [`23-PROMPT-QC-MANUAL-04-09.md`](23-PROMPT-QC-MANUAL-04-09.md).
 
 ---
 

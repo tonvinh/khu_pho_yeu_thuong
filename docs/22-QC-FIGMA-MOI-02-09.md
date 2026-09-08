@@ -5,8 +5,9 @@
 > Đã parse lại: `rm scripts/figma/nodes.pkl && python3 scripts/figma/parse.py` (~40s),
 > đọc bằng `python3 scripts/figma/dump.py <node-id> [depth]`.
 > Ảnh export kèm theo: `docs/lp/Landing page.png` … `Landing page-4.png` (2880×7560 = **1440×3780** @2x).
-> **Bản .png ở Drive, KHÔNG track trong git** (dọn 8/9) — trong repo dùng bản nén cùng thứ tự
-> `docs/lp/export-02-09/landing-page.webp` … `landing-page-4.webp` (1440×3780, ~430KB/tấm).
+> **Dọn 8/9: repo KHÔNG còn ảnh nào của bản export này** (cả `.png` gốc lẫn bản nén
+> `export-02-09/*.webp`) — số đo trong tài liệu này chính là thứ rút ra từ chúng. Cần xem
+> lại ảnh thì xin ở Drive team Design, xem `docs/README.md` §C.
 
 ## 0. Bản đồ frame ↔ ảnh export
 

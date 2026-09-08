@@ -35,9 +35,8 @@ Thumbs.db
 .claude/
 
 # --- Nguồn design thô (18/8) ---
-# LandingpageFCM.fig nặng 730MB — GitHub chặn file >100MB, và bản dump đã đọc được
-# rồi (docs/lp/figma-frame-7217-1990.txt được track). Giữ file .fig gốc ở Drive của
-# team Design, không đưa vào repo. Bộ giải mã: scripts/figma/.
+# LandingpageFCM.fig nặng 730MB — GitHub chặn file >100MB. Giữ file .fig gốc ở Drive
+# của team Design, không đưa vào repo. Bộ giải mã: scripts/figma/ (dump lại khi cần).
 docs/lp/*.fig
 
 # Cache trung gian do scripts/figma/parse.py sinh ra từ .fig (67MB, tái tạo được).
@@ -48,7 +47,7 @@ scripts/figma/__pycache__/
 docs/lp/font_FPT_songvui.zip
 
 # Ảnh export gốc từ Figma nặng ~8.7MB/tấm và nguồn font thô — giữ ở Drive của Design.
-# Bản NÉN để đối chiếu khi QC nằm ở docs/lp/export-02-09/*.webp (1440px, ~430KB/tấm).
+# Bản nén export-02-09/*.webp cũng đã gỡ khỏi repo (dọn 8/9) — xem khối cuối file.
 docs/lp/Landing page*.png
 docs/lp/FONT v3 SONGVUI/
 
@@ -65,9 +64,6 @@ docs/lp/*.png
 
 # File yêu cầu/wording bản gốc (4.8MB + 1.0MB)
 docs/*.xlsx
-# Trừ template của đặc tả gốc (vài KB)
-!docs/import-template.xlsx
-
 # Email review admin_v1.pdf (4.2MB)
 docs/admin/
 
@@ -76,3 +72,10 @@ docs/admin/
 # chặn để `git add -A` không hút ngược vào repo.
 public/brand/kv-khu-pho-sm.webp
 public/brand/sign-fptplay.webp
+
+# Gỡ nốt 8/9 (2.25MB) — repo không giữ ảnh/dump/prototype nào của design nữa.
+# Cần đối chiếu giao diện thì mở .fig trên Drive, hoặc dump lại bằng scripts/figma/.
+docs/lp/export-02-09/
+docs/lp/figma-frame-7217-1990.txt
+docs/KhuPhoCuaToi-prototype-v4.html
+

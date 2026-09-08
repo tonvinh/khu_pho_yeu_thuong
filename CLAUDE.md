@@ -110,8 +110,9 @@ Từ nay đối chiếu giao diện trang chủ với FILE FIGMA, không đo b�
 
 - `.fig` là ZIP: `canvas.fig` (Kiwi + **Zstandard**) + `images/` (767 ảnh gốc) + `meta.json`.
 - Bộ giải mã tự viết ở `scripts/figma/` — chạy `python3 scripts/figma/dump.py 7217:1990`
-  in ra cây node kèm x/y/w/h, màu, bo góc, viền, font. Bản dump đã lưu sẵn:
-  `docs/lp/figma-frame-7217-1990.txt` (frame "Landing page" 1440×4450).
+  in ra cây node kèm x/y/w/h, màu, bo góc, viền, font. **Không còn bản dump sẵn trong
+  repo** (`docs/lp/figma-frame-7217-1990.txt` gỡ 8/9) — lấy `.fig` ở Drive rồi
+  `parse.py` + `dump.py` sinh lại; frame chuẩn hiện cao 3780, không phải 4450.
 - BẪY khi tự đọc Kiwi: `uint64` KHÔNG phải LEB128 thuần — 8 nhóm 7 bit rồi byte thứ 9
   lấy trọn 8 bit. Đọc sai là lệch cả stream (xem `scripts/figma/kiwi.py`).
 - Số chuẩn: khối nội dung rộng **1276** (lề 82) · hero cao **900**, gradient
@@ -679,12 +680,16 @@ phải copy gốc.
 - Test khoá: `tests/counters.test.ts` (6 case logic) · `tests/ui/admin-site-counters.test.tsx`
   (4 case màn `/admin/noi-dung`).
 
-## Dọn repo 8/9 — nguồn thô ra khỏi git
+## Dọn repo 8/9 — mọi nguồn/ảnh design ra khỏi git
 
-Repo chỉ giữ **bản đã xử lý**; 6 file nguồn nặng (28MB) chuyển sang Drive của team và đã
-được gỡ khỏi **toàn bộ lịch sử** bằng `git filter-repo` (`.git` 68MB → nhẹ hơn ~6×), nên
-mọi hash commit trước 8/9 đã đổi — ai còn bản clone cũ phải clone lại. Danh sách file +
-bản thay thế trong repo: `docs/README.md` §C. `.gitignore` đã chặn để không lọt lại.
+Repo **không còn giữ ảnh, dump hay prototype nào của design** — chỉ còn code, tài liệu
+`.md` và 3 ảnh nhỏ (`lp/Frame 151.png`, `lp/Group 4.png`, `lp/vuesax/tick-circle.svg`).
+Muốn đối chiếu giao diện thì mở `.fig` trên Drive của team Design, hoặc dump lại bằng
+`scripts/figma/`. Danh sách đầy đủ "file nào ở Drive": `docs/README.md` §C; `.gitignore`
+đã chặn để không lọt lại.
+
+Đợt 1 (28MB) còn gỡ khỏi **toàn bộ lịch sử** bằng `git filter-repo` (`.git` 68MB → 4.8MB)
+nên mọi hash commit trước 8/9 đã đổi — ai còn bản clone cũ phải clone lại.
 
 **BẪY `.gitignore`**: file này KHÔNG có chú thích cuối dòng — `docs/*.xlsx  # ghi chú`
 biến cả cụm thành pattern nên không khớp gì cả. Ghi chú phải nằm ở dòng riêng.
