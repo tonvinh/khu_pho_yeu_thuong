@@ -118,6 +118,7 @@ Xếp theo mức độ cần xử lý.
 |---|---|---|
 | **Chưa có luồng xoá dữ liệu theo yêu cầu** | Chính sách công bố cho phép yêu cầu xoá qua 1900 6600, nhưng thao tác hiện là **thủ công bằng psql** (xoá `phone_encrypted`, thu hồi phiên, giữ nội dung ẩn danh) | Viết `scripts/erase-contact.mjs` nhận `phone_hash` + ghi `audit_logs` |
 | **Chưa có màn hình đọc `audit_logs`** | Log ghi đủ nhưng phải query tay | Thêm trang admin chỉ đọc, lọc theo action/thời gian |
+| **Sửa câu nhắc qua drawer không ghi audit** | `PATCH /api/admin/suggestions/[id]` với `action:"update"` chỉ ghi `audit_logs` khi request có đổi `status`. Sửa nội dung câu, chủ đề, vị trí, **tên hiển thị của tác giả** (ghi thẳng vào `users.display_name`) ⇒ không để lại dòng nào | Ghi một audit `suggestion_edit` kèm diff các trường, độc lập với việc đổi trạng thái |
 | **Chưa có script xoay `PHONE_AES_KEY`** | Xoay khoá cần giải mã bằng khoá cũ + mã hoá lại toàn bộ `leads.phone_encrypted`, `users.phone_encrypted`, `sessions.phone_encrypted` | Viết migration script nhận cả 2 khoá |
 | **`redactPhonesInText` chưa gắn vào logger** | Hàm đã có + đã test nhưng chưa có logger tập trung gọi nó | Bọc một `log()` chung, dùng thay `console.*` |
 | **Chưa có backup tự động** | Backup DB/MinIO hiện là lệnh chạy tay | Thêm cron trên VM + kiểm tra restore định kỳ |
@@ -127,6 +128,7 @@ Xếp theo mức độ cần xử lý.
 | Vấn đề | Chi tiết | Ảnh hưởng |
 |---|---|---|
 | **Từ chối câu đã duyệt không thu hồi điểm** | Action `reject` áp dụng được cho câu đang `approved`, nhưng event `suggestion_approved` (+5) và các `vote_received` đã cộng **không bị vô hiệu** | Điểm hơi cao hơn thực tế; admin phải xử lý thủ công qua `invalidate_votes` hoặc SQL |
+| **Bắt buộc tỉnh/thành chỉ do UI ép** | `geoError()` validate giá trị có gửi, nhưng **bỏ trống thì cho qua**: `POST /api/v1/issues` và `POST /api/v1/leads` gọi API trực tiếp vẫn ghi được bản ghi không tỉnh/thành. Ràng buộc 18/8 nằm ở `ProposeModal` / form ưu đãi | Chặn ở route (`if (!city) return 400`) nếu BA xác nhận đây là ràng buộc nghiệp vụ, không chỉ là UX |
 | **Lead không khử trùng lặp** | Mỗi lần tick opt-in tạo một bản ghi `leads` mới; không kiểm `phone_hash` đã có | Danh sách sale có thể trùng số. Nên gộp theo `phone_hash` khi export |
 | **Chứng nhận không tự thu hồi** | Duyệt thêm đề xuất mới sau khi khu phố đã đạt 100% làm tỉ lệ tụt xuống nhưng `certified_4n` vẫn `true` | Admin tự quyết; thu hồi phải gọi API `{"revoke": true}` (chưa có nút UI) |
 | **`month_snapshots` chưa dùng** | Bảng đã tạo nhưng khối "Khu phố dễ thương nhất tháng" **đã gỡ khỏi trang chủ 18/8** | Không còn màn nào cần chốt kỳ; bảng thành **hoàn toàn mồ côi** |

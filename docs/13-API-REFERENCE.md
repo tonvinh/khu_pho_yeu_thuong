@@ -1,6 +1,9 @@
 # 13 — Tham chiếu API
 
-> Cập nhật: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9.
+> Cập nhật: **10/9/2026** — soát lại TOÀN BỘ 43 route đối chiếu trực tiếp với `src/app/api/**`
+> trước khi bàn giao cho đơn vị pentest. Đã sửa: §1.4 (thân lỗi không có mã máy đọc), §2.6 và
+> §5 (tỉnh/thành **không** bắt buộc ở tầng API), §2.8 (bổ sung trường `phone`), §2.11 (bổ sung
+> 3 trường `neighborhood_*`), §3.4 (bổ sung hẳn nhánh `action:"update"` trước đây bỏ sót).
 > Tất cả endpoint hiện có trong `src/app/api` (đối chiếu bằng `find src/app/api -name route.ts`). Đường dẫn dưới đây **chưa gồm `basePath`** — chạy dưới path (`BASE_PATH=/khu-pho-biet-thuong`, chốt 8/9) thì tiền tố thêm vào đầu.
 > Định dạng: JSON UTF-8. Thông báo lỗi là **tiếng Việt, dành cho người dùng cuối** — có thể hiển thị thẳng lên UI.
 
@@ -48,7 +51,10 @@ Riêng tài khoản admin còn bị **khoá 15 phút sau 5 lần sai mật khẩ
 | 423 | Tài khoản admin đang bị khoá tạm |
 | 429 | Vượt rate limit |
 
-Thân lỗi luôn có dạng `{"error": "…"}`; một số trường hợp kèm cờ phụ (`need_confirm_switch`, dữ liệu preview import).
+Thân lỗi luôn có dạng `{"error": "…"}`; một số trường hợp kèm cờ phụ (`need_confirm_switch`, dữ liệu
+preview import). ⚠️ **Không có trường mã lỗi máy đọc được**: các tên như `SELF_VOTE`, `ALREADY_VOTED`,
+`NO_SUGGESTION` dưới đây là **nhãn nội bộ của tài liệu** để phân biệt ca, client chỉ nhận được câu
+tiếng Việt trong `error`.
 
 ### 1.5 Nguyên tắc bất di bất dịch
 
@@ -183,7 +189,11 @@ Yêu cầu: session + CSRF + rate limit.
 ```
 
 - `category` phải thuộc **6 mã** hợp lệ (`src/lib/taxonomy.ts`), sai → 400.
-- **Tỉnh/thành bắt buộc** và phải nằm trong danh mục 34 tỉnh (`geoError()` — 400 nếu sai).
+- Tỉnh/thành: `geoError()` chỉ **validate khi có giá trị** — gửi tên không thuộc danh mục 34 tỉnh,
+  hoặc có `neighborhood_ward` mà thiếu `neighborhood_city` → 400. ⚠️ **Bỏ trống CẢ HAI trường thì
+  route cho qua**: bắt buộc chọn tỉnh/thành là ràng buộc của `ProposeModal` (UI), không phải của API.
+  Gọi API trực tiếp vẫn tạo được đề xuất không tỉnh/thành nếu `neighborhood_id` (hoặc khu phố trong
+  hồ sơ user) resolve được.
 - `neighborhood_id` bỏ trống thì `resolveNeighborhoodId` tra theo `neighborhood_text`
   (chưa có ⇒ tạo khu phố `hidden=true`); không ra được gì thì lấy khu phố trong hồ sơ user;
   không có cả ba → 400 "Vui lòng chọn khu phố của bạn".
@@ -218,12 +228,20 @@ Chi tiết một góc xóm + **các câu nhắc đã duyệt**. Nếu issue chư
 ### 2.8 `POST /api/v1/issues/{id}/suggestions` — viết câu nhắc 🔒
 
 ```json
-{ "content": "Đi chậm chút nha, trong hẻm có đứa nhỏ đang chơi.", "lead_opt_in": false }
+{ "content": "Đi chậm chút nha, trong hẻm có đứa nhỏ đang chơi.",
+  "lead_opt_in": false, "phone": "0901234567" }
 ```
 
 - Issue phải ở `waiting`/`voting`, ngược lại 404 "Vấn đề này chưa mở nhận câu nhắc".
 - `content` rỗng → 400; dài > 120 ký tự → 400 "Câu nhắc tối đa 120 ký tự (tiêu chí Nhỏ)".
-- `lead_opt_in: true` → tạo **lead tầng 1** (`source='soft_drawer'`) từ SĐT đã mã hoá trong phiên, **không hỏi lại số**. Mặc định là `false`.
+- `lead_opt_in: true` → tạo **lead tầng 1** (`source='soft_drawer'`). Mặc định `false`.
+- `phone` (thêm 18/8 — form viết câu có ô SĐT): **chỉ đọc khi `lead_opt_in = true`**.
+  - Có `phone` → validate trước khi ghi câu (sai định dạng / dải số ảo → 400, câu **không** được tạo).
+  - Không có `phone` → lấy SĐT mã hoá gắn ở bản ghi phiên, **không hỏi lại số**.
+  - SĐT nhập **khác** số của tài khoản đang đăng nhập: lead vẫn ghi, nhưng **không** gắn vào hồ sơ
+    user nào (`users.phone_encrypted` chỉ cập nhật khi hash trùng tài khoản hiện tại) — quy tắc 3b,
+    không ghi chéo tài khoản. Khác với `POST /api/v1/leads`: ở đây **không có** luồng 409
+    `need_confirm_switch`.
 
 **201** `{ "ok": true, "suggestion": { "id": "…" } }` — trạng thái `submitted`, chờ admin duyệt 4N.
 
@@ -320,8 +338,20 @@ Hồ sơ khu phố — dùng cho POPUP khu phố ở trang chủ (`NeighborhoodM
 ### 2.11 `POST /api/v1/auth/identify` — định danh (KHÔNG OTP)
 
 ```json
-{ "phone": "0901234567", "display_name": "Cô Tám tạp hoá", "neighborhood_id": "uuid | null" }
+{ "phone": "0901234567", "display_name": "Cô Tám tạp hoá",
+  "neighborhood_id": "uuid | null",
+  "neighborhood_text": "Hẻm 42 Lê Lợi",
+  "neighborhood_city": "Thành phố Hồ Chí Minh",
+  "neighborhood_ward": "Phường Bàn Cờ" }
 ```
+
+Ba trường `neighborhood_*` cho phép **tự nhập khu phố** khi không chọn từ danh sách (free text →
+khu phố `hidden=true` chờ admin duyệt):
+
+- Tự nhập (`neighborhood_text` có giá trị, `neighborhood_id` rỗng) ⇒ **`neighborhood_city` bắt buộc**,
+  thiếu → 400 `Chọn tỉnh/thành của khu phố bạn nhé`. (Sửa 18/8: trước đó khu phố tạo từ đây luôn có
+  `city = NULL` vì thiếu tham số geo.)
+- Chọn từ danh sách hoặc không gửi gì ⇒ `geoError()` chỉ validate khi có giá trị, giống §2.6.
 
 Xử lý:
 
@@ -465,6 +495,38 @@ Bộ lọc cứng: **câu `submitted` của đề xuất đang `pending_review`/
 | `{"action":"installed","installed_date":"2026-09-20"}` | đang `produced` | → `installed`; issue → `signed`; +30đ; tạo notification in-web. `installed_date` bỏ trống = hôm nay |
 
 Sai trạng thái → 409 "Trạng thái hiện tại không cho phép hành động này".
+
+**`{"action":"update", …}` — drawer "Sửa" (trước đây tài liệu bỏ sót hẳn nhánh này).**
+Đây là bề mặt ghi lớn nhất của màn Lời nhắc: một request sửa được nhiều thứ cùng lúc, mỗi trường
+tuỳ chọn (vắng ⇒ giữ nguyên).
+
+| Trường | Hiệu ứng | Lỗi |
+|---|---|---|
+| `content` | Sửa nội dung câu | rỗng → 400 · >120 ký tự → 400 |
+| `category` | Đổi chủ đề của **góc phố** chứa câu | không thuộc 6 mã → 400 |
+| `location_text` | Đổi vị trí treo của góc phố | rỗng → 400 |
+| `neighborhood_id` / khu phố | Chuyển góc phố sang khu phố khác | không tồn tại → 400 |
+| `author_name` | **Đổi `users.display_name` của tác giả** — áp dụng ở MỌI nơi hiển thị tên người đó, không chỉ câu này | rỗng → 400 |
+| `status` | Đổi trạng thái, side-effect **giống hệt** action tương ứng (`approved` cộng 5đ và cần đủ 4N, `installed` cộng 30đ + notification…) | không đi đúng `STATUS_FLOW` → 409 "phải đi theo vòng đời của biển" |
+| `review_4n` · `note` · `installed_date` | Tham số kèm theo khi `status` đổi | như action tương ứng |
+
+`STATUS_FLOW` cho nhánh `update` **rộng hơn** bảng action ở trên — có thêm đường **khôi phục**:
+
+| Từ | Được chuyển sang |
+|---|---|
+| `submitted` | `approved` · `rejected` |
+| `approved` | `selected` · `rejected` |
+| `selected` | `produced` |
+| `produced` | `installed` |
+| `rejected` | **`submitted`** (đưa câu đã từ chối về hàng chờ, xoá `review_note`) |
+| `installed` | — (không đi đâu được) |
+
+Khác biệt so với action `select`: đổi `status` sang `selected` qua `update` **không bắt buộc lý do**
+dù câu không cao phiếu nhất (admin chọn có chủ đích từ drawer, `note` tuỳ chọn).
+
+⚠️ **Khoảng trống audit**: nhật ký `audit_logs` chỉ ghi khi request có đổi `status`
+(`suggestion_<status mới>`). Sửa **chỉ** nội dung / chủ đề / vị trí / tên tác giả ⇒ **không để lại
+dòng audit nào**. Xem [`20`](20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md) §3.
 
 `POST /api/admin/suggestions/{id}/photo` (~~`/sign-photo`~~) — multipart `file` (≤10MB) →
 `public/signs/{id}/photo.webp`, ghi `suggestions.image_key`, trả `image_url`.
@@ -737,7 +799,9 @@ Chưa liệt kê chi tiết ở §2 vì gắn với quy tắc riêng:
   "interests": ["internet","internet_tv_camera"], "opted_in": true, "confirm_switch": false }
 ```
 
-- **`province` bắt buộc** (18/8) và phải thuộc danh mục 34 tỉnh — sai → 400. `address` tuỳ chọn.
+- `province`: phải thuộc danh mục 34 tỉnh nếu có giá trị — sai → 400. ⚠️ **Bỏ trống vẫn được ghi**
+  (lưu `province = NULL`): cũng như §2.6, "bắt buộc tỉnh/thành" (18/8) là ràng buộc của form ưu đãi,
+  không phải của route. `address` tuỳ chọn.
   `neighborhood_text` vẫn nhận để popup ưu đãi nhanh (`LeadPromptModal`) không phải đổi.
 - `interests` lọc theo **6 mã** trong `INTERESTS` (`internet`, `camera`, `fpt_play`, `internet_tv`,
   `internet_camera`, `internet_tv_camera`).

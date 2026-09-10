@@ -23,7 +23,7 @@ Nếu A và B mâu thuẫn → hệ thống đang lệch đặc tả: sửa code
 |---|---|
 | [`CLAUDE.md`](CLAUDE.md) | **Đọc trước tiên** — 11 quy tắc cứng không được vi phạm + Definition of Done |
 | [`00-REVIEW-SUMMARY.md`](00-REVIEW-SUMMARY.md) | Tóm tắt kiểm duyệt, nhật ký quyết định |
-| [`01-PRD.md`](01-PRD.md) | Bối cảnh, mục tiêu kinh doanh, personas, scope, KPI |
+| [`01-PRD.md`](01-PRD.md) | **URD** — vai trò & ranh giới tin cậy (R0/R1/R2), ma trận quyền, yêu cầu người dùng `UR-U-*` + Admin `UR-A-*` + dữ liệu cá nhân `UR-P-*`, bối cảnh/mục tiêu/KPI |
 | [`02-FUNCTIONAL-SPEC.md`](02-FUNCTIONAL-SPEC.md) | Từng màn hình & flow — nguồn sự thật về **hành vi** |
 | [`03-DATA-MODEL.md`](03-DATA-MODEL.md) | Schema, state machine, API — nguồn sự thật về **dữ liệu** |
 | [`04-ADMIN-SPEC.md`](04-ADMIN-SPEC.md) | Đặc tả trang quản trị |
