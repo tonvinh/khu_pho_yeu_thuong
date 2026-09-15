@@ -5,7 +5,7 @@
   "description": "Website Khu Phố Của Tôi — Chiến dịch Khu phố biết thương (FPT Telecom)",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "NEXT_TELEMETRY_DISABLED=1 next build",
     "start": "next start",
     "lint": "next lint",
     "migrate": "node scripts/migrate.mjs",

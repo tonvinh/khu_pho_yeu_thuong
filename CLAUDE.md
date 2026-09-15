@@ -791,5 +791,10 @@ chạy (link chia sẻ mất ảnh) — và dữ liệu người dùng có emoji
   build qua, container `--network none` không DB trả 200 cho cả 4 route OG.
   Cần BuildKit hoặc buildah hỗ trợ `RUN --network`; KHÔNG thêm `# syntax=docker/dockerfile:1`
   (kéo image frontend từ Docker Hub). `pnpm install` ở stage deps vẫn cần registry.
+- `package.json`: `"build": "NEXT_TELEMETRY_DISABLED=1 next build"` — `next build` **chờ**
+  `telemetry.flush()` gửi tới `telemetry.nextjs.org` (timeout 5s, lỗi bị nuốt): không làm hỏng
+  build nhưng môi trường kín tốn thêm ~5s và log có dòng "Attention: …telemetry" dễ nghi nhầm.
+  Đặt ở SCRIPT chứ không chỉ `ENV` trong Dockerfile vì GitLab CI FPT dùng Dockerfile template
+  riêng. Cú pháp gán biến inline chỉ chạy trên sh (Linux/macOS), không chạy trên Windows cmd.
 - Đã rà: ngoài OG, `src/` không có chỗ nào gọi Internet (font ở `public/fonts/`, không CDN,
   không `next/font/google`). Thêm thư viện/tính năng mới phải giữ điều này.
