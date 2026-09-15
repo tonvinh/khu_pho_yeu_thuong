@@ -744,3 +744,52 @@ giữa hộp 82 nên mỗi dòng tự mang 16px đệm trên ⇒ lề trong TRÊ
 **Còn lệch, chấp nhận có chủ ý**: tab 1/2 khối chữ mỗi dòng cao ~54 vs 50 của `.fig`
 (tiêu đề 18px + meta 14px theo line-height body); tab 1 và tab 3 vẫn giữ thanh phân
 trang mà `.fig` không vẽ (chốt 7/9 — cần xem hạng 6–10) nên card cao hơn 550.
+
+## MÔI TRƯỜNG KÍN 15/9 — build CI và production KHÔNG ra được Internet
+
+Sự cố: GitLab CI của FPT (`git.fpt.net`, runner buildah v1.43.1) chết ở `RUN npm run build`:
+`Error occurred prerendering page "/opengraph-image"` · `fetch failed` ·
+`UND_ERR_CONNECT_TIMEOUT` (tường lửa DROP gói tin → mỗi fetch treo ~10s rồi mới lỗi; Docker
+`--network none` ở máy dev thì ra `EAI_AGAIN` — cùng một nguyên nhân). Máy dev có Internet nên
+không bao giờ thấy.
+
+**CI FPT KHÔNG dùng `Dockerfile` của repo**: nó tải template `buildah-nodejs`
+(`build-container-image-template`), `FROM hcmregistry.fpt.net/isc-khu-pho-yeu-thuong/build/
+khu-pho-yeu-thuong-web-portal:latest` — base image đã cài sẵn `node_modules` bằng **npm**
+(`package-lock.json` nằm trong image, không trong repo), rồi `COPY . /app/` + `npm run build`.
+Hệ quả: (1) thêm/đổi dependency phải nhờ bên FPT build lại base image; (2) Next trong CI là
+**15.5.25** trong khi `pnpm-lock` local là 15.5.20 — đã diff, `@vercel/og` hai bản giống hệt;
+(3) Node của base image không rõ phiên bản → `og-text.ts` có dự phòng khi thiếu `Intl.Segmenter`.
+Repo GitLab là bản sao có thêm `.gitlab-ci.yml`, `env.sh`, `catalog-info.yaml`, `build/` —
+hash commit KHÔNG trùng repo GitHub.
+
+**Nguyên nhân**: `next/og` (satori) gặp grapheme nào mà font truyền vào KHÔNG có glyph thì tự
+`fetch` ra ngoài — emoji → `cdn.jsdelivr.net` (twemoji, lỗi là NÉM), ký tự thiếu font →
+`fonts.googleapis.com` (có bắt lỗi nhưng treo tới hết timeout kết nối, chữ hiện trống).
+`src/lib/og.tsx` có 💛 và 3 route con có 🏅 🏆 🎉 trong nhãn; `/opengraph-image` trang chủ
+không có `force-dynamic` nên prerender lúc build → build chết. 3 route còn lại chỉ nổ lúc
+chạy (link chia sẻ mất ảnh) — và dữ liệu người dùng có emoji cũng kích hoạt y hệt.
+
+**Quy tắc cho ảnh OG** (`src/lib/og.tsx`):
+- CẤM emoji trong code OG. Icon là SVG vẽ tại chỗ: `icon` (ô tròn) / `badgeIcon` (nhãn) nhận
+  `"heart" | "medal" | "trophy" | "party"` — thêm icon thì thêm path vào `ICON_PATHS`.
+- Mọi chuỗi (kể cả chữ cố định) đi qua `ogText()` BÊN TRONG `ogCard` — lọc theo **bảng cmap
+  thật** của BeVietnamPro (`parseCmap` trong `src/lib/og-text.ts`, giao Regular ∩ Bold), bỏ
+  NGUYÊN grapheme nếu có code point thiếu glyph. Không lọc bằng regex emoji: satori quyết định
+  gọi mạng theo glyph chứ không theo "có phải emoji". Chỉ lọc lúc dựng ảnh, DB giữ nguyên.
+- Tiêu đề trích dẫn dùng `quoteTitle` (bọc “…” SAU khi lọc) — đừng tự ghép ngoặc trong route.
+- `ImageResponse` dựng LƯỜI trong stream → `ogCard` đọc hết `arrayBuffer()` để try/catch bắt
+  được; lỗi thì trả `public/og-default.png` kèm header `x-og-fallback: 1`, cache 5 phút.
+  Ảnh này là bản render của thẻ trang chủ — đổi giao diện thẻ thì dựng lại file.
+- Truy vấn DB trong route OG bọc `ogData(...)`: DB lỗi → null → thẻ chung, không 500.
+
+**Chống tái phát**:
+- `tests/og-offline.test.tsx` chặn `fetch` toàn cục rồi dựng đủ 4 route với dữ liệu có emoji,
+  cờ, keycap, chữ Hán/Thái + ca DB sập. Đã thử cắm lại 💛 → 4 ca đỏ, log chỉ đúng URL jsdelivr.
+- `Dockerfile`: `RUN --network=none pnpm build` — chỉ bảo vệ đường deploy Docker của repo
+  (GitHub Actions → VM) và build Docker ở máy dev; KHÔNG ảnh hưởng GitLab CI FPT (dùng template). Đã đối chứng trên Docker 29.7: code cũ + Dockerfile mới tái hiện đúng lỗi CI; code mới
+  build qua, container `--network none` không DB trả 200 cho cả 4 route OG.
+  Cần BuildKit hoặc buildah hỗ trợ `RUN --network`; KHÔNG thêm `# syntax=docker/dockerfile:1`
+  (kéo image frontend từ Docker Hub). `pnpm install` ở stage deps vẫn cần registry.
+- Đã rà: ngoài OG, `src/` không có chỗ nào gọi Internet (font ở `public/fonts/`, không CDN,
+  không `next/font/google`). Thêm thư viện/tính năng mới phải giữ điều này.

@@ -12,6 +12,6 @@ export default function Image() {
     badge: "Khu phố biết thương",
     title: "Muốn gửi một lời thương cho xóm mình?",
     subtitle: "Viết câu nhắc 4N, bấm “Thương” để bình chọn — câu được thương nhất sẽ lên biển thật.",
-    emoji: "💛",
+    icon: "heart",
   });
 }

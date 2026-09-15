@@ -17,7 +17,13 @@ COPY . .
 ARG BASE_PATH=""
 ENV BASE_PATH=$BASE_PATH
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm build
+# Build KHÔNG MẠNG (15/9): CI của FPT và production là môi trường kín. Chặn mạng ngay tại
+# đây để máy dev build Docker cũng gặp đúng điều kiện đó — lần trước next/og tải emoji từ
+# cdn.jsdelivr.net lúc prerender /opengraph-image, máy dev qua mà CI chết. Chỉ bước build
+# bị chặn; `pnpm install` ở stage deps vẫn cần registry.
+# Cần BuildKit (Docker ≥ 23 mặc định) hoặc buildah có hỗ trợ `RUN --network`. KHÔNG thêm
+# dòng `# syntax=docker/dockerfile:1` — dòng đó kéo image frontend từ Docker Hub.
+RUN --network=none pnpm build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
