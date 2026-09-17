@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },
-  serverExternalPackages: ["sharp", "minio", "@node-rs/argon2", "xlsx", "adm-zip"],
+  serverExternalPackages: ["sharp", "@node-rs/argon2", "xlsx", "adm-zip"],
   async headers() {
     return [
       {

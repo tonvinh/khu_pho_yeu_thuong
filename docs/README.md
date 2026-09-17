@@ -41,7 +41,7 @@ Nếu A và B mâu thuẫn → hệ thống đang lệch đặc tả: sửa code
 | File | Nội dung | Đọc khi |
 |---|---|---|
 | [`10-TONG-QUAN-DU-AN.md`](10-TONG-QUAN-DU-AN.md) | Bức tranh toàn cảnh: sản phẩm, vai trò, vòng đời nội dung end-to-end, từ điển thuật ngữ, bản đồ repo | Người mới vào dự án — **bắt đầu ở đây** |
-| [`11-KIEN-TRUC-HE-THONG.md`](11-KIEN-TRUC-HE-THONG.md) | Kiến trúc: 4 service Docker, vòng đời request, render SSR + island, module `src/lib`, pipeline ảnh, basePath | Trước khi sửa code lõi |
+| [`11-KIEN-TRUC-HE-THONG.md`](11-KIEN-TRUC-HE-THONG.md) | Kiến trúc: 3 service Docker (ảnh trên filesystem/NFS), vòng đời request, render SSR + island, module `src/lib`, pipeline ảnh, basePath | Trước khi sửa code lõi |
 | [`12-DATA-DICTIONARY.md`](12-DATA-DICTIONARY.md) | Từ điển dữ liệu: từng bảng/cột/ràng buộc/index, quan hệ, state machine, quy tắc bất biến, migration | Khi đụng DB hoặc viết query |
 | [`13-API-REFERENCE.md`](13-API-REFERENCE.md) | Tham chiếu API đầy đủ: **43 route** public + admin, request/response/lỗi, ví dụ curl, bảng tra nhanh | Khi tích hợp hoặc debug API |
 | [`14-BAO-MAT-VA-QUYEN-RIENG-TU.md`](14-BAO-MAT-VA-QUYEN-RIENG-TU.md) | Định danh không OTP, HMAC/AES, phiên, CSRF, rate limit, admin auth, audit log, PDPD, mô hình đe doạ | Trước mọi thay đổi chạm SĐT/auth |

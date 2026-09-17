@@ -1,7 +1,7 @@
 # CLAUDE.md — repo Khu Phố Của Tôi
 
 **Đọc `docs/CLAUDE.md` trước** — đó là nguồn quy tắc cứng (4N thủ công, không OTP, không SMS,
-bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin triển khai thực tế.
+bảo mật SĐT, Docker 3 service...). File này chỉ bổ sung thông tin triển khai thực tế.
 
 ## Lệnh
 
@@ -15,7 +15,7 @@ bảo mật SĐT, Docker 4 service...). File này chỉ bổ sung thông tin tri
 - Side-effects "installed" (issue→signed, +30đ, notification in-web) nằm ở `applyInstalledSideEffects` — gọi trong transaction PATCH /api/admin/suggestions/[id].
 - CSRF double-submit: cookie `kp_csrf` + header `x-csrf-token` — client dùng helper `src/components/client-api.ts`.
 - Copy tiếng Việt NGUYÊN VĂN ở `src/lib/copy.ts` (từ docs/06 §2) — không sửa lời.
-- Ảnh: MinIO key `public/...` (route stream `/api/img/[...key]`) vs `private/...` (chỉ admin — ảnh bản đồ gốc Q3).
+- Ảnh: file `${UPLOAD_DIR}/<key>` (mặc định `/app/uploads`), key `public/...` (route stream `/api/img/[...key]`) vs `private/...` (chỉ admin — ảnh bản đồ gốc Q3). Mọi đọc/ghi/xoá qua `src/lib/storage.ts` — xem §"Bỏ MinIO 17/9".
 - ASSUMPTION đã ghi chú trong code: SĐT mã hoá AES gắn ở bảng `sessions` để tạo lead tầng 1
   không hỏi lại SĐT (hash một chiều không khôi phục được) — xem db/migrations/001_init.sql.
 - Seed ưu tiên đúng CÔNG THỨC điểm; vài con số hiển thị trong design (52 thương của Bà Liên)
@@ -798,3 +798,45 @@ chạy (link chia sẻ mất ảnh) — và dữ liệu người dùng có emoji
   riêng. Cú pháp gán biến inline chỉ chạy trên sh (Linux/macOS), không chạy trên Windows cmd.
 - Đã rà: ngoài OG, `src/` không có chỗ nào gọi Internet (font ở `public/fonts/`, không CDN,
   không `next/font/google`). Thêm thư viện/tính năng mới phải giữ điều này.
+
+## Bỏ MinIO 17/9 — ảnh lưu filesystem `/app/uploads` (production: NFS trên Kubernetes)
+
+Quy tắc cứng 11 đổi thành 3 service (đã duyệt). Chi tiết vận hành: `docs/18` §12 (k8s/NFS) · §13
+(runbook chuyển ảnh cũ). Dep `minio` đã gỡ, **không thêm dep mới** (CI FPT dùng base image cài sẵn
+`node_modules`) — chỉ `node:fs`/`node:path`/`node:crypto`.
+
+- **Quy ước**: file = `${UPLOAD_DIR}/${key}`; key DB giữ nguyên (`public/…`, `private/…`) nên không
+  migration, URL `/api/img/<key>` và `imgUrl` không đổi. `env.UPLOAD_DIR` mặc định `/app/uploads`,
+  luôn `path.resolve` (dev: `UPLOAD_DIR=./uploads`, thư mục đã gitignore). Cả 2 compose GHI ĐÈ
+  `UPLOAD_DIR=/app/uploads` vì `env_file: .env` của dev sẽ lọt vào container.
+- **Key là đường dẫn file** ⇒ `resolveKey()` kiểm trước MỌI thao tác: prefix `public|private`, mỗi đoạn
+  `[A-Za-z0-9._-]` KHÔNG bắt đầu bằng `.` (chặn `..`, file tạm, file ẩn), không `\`, byte null, tuyệt
+  đối. Sinh key mới phải theo đúng bộ ký tự này, nếu không `/api/img` trả 404.
+- **Nhiều replica**: không cache trạng thái file trong RAM; ghi `.<tên>.<hex>.tmp` cùng thư mục → fsync →
+  `rename`. `scripts/seed-images.mjs` chép lại logic này (không import `src/`). Rate limit/TOTP/counters
+  vẫn in-memory — chạy >1 pod vẫn vướng `docs/20` §3.1.
+- **UID/GID cố định 1001** (`ARG APP_UID/APP_GID`, `USER 1001:1001` dạng số cho `runAsNonRoot`): NFS
+  không áp `fsGroup`, export phải thuộc 1001:1001. Image CI FPT build bằng template riêng ⇒ pod vẫn
+  phải đặt `runAsUser/runAsGroup` tường minh.
+- **Không phụ thuộc NFS lúc khởi động**: ghi lỗi → route trả 500 câu chung, log
+  `[storage] ghi ảnh thất bại UPLOAD_DIR=… code=EACCES|EROFS|ENOENT…`. Healthcheck `/api/v1/counters`
+  không chạm thư mục ảnh — đừng đưa NFS vào liveness probe.
+- **Đã đo bằng Docker**: `--read-only` chạy đủ route + upload mà KHÔNG cần tmpfs; `docker diff` rỗng ⇒
+  Next không ghi `.next/cache` (app không dùng `next/image`/ISR). 2 container chung volume: ghi chéo +
+  20 lần ghi đồng thời cùng key đều sạch. Test: `tests/storage.test.ts`, `tests/img-route.test.ts`,
+  `tests/e2e/uploads.e2e.ts`.
+
+### Bẫy gặp thật trong phiên 17/9
+
+- **MinIO không lưu file ảnh trên đĩa**: mỗi object là THƯ MỤC chứa `xl.meta` ⇒ chuyển dữ liệu phải
+  `mc mirror` rồi `docker cp` (image MinIO không có `tar`/`find`), không chép volume `minio_data`.
+- **`tar` của macOS nhét file AppleDouble `._*`** khi nén thư mục có xattr: 95 ảnh giải nén ra 273 file.
+  Dùng `COPYFILE_DISABLE=1 tar …`.
+- **Volume dev trùng tên project compose**: container dev `khupho-db` (tạo tay) đang mount
+  `khu_pho_yeu_thuong_db_data` — đúng tên volume `docker compose up` trong repo sẽ dùng ⇒ hai Postgres
+  chung thư mục dữ liệu. Kiểm thử stack thì dùng project riêng: `docker compose -p <tên> --env-file …`.
+- **`scripts/create-admin.mjs` hỏng trong image** (có từ trước, không do đổi storage — build lại
+  HEAD cũ cũng lỗi): `otplib` bị bundle vào route nên standalone không chép `node_modules/otplib`
+  ⇒ `ERR_MODULE_NOT_FOUND`. Chưa sửa.
+- **E2E C2 (`tests/e2e/qc-fixes.e2e.ts`) chỉ qua với `next dev`**: nó tìm `@media (min-width: 640px)`
+  trong CSS, bản build minify thành `(min-width:640px)` ⇒ luôn đỏ khi chạy trên stack Docker.

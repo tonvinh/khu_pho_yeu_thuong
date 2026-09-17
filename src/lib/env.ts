@@ -1,5 +1,6 @@
 // Đọc secrets từ biến môi trường (secret manager / .env — KHÔNG hard-code).
 // PEPPER (định danh) và khoá AES (liên hệ) là 2 khoá TÁCH BIỆT (07 §2.1).
+import path from "node:path";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -31,14 +32,10 @@ export const env = {
   get BASE_PATH() {
     return process.env.NEXT_PUBLIC_BASE_PATH || process.env.BASE_PATH || "";
   },
-  get MINIO() {
-    return {
-      endPoint: process.env.MINIO_ENDPOINT || "localhost",
-      port: Number(process.env.MINIO_PORT || 9000),
-      useSSL: process.env.MINIO_USE_SSL === "true",
-      accessKey: process.env.MINIO_ACCESS_KEY || "khupho",
-      secretKey: process.env.MINIO_SECRET_KEY || "khupho_dev_secret",
-      bucket: process.env.MINIO_BUCKET || "khupho",
-    };
+  /** Thư mục gốc chứa ảnh upload (key `public/...`, `private/...` nằm ngay dưới).
+   *  Production mount NFS/PVC vào đúng /app/uploads; dev ngoài Docker đặt `./uploads`.
+   *  Luôn trả đường dẫn TUYỆT ĐỐI (resolve theo cwd) và đọc lại mỗi lần gọi. */
+  get UPLOAD_DIR() {
+    return path.resolve(process.env.UPLOAD_DIR || "/app/uploads");
   },
 };

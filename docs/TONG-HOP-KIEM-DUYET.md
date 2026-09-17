@@ -1,6 +1,11 @@
 # BỘ TÀI LIỆU DỰ ÁN — WEBSITE "KHU PHỐ CỦA TÔI" (BẢN TỔNG HỢP KIỂM DUYỆT)
 Phiên bản 1.0-RC · 17/07/2026 · Gồm 9 tài liệu, đọc liền mạch để kiểm duyệt lần cuối. File Excel `import-template.xlsx` đính kèm riêng.
 
+> **Ghi chú 17/9/2026 — storage đổi từ MinIO sang filesystem/NFS.** Biên bản dưới đây giữ nguyên nội dung
+> lúc kiểm duyệt (compose 4 service có `storage` MinIO). Từ 17/9: còn 3 service, ảnh upload lưu
+> `/app/uploads` (production Kubernetes mount PVC NFS) — quy tắc cứng 11 hiện hành ở `docs/CLAUDE.md`,
+> triển khai ở `docs/18` §12–§13.
+
 
 
 ---

@@ -1,27 +1,26 @@
 // Seed ẢNH mock cho dữ liệu demo — sinh placeholder bằng sharp (SVG → WebP),
-// upload MinIO rồi gắn key vào DB. Key ĐÚNG convention của các route admin:
+// ghi vào thư mục upload (UPLOAD_DIR/<key>) rồi gắn key vào DB.
+// Key ĐÚNG convention của các route admin:
 //   - Khu phố:  public/neighborhoods/<id>/photo.webp
 //   - Bản đồ:   private/maps/<id>/original.webp (gốc — chỉ admin, Q3)
 //               public/maps/<id>/stylized.webp  (duotone kem–đỏ gạch, cùng pipeline stylize.ts)
 //   - Vấn đề:   public/issues/<id>/photo.webp   (ảnh địa điểm, hiện khi bấm pin)
 //   - Biển:     public/signs/<id>/photo.webp    (ảnh biển đã treo — suggestion installed)
-// Chạy lại bao nhiêu lần cũng được (ghi đè object + key cũ).
+// Chạy lại bao nhiêu lần cũng được (ghi đè file + key cũ).
+// KHÔNG import src/lib/storage.ts (script .mjs thuần chạy trong image production) — phần
+// ghi file dưới đây phải giữ ĐÚNG quy ước của storage.ts: ghi tạm cùng thư mục rồi rename.
+import { randomBytes } from "node:crypto";
+import { mkdir, open, rename, rm } from "node:fs/promises";
+import path from "node:path";
 import pg from "pg";
 import sharp from "sharp";
-import { Client as MinioClient } from "minio";
 
 try { process.loadEnvFile(".env"); } catch { /* env đã có */ }
 
 const DATABASE_URL =
   process.env.DATABASE_URL || "postgres://khupho:khupho_dev@localhost:5432/khupho";
-const MINIO = {
-  endPoint: process.env.MINIO_ENDPOINT || "localhost",
-  port: Number(process.env.MINIO_PORT || 9000),
-  useSSL: process.env.MINIO_USE_SSL === "true",
-  accessKey: process.env.MINIO_ACCESS_KEY || "khupho",
-  secretKey: process.env.MINIO_SECRET_KEY || "khupho_dev_secret",
-  bucket: process.env.MINIO_BUCKET || "khupho",
-};
+// Mặc định /app/uploads như web app; dev ngoài Docker đặt UPLOAD_DIR=./uploads trong .env
+const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || "/app/uploads");
 
 // ===== Bảng màu chiến dịch =====
 const CREAM = "#FBF5EC";
@@ -233,12 +232,29 @@ const svgToWebp = (svg, quality = 82) =>
 // ===== Main =====
 const db = new pg.Client({ connectionString: DATABASE_URL });
 await db.connect();
-const minio = new MinioClient(MINIO);
-if (!(await minio.bucketExists(MINIO.bucket).catch(() => false))) {
-  await minio.makeBucket(MINIO.bucket);
+async function put(key, buf) {
+  if (!/^(public|private)(\/[A-Za-z0-9_-][A-Za-z0-9._-]*)+$/.test(key)) {
+    throw new Error(`Key ảnh không hợp lệ: ${key}`);
+  }
+  const file = path.join(UPLOAD_DIR, key);
+  const dir = path.dirname(file);
+  const tmp = path.join(dir, `.${path.basename(file)}.${randomBytes(8).toString("hex")}.tmp`);
+  try {
+    await mkdir(dir, { recursive: true });
+    const fh = await open(tmp, "wx");
+    try {
+      await fh.writeFile(buf);
+      await fh.sync();
+    } finally {
+      await fh.close();
+    }
+    await rename(tmp, file);
+  } catch (e) {
+    await rm(tmp, { force: true }).catch(() => {});
+    console.error(`✖ Ghi ảnh thất bại UPLOAD_DIR=${UPLOAD_DIR} code=${e.code || e.name} key=${key}`);
+    throw e;
+  }
 }
-const put = (key, buf) =>
-  minio.putObject(MINIO.bucket, key, buf, buf.length, { "Content-Type": "image/webp" });
 
 // 1) Khu phố: ảnh tổng quan (neighborhood_photos, 2 ảnh demo/khu — kích thước
 //    ĐỒNG NHẤT 1280×720 như route upload admin) + bản đồ gốc (private) + cách điệu (public)

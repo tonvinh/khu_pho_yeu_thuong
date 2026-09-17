@@ -28,7 +28,7 @@ Bám sát bố cục, màu (nền kem, đỏ gạch primary, cam/xanh lá/xanh d
 8. **Không có SMS** trong toàn hệ thống (Q1) — báo tin vui qua bảng `notifications` + banner in-web.
 9. Domain: ~~site chạy ở **MỘT trong hai** — `khupho.fpt.vn` **hoặc** `fpt.vn/khu-pho-de-thuong` (chưa chốt phương án nào)~~ → **CHỐT 8/9/2026: `https://fpt.vn/khu-pho-biet-thuong`** (chạy dưới path) ⇒ `BASE_PATH=/khu-pho-biet-thuong`, `SITE_ORIGIN=https://fpt.vn`. Lưu ý đoạn path thật là **`khu-pho-biet-thuong`**, không phải `khu-pho-de-thuong` như ví dụ cũ. Vẫn giữ nguyên yêu cầu gốc: cấu hình Next.js `basePath` bằng biến môi trường, mọi URL/asset/OG qua helper, không hard-code đường dẫn gốc — đổi phương án chỉ là đổi 1 biến env (nhưng là **build arg**, đổi phải build lại image).
 10. Bản đồ (Q3): ảnh gốc chỉ admin thấy; public luôn là bản cách điệu; pin dùng toạ độ % để không phụ thuộc kích thước ảnh.
-11. **Toàn bộ infra dùng Docker** (07-NFR-TECH §2.2): 1 file `docker-compose.yml` với 4 service — `web` (Next.js multi-stage, non-root), `db` (postgres:16-alpine, không expose port ngoài), `storage` (MinIO cho ảnh), `proxy` (Caddy/nginx — service duy nhất mở port, lo TLS + security headers). Secrets qua `.env` không commit (kèm `.env.example`); healthcheck mọi service; migration là lệnh riêng, không tự chạy khi container start.
+11. **Toàn bộ infra dùng Docker** (07-NFR-TECH §2.2): 1 file `docker-compose.yml` với 3 service (dev/VM) — `web` (Next.js multi-stage, non-root UID/GID cố định 1001), `db` (postgres:16-alpine, không expose port ngoài), `proxy` (Caddy/nginx — service duy nhất mở port, lo TLS + security headers). *(Đổi 17/9/2026, đã duyệt: bỏ service `storage`.)* **Ảnh upload lưu filesystem `/app/uploads`** (compose: volume riêng; production Kubernetes: PVC NFS ReadWriteMany mount vào đúng đường dẫn đó); thư mục ảnh **không** publish qua proxy — mọi ảnh đi qua `/api/img`. Secrets qua `.env` không commit (kèm `.env.example`); healthcheck mọi service; migration là lệnh riêng, không tự chạy khi container start.
 
 ## Quyết định đã chốt
 Tất cả 8 câu hỏi mở đã được chốt — xem bảng 07-NFR-TECH §4. Không còn giả định treo; nếu phát sinh mơ hồ mới, ghi chú ASSUMPTION trong code + báo lại PM.
@@ -37,7 +37,7 @@ Tất cả 8 câu hỏi mở đã được chốt — xem bảng 07-NFR-TECH §4
 - Chạy được luồng end-to-end: đề xuất → duyệt → viết câu → thương (định danh SĐT + cookie) → admin duyệt với checklist 4N → chọn câu → installed → pin xanh + counter + điểm +30 + banner báo tin vui in-web.
 - Upload ảnh bản đồ → hiển thị bản cách điệu + đặt pin bằng click hoạt động; bấm pin hiện ảnh thật địa điểm.
 - Share URL + OG image render đúng cho Đại sứ / biển đã treo / chứng nhận khu phố (test preview Facebook & Zalo debugger).
-- `docker compose up -d` từ máy sạch (chỉ cần Docker + file `.env`) dựng được toàn bộ hệ thống chạy end-to-end; không service nào ngoài `proxy` mở port ra ngoài.
+- `docker compose up -d` từ máy sạch (chỉ cần Docker + file `.env`) dựng được toàn bộ hệ thống (3 service) chạy end-to-end, ảnh upload còn nguyên sau khi recreate container `web`; không service nào ngoài `proxy` mở port ra ngoài.
 - Seed data theo 06 §5 tái hiện đúng các màn hình trong design.
 - 3 test case điểm (05 §4) pass. Test 4N với fixtures 06 §3.3 pass.
 - Mobile 360px không vỡ layout; LCP trang chủ < 2.5s.

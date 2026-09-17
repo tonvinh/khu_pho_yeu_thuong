@@ -29,7 +29,19 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN addgroup -S khupho && adduser -S khupho -G khupho
+# UID/GID CỐ ĐỊNH (17/9): ảnh upload nằm ở /app/uploads, production mount NFS vào đó.
+# NFS phân quyền theo UID/GID SỐ và kubelet KHÔNG chown volume NFS (fsGroup không áp) ⇒
+# thư mục export phải thuộc đúng UID/GID này, pod đặt runAsUser/runAsGroup khớp.
+# `adduser -S` không có -u sẽ lấy UID động — đổi base image là lệch quyền, mất ghi ảnh.
+ARG APP_UID=1001
+ARG APP_GID=1001
+RUN addgroup -S -g ${APP_GID} khupho \
+  && adduser -S -u ${APP_UID} -G khupho khupho \
+  && mkdir -p /app/uploads \
+  && chown ${APP_UID}:${APP_GID} /app/uploads
+# Ảnh upload: `${UPLOAD_DIR}/public/...`, `${UPLOAD_DIR}/private/...` (xem src/lib/storage.ts).
+# Đây là thư mục DUY NHẤT app ghi lúc chạy — xem docs/18 §K8s về readOnlyRootFilesystem.
+ENV UPLOAD_DIR=/app/uploads
 
 COPY --from=builder --chown=khupho:khupho /app/.next/standalone ./
 COPY --from=builder --chown=khupho:khupho /app/.next/static ./.next/static
@@ -39,7 +51,9 @@ COPY --from=builder --chown=khupho:khupho /app/public ./public
 COPY --from=builder --chown=khupho:khupho /app/db ./db
 COPY --from=builder --chown=khupho:khupho /app/scripts ./scripts
 
-USER khupho
+# USER dạng SỐ: Kubernetes `runAsNonRoot: true` chỉ kiểm được user số, tên user thì từ chối
+# chạy pod ("image has non-numeric user").
+USER ${APP_UID}:${APP_GID}
 EXPOSE 3000
 ENV PORT=3000 HOSTNAME=0.0.0.0
 

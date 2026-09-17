@@ -4,7 +4,11 @@
 > và *nếu sai thì làm gì*. Bản tóm tắt copy-paste nhanh ở [`../README.md`](../README.md).
 > Kiến trúc & lý do thiết kế: [`11-KIEN-TRUC-HE-THONG.md`](11-KIEN-TRUC-HE-THONG.md).
 >
-> Cập nhật: 8/9/2026 — soát nhanh sau các đợt 18/8, 2–4/9, 7/9. Thay đổi duy nhất ảnh hưởng runbook:
+> Cập nhật: **17/9/2026 — bỏ object storage**: ảnh upload lưu filesystem `/app/uploads` (compose: volume
+> `uploads_data`; production Kubernetes: PVC NFS — yêu cầu cho bên vận hành ở [§12](#12-kubernetes--nfs--yêu-cầu-cho-bên-vận-hành),
+> chuyển dữ liệu ảnh cũ ở [§13](#13-chuyển-ảnh-cũ-sang-filesystem-một-lần)). Còn 3 service; không còn service/biến môi trường nào cho object storage.
+>
+> Trước đó 8/9/2026 — soát nhanh sau các đợt 18/8, 2–4/9, 7/9. Thay đổi duy nhất ảnh hưởng runbook:
 > **khối video TVC đã gỡ khỏi sản phẩm** (component xoá 2/9, 4 khoá `campaign_*` gỡ 4/9) ⇒ mọi mục
 > nói về iframe YouTube nay chỉ còn giá trị lịch sử. `frame-src` trong CSP **vẫn nên giữ** phòng khi
 > Design khôi phục khối này; giữ nó không làm CSP yếu đi đáng kể.
@@ -17,7 +21,7 @@
 | [§1](#1-điều-kiện-cần-trước-khi-bắt-đầu) | Điều kiện cần trước khi bắt đầu |
 | [§2](#2-biến-môi-trường--secrets) | Biến môi trường & secrets |
 | [§3](#3-mode-b--deploy-production-thực-tế-từng-bước) | **Mode B — deploy production thực tế, từng bước B1→B9** |
-| [§4](#4-mode-a--compose-4-service-máyvm-riêng) | Mode A — compose 4 service (máy/VM riêng) |
+| [§4](#4-mode-a--compose-3-service-máyvm-riêng) | Mode A — compose 3 service (máy/VM riêng) |
 | [§5](#5-deploy-các-lần-sau) | Deploy các lần sau (thủ công) |
 | [§6](#6-cicd-github-actions--self-hosted-runner) | CI/CD (GitHub Actions + self-hosted runner) |
 | [§7](#7-rollback) | Rollback |
@@ -25,6 +29,8 @@
 | [§9](#9-backup--restore) | Backup & restore |
 | [§10](#10-sự-cố-thường-gặp) | Sự cố thường gặp |
 | [§11](#11-checklist-go-live) | Checklist go-live |
+| [§12](#12-kubernetes--nfs--yêu-cầu-cho-bên-vận-hành) | **Kubernetes + NFS** — yêu cầu cho bên vận hành |
+| [§13](#13-chuyển-ảnh-cũ-sang-filesystem-một-lần) | Chuyển ảnh cũ sang filesystem (một lần) |
 
 ---
 
@@ -32,7 +38,7 @@
 
 Repo hỗ trợ **hai** mode, khác nhau ở chỗ ai lo TLS/reverse-proxy:
 
-| | **Mode A — compose 4 service** | **Mode B — VM dùng chung + Caddy trên host** |
+| | **Mode A — compose 3 service** | **Mode B — VM dùng chung + Caddy trên host** |
 |---|---|---|
 | File compose | `docker-compose.yml` | `docker-compose.prod.yml` |
 | Proxy/TLS | service `proxy` (Caddy trong Docker) | Caddy chạy bằng systemd **trên host** |
@@ -41,7 +47,7 @@ Repo hỗ trợ **hai** mode, khác nhau ở chỗ ai lo TLS/reverse-proxy:
 | Dùng khi | có máy/VM **trống** dành riêng cho dự án | VM **dùng chung** với app khác |
 | Trạng thái | mode "chuẩn" theo quy tắc cứng 11 | **đang chạy thật** tại https://khupho.ailab.city |
 
-Nếu bạn deploy production lần đầu cho FPT trên máy riêng → làm [§4](#4-mode-a--compose-4-service-máyvm-riêng).
+Nếu bạn deploy production lần đầu cho FPT trên máy riêng → làm [§4](#4-mode-a--compose-3-service-máyvm-riêng).
 Nếu bạn tiếp quản hệ thống đang chạy hoặc dựng lại đúng như production hiện tại → làm [§3](#3-mode-b--deploy-production-thực-tế-từng-bước).
 
 Cả hai mode **dùng chung** file security header [`deploy/khupho-headers.caddy`](../deploy/khupho-headers.caddy)
@@ -82,13 +88,12 @@ Tạo file từ template: `cp .env.example .env`. File `.env` **không bao giờ
 | `PHONE_PEPPER` | ✅ | ❌ **Không bao giờ đổi** | Pepper HMAC-SHA256 định danh SĐT. `openssl rand -hex 32`. Đổi = mất toàn bộ tài khoản/điểm/phiếu của cư dân |
 | `PHONE_AES_KEY` | ✅ | ⚠️ Cần migration dữ liệu | Khoá AES-256-GCM mã hoá SĐT lead. `openssl rand -base64 32` (đúng 32 byte). **Tách hoàn toàn** với PEPPER |
 | `POSTGRES_PASSWORD` | ✅ | ✅ | Mật khẩu Postgres (user/db mặc định `khupho`) |
-| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | ✅ | ✅ | Credentials MinIO. Secret nên ≥ 16 ký tự |
 | `DATABASE_URL` | dev | ✅ | Chỉ cần khi chạy **ngoài** Docker. Trong compose bị override thành `@db:5432` |
 | `SITE_ORIGIN` | | ✅ (cần `up -d web`) | Origin tuyệt đối cho OG tag/share link. Production: `https://khupho.ailab.city`. **Không** liên quan CSRF/auth |
 | `BASE_PATH` | | ❌ **Build arg** | **Chốt 8/9: `/khu-pho-biet-thuong`** (site ở `https://fpt.vn/khu-pho-biet-thuong`); `""` nếu chuyển sang domain riêng. Đổi ⇒ **bắt buộc rebuild image**. Cả 2 file compose đều đọc biến này từ `.env` (sửa 8/9 — `docker-compose.prod.yml` trước đó chốt cứng `""`, làm CI build lại là mất subpath) |
 | `SITE_ADDRESS` | | ✅ | **Chỉ** dùng ở mode A: `:80` cho local, hoặc domain để Caddy tự cấp TLS |
 | `POSTGRES_USER` / `POSTGRES_DB` | | | Mặc định `khupho` |
-| `MINIO_BUCKET` | | ✅ | Mặc định `khupho`. Bucket **tự tạo** ở lần upload đầu (`ensureBucket`) — không phải tạo tay |
+| `UPLOAD_DIR` | | ⚠️ Cần chuyển file | Thư mục gốc chứa ảnh upload. Image đặt sẵn `/app/uploads`; cả 2 file compose **ghi đè** thành `/app/uploads` + mount volume `uploads_data`, nên **không cần** khai trong `.env` production. Dev ngoài Docker: `./uploads`. Đổi giá trị = ảnh cũ nằm lại thư mục cũ |
 | `SEED_ADMIN_PASSWORD` | | | Chỉ cho `pnpm seed` môi trường thử (mặc định `KhuPho@2026!Demo`) |
 
 Ở **production** (`NODE_ENV=production`), thiếu biến bắt buộc thì app **ném lỗi lúc khởi động**
@@ -101,7 +106,6 @@ lên còn hơn chạy bằng pepper mặc định.
 echo "PHONE_PEPPER=$(openssl rand -hex 32)"
 echo "PHONE_AES_KEY=$(openssl rand -base64 32)"
 echo "POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -d '/+=')"
-echo "MINIO_SECRET_KEY=$(openssl rand -base64 24 | tr -d '/+=')"
 ```
 
 `PHONE_AES_KEY` phải giải mã ra **đúng 32 byte** — dùng nguyên chuỗi `openssl rand -base64 32`
@@ -127,8 +131,9 @@ liên kết SĐT → tài khoản. Vì vậy cất 2 khoá này **tách khỏi**
 
 - **Không có service `proxy`** — Caddy trên host lo TLS/reverse-proxy.
 - `web` publish **chỉ nội bộ** `127.0.0.1:3001` (port 3000/8000 đã bị app khác dùng).
-- `db` + `storage` **không publish port nào** → không đụng Postgres 5432 / MinIO 9000 của app kia.
-- Project name cố định `khupho` → container tên `khupho-web-1|khupho-db-1|khupho-storage-1`.
+- `db` **không publish port nào** → không đụng Postgres 5432 của app kia.
+- Ảnh upload nằm trong volume `khupho_uploads_data` mount vào `web:/app/uploads` (thuộc UID/GID 1001).
+- Project name cố định `khupho` → container tên `khupho-web-1|khupho-db-1`.
 
 ### B1. Cài Docker (một lần)
 
@@ -171,8 +176,6 @@ SITE_ORIGIN=https://khupho.ailab.city
 POSTGRES_PASSWORD=<sinh ở §2.2>
 PHONE_PEPPER=<sinh ở §2.2 — hoặc pepper CŨ nếu deploy lại hệ thống đã có dữ liệu>
 PHONE_AES_KEY=<sinh ở §2.2>
-MINIO_ACCESS_KEY=khupho
-MINIO_SECRET_KEY=<sinh ở §2.2>
 ```
 
 `SITE_ADDRESS` và `DATABASE_URL` **không dùng** ở mode B (compose tự dựng `DATABASE_URL` trỏ `@db:5432`).
@@ -269,8 +272,8 @@ docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.prod.yml ps
 ```
 
-Kỳ vọng: 3 container `khupho-web-1`, `khupho-db-1`, `khupho-storage-1` — `db`/`storage` phải
-`healthy` thì `web` mới khởi động (`depends_on: service_healthy`).
+Kỳ vọng: 2 container `khupho-web-1`, `khupho-db-1` — `db` phải `healthy` thì `web` mới khởi động
+(`depends_on: service_healthy`). Nâng cấp từ bản còn service `storage` cũ? Làm [§13](#13-chuyển-ảnh-cũ-sang-filesystem-một-lần) **trước** bước này.
 
 *Build fail ở native deps (sharp/argon2/esbuild)?* Dockerfile ghim `pnpm@9` có chủ đích — xem [§10](#10-sự-cố-thường-gặp).
 
@@ -334,7 +337,7 @@ Cuối cùng chạy end-to-end trên chính domain thật:
 
 ---
 
-## 4. Mode A — compose 4 service (máy/VM riêng)
+## 4. Mode A — compose 3 service (máy/VM riêng)
 
 Dùng khi có máy trống và muốn cả proxy + TLS nằm trong Docker. Chỉ service `proxy` mở port 80/443.
 
@@ -356,7 +359,7 @@ SITE_ORIGIN=https://khupho.example.com
 
 ```bash
 docker compose up -d --build
-docker compose ps          # 4 service: web, db, storage, proxy
+docker compose ps          # 3 service: web, db, proxy
 ```
 
 ### A4. Migration + admin
@@ -406,7 +409,7 @@ Khi nào cần gì:
 |---|---|
 | Sửa code | `build web` + `up -d` |
 | Thêm file trong `db/migrations/` | `build web` + `up -d` + **`migrate.mjs`** |
-| Đổi `SITE_ORIGIN`, `POSTGRES_PASSWORD`, `MINIO_*` trong `.env` | `up -d web` (không cần build) — container phải khởi động lại mới đọc `.env` mới |
+| Đổi `SITE_ORIGIN`, `POSTGRES_PASSWORD` trong `.env` | `up -d web` (không cần build) — container phải khởi động lại mới đọc `.env` mới |
 | Đổi `BASE_PATH` | **Bắt buộc build lại** — là build arg, đã nướng vào image |
 | Sửa `deploy/khupho-headers.caddy` | Mode B: CI tự sync + reload caddy; làm tay xem [B5.2–B5.4](#b5-caddy-trên-host--security-header-một-lần). Mode A: `docker compose restart proxy` |
 | Sửa `docker-compose*.yml` | `up -d` (compose tự recreate service có định nghĩa thay đổi) |
@@ -539,7 +542,7 @@ Theo dõi sức khoẻ:
 |---|---|---|
 | App sống | `curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/api/v1/counters` | 200 |
 | Container | `docker compose -f $F ps` | cột STATUS có `healthy` |
-| Dung lượng | `docker system df` · `df -h` | ảnh WebP tích tụ trong volume `minio_data` |
+| Dung lượng | `docker system df` · `df -h` | ảnh WebP tích tụ trong volume `uploads_data` (`docker compose -f $F exec web du -sh /app/uploads`) |
 | RAM/swap | `free -h` | build image là lúc căng nhất |
 | Chứng chỉ TLS | `sudo caddy list-certificates` hoặc log Caddy | còn hạn (Caddy tự gia hạn) |
 
@@ -550,7 +553,7 @@ docker image prune -f                 # xoá image dangling
 docker builder prune -f --keep-storage 5GB
 ```
 
-> Đừng chạy `docker system prune -a --volumes` — cờ `--volumes` xoá luôn `db_data`/`minio_data`.
+> Đừng chạy `docker system prune -a --volumes` — cờ `--volumes` xoá luôn `db_data`/`uploads_data`.
 
 ---
 
@@ -565,12 +568,12 @@ cd /opt/khu_pho
 # Database (db không publish port → dump qua exec)
 docker compose -f $F exec -T db pg_dump -U khupho khupho | gzip > backup-$(date +%F).sql.gz
 
-# Ảnh MinIO (volume minio_data)
-docker run --rm --volumes-from khupho-storage-1 -v "$PWD":/backup alpine \
-  tar czf /backup/minio-$(date +%F).tar.gz /data
+# Ảnh upload (volume uploads_data) — tar chạy TRONG container web rồi stream ra host,
+# không phụ thuộc tên volume/project; file đang ghi dở là `.…tmp` ẩn, restore về vô hại
+docker compose -f $F exec -T web tar czf - -C /app/uploads . > uploads-$(date +%F).tar.gz
 ```
 
-Hai pattern `backup-*.sql.gz` và `minio-*.tar.gz` đã có trong `.gitignore` **và** `.dockerignore`
+Hai pattern `backup-*.sql.gz` và `uploads-*.tar.gz` đã có trong `.gitignore` **và** `.dockerignore`
 — để file backup nằm trong `/opt/khu_pho` không lọt vào git lẫn build context.
 Tốt nhất vẫn là **chuyển ra khỏi VM** ngay sau khi tạo.
 
@@ -585,6 +588,8 @@ crontab -e
 ```cron
 # 02:00 mỗi ngày: dump DB, giữ 14 bản gần nhất
 0 2 * * * cd /opt/khu_pho && docker compose -f docker-compose.prod.yml exec -T db pg_dump -U khupho khupho | gzip > /var/backups/khupho/db-$(date +\%F).sql.gz 2>>/var/log/khupho-backup.log && find /var/backups/khupho -name 'db-*.sql.gz' -mtime +14 -delete
+# 02:30 mỗi ngày: tar thư mục ảnh upload, giữ 14 bản
+30 2 * * * cd /opt/khu_pho && docker compose -f docker-compose.prod.yml exec -T web tar czf - -C /app/uploads . > /var/backups/khupho/uploads-$(date +\%F).tar.gz 2>>/var/log/khupho-backup.log && find /var/backups/khupho -name 'uploads-*.tar.gz' -mtime +14 -delete
 ```
 
 ```bash
@@ -599,10 +604,8 @@ F=docker-compose.prod.yml
 # Database
 gunzip -c backup-YYYY-MM-DD.sql.gz | docker compose -f $F exec -T db psql -U khupho khupho
 
-# Ảnh MinIO
-docker run --rm --volumes-from khupho-storage-1 -v "$PWD":/backup alpine \
-  tar xzf /backup/minio-YYYY-MM-DD.tar.gz -C /
-docker compose -f $F restart storage
+# Ảnh upload — giải nén trong container web nên file thuộc đúng UID/GID 1001, không cần restart
+docker compose -f $F exec -T web tar xzf - -C /app/uploads < uploads-YYYY-MM-DD.tar.gz
 ```
 
 Restore xong phải dùng **đúng `.env` cùng thời điểm** (cùng `PHONE_PEPPER` và `PHONE_AES_KEY`),
@@ -625,7 +628,8 @@ rồi chạy lại `migrate.mjs` (dump cũ có thể thiếu migration mới).
 | Sửa CSP trong repo mà production không đổi | Host nối **nửa vời**: thiếu `import khupho_headers` trong site block ([B5.3](#b5-caddy-trên-host--security-header-một-lần)). Job `sync-headers` sẽ fail và chỉ đúng dòng thiếu |
 | *(lịch sử — khối TVC đã gỡ 2–4/9)* Video TVC là ô xám "This content is blocked" | CSP của Caddy **host** thiếu `frame-src https://www.youtube-nocookie.com`. Kiểm `curl -sI https://<domain>/ \| grep -i content-security`, sửa theo [B5](#b5-caddy-trên-host--security-header-một-lần) → `caddy validate` + `reload`. Không cần rebuild app |
 | *(lịch sử)* Video TVC ra "Error 153 — Video player configuration error" | Iframe nạp được nhưng thiếu `referrerPolicy="strict-origin-when-cross-origin"` trên thẻ. Site đặt `Referrer-Policy: no-referrer` nên YouTube không xác thực được domain nhúng. **Không phải** lỗi ID video — đổi ID khác vẫn lỗi y hệt |
-| Ảnh không hiện | `storage` healthy chưa? `MINIO_*` khớp chưa? Ảnh public đi qua `/api/img/…`, không truy cập MinIO trực tiếp. Bucket tự tạo ở lần upload đầu |
+| Ảnh không hiện (404) | Ảnh public đi qua `/api/img/…`. Kiểm file có thật: `docker compose -f $F exec web ls -l /app/uploads/<key>`. Thiếu → volume chưa mount đúng `/app/uploads` (xem `docker inspect khupho-web-1 --format '{{json .Mounts}}'`) hoặc chưa chuyển ảnh cũ ([§13](#13-chuyển-ảnh-cũ-sang-filesystem-một-lần)). File có mà vẫn 404 → key sai quy ước (`..`, `\`, đoạn bắt đầu bằng `.`) hoặc không đọc được (log có `[img] đọc ảnh thất bại code=…`) |
+| Upload ảnh báo "Không lưu được ảnh, vui lòng thử lại sau" (500) | Log `web` có dòng `[storage] ghi ảnh thất bại UPLOAD_DIR=… code=…`. `EACCES`: thư mục không thuộc/không cho UID 1001 ghi → `chown -R 1001:1001` thư mục export/volume. `EROFS`: volume mount read-only hoặc chưa mount mà root filesystem read-only. `ENOENT`/`ENOTDIR`: `UPLOAD_DIR` trỏ sai. App vẫn chạy bình thường, chỉ upload lỗi |
 | Ảnh prefix `private/` trả 404 | Đúng như thiết kế: `/api/img/…` **chỉ** phục vụ key `public/`. *(Route đọc ảnh bản đồ gốc dành cho admin đã xoá cùng khối bản đồ 1/8 — hiện không còn ảnh `private/` nào được sinh ra.)* |
 | Slider hero trống dù admin đã bật "tiêu biểu" | Từ 7/9 slider lấy khu `is_featured` và **cắt đúng 10 slot**. Kiểm: khu có `hidden=false`, `deleted_at IS NULL`, và `featured_position` nằm trong 1–10 (hoặc NULL nhưng 10 slot chưa đầy) |
 | Khu phố biến mất khỏi toàn bộ web | Có thể đã bị **xoá mềm**: `SELECT name, deleted_at FROM neighborhoods WHERE deleted_at IS NOT NULL;` → khôi phục ở tab 🗑 Đã xoá của `/admin/khu-pho` |
@@ -653,7 +657,7 @@ Dữ liệu & tài khoản
 
 - [ ] Đã chạy migration; `curl /api/v1/counters` trả 200.
 - [ ] Đã tạo admin thật bằng `create-admin.mjs`; **đã đổi hoặc xoá tài khoản demo `admin@fpt.com` nếu từng seed**.
-- [ ] Đã lên lịch backup DB + MinIO (cron [§9.2](#92-backup-tự-động-cron)) và **đã thử restore ít nhất một lần**.
+- [ ] Đã lên lịch backup DB + ảnh upload (cron [§9.2](#92-backup-tự-động-cron)) và **đã thử restore ít nhất một lần**.
 
 Ứng dụng
 
@@ -668,3 +672,157 @@ CI/CD
 - [ ] Runner self-hosted online, label `khupho`, user thuộc nhóm `docker`.
 - [ ] Sudoers NOPASSWD đúng 3 binary ([§6.3](#63-sudoers-cho-job-sync-headers-một-lần)).
 - [ ] Đã chạy thử một lần "Run workflow" tay và cả 2 job đều xanh.
+
+---
+
+## 12. Kubernetes + NFS — yêu cầu cho bên vận hành
+
+Production chạy **Kubernetes**, ảnh upload nằm trên **NFS mount bằng PV/PVC**. Repo **không** chứa
+manifest/Helm: GitLab CI của FPT build image theo template riêng và bên vận hành tự deploy. Mục này
+là hợp đồng giữa app và hạ tầng — mọi điểm dưới đây đã thử bằng Docker (kết quả ở cuối mục).
+
+### 12.1 App cần gì
+
+| # | Yêu cầu | Chi tiết |
+|---|---|---|
+| 1 | **PVC `ReadWriteMany`** mount vào **`/app/uploads`** | Nhiều replica cùng ghi/đọc. Key trong DB (`public/…`, `private/…`) là đường dẫn tương đối dưới thư mục này. Đổi chỗ mount thì đặt `UPLOAD_DIR=<đường dẫn tuyệt đối>` |
+| 2 | Thư mục export NFS thuộc **UID 1001 / GID 1001** (hoặc cho GID 1001 ghi, mode `2775`) | **NFS không áp `fsGroup`** — kubelet không chown volume NFS; server hay bật `root_squash` nên init container chạy root cũng không chown được. Chown **phía NFS server**: `chown -R 1001:1001 <export> && chmod 2775 <export>` |
+| 3 | `securityContext` pod: `runAsNonRoot: true`, **`runAsUser: 1001`**, **`runAsGroup: 1001`**, `allowPrivilegeEscalation: false` | Dockerfile của repo chốt `USER 1001:1001` (số, để `runAsNonRoot` kiểm được). Image build bằng **template CI của FPT không dùng Dockerfile này** ⇒ user trong image có thể khác — **vẫn phải đặt `runAsUser/runAsGroup` tường minh** cho khớp chủ sở hữu thư mục NFS |
+| 4 | Khuyến nghị **`readOnlyRootFilesystem: true`** | App chỉ ghi vào `/app/uploads`. Đã kiểm: **không cần tmpfs/emptyDir nào khác** (xem 12.3). Lợi ích phụ: quên mount PVC thì upload báo lỗi `EROFS` ngay, thay vì âm thầm ghi vào lớp ghi của container rồi **mất ảnh khi pod restart** |
+| 5 | **Liveness/readiness KHÔNG đụng NFS** | Dùng `GET <BASE_PATH>/api/v1/counters` port 3000 (production chốt `BASE_PATH=/khu-pho-biet-thuong` ⇒ path là `/khu-pho-biet-thuong/api/v1/counters`). Route này chỉ đọc DB. Đừng thêm probe kiểm thư mục ảnh: NFS chập chờn vài giây sẽ làm kubelet restart **mọi** pod cùng lúc |
+| 6 | Ingress cho body upload **≥ 12MB** | Route upload nhận tối đa 10MB/ảnh (multipart có thêm overhead). ingress-nginx mặc định `proxy-body-size: 1m` ⇒ ảnh >1MB bị **413** trước khi tới app: đặt annotation `nginx.ingress.kubernetes.io/proxy-body-size: "12m"` |
+| 7 | **Không** publish thư mục NFS qua ingress/web server tĩnh | Mọi ảnh đi qua `/api/img/…` — route chỉ phục vụ `public/`, `private/` không được lộ |
+| 8 | Không cần biến môi trường nào cho ảnh | `UPLOAD_DIR` mặc định `/app/uploads`. Không còn secret object storage |
+
+Khi volume **chưa ghi được** (chưa mount, sai quyền, NFS read-only): app **vẫn khởi động**, trang chủ và
+API trả 200 bình thường; chỉ upload trả **500** câu chung "Không lưu được ảnh, vui lòng thử lại sau",
+log có một dòng đủ để chẩn đoán:
+
+```
+[storage] ghi ảnh thất bại UPLOAD_DIR=/app/uploads code=EACCES key=public/neighborhoods/<id>/photo-1-<ts>.webp
+```
+
+`EACCES` = sai chủ sở hữu/quyền (mục 2–3) · `EROFS` = mount read-only hoặc chưa mount PVC khi bật
+`readOnlyRootFilesystem` · `ENOENT`/`ENOTDIR` = `UPLOAD_DIR` trỏ sai. Ảnh thiếu file khi xem → 404.
+
+### 12.2 Chạy nhiều replica
+
+- **Phần ảnh an toàn**: code không giữ trạng thái file nào trong RAM; mọi lần ghi là ghi file tạm
+  `.<tên>.<hex>.tmp` **cùng thư mục** → `fsync` → `rename` (nguyên tử trên NFS). Hai pod ghi cùng key
+  thì bản sau thắng, không file nào hỏng; người đọc không bao giờ thấy file dở.
+- **Phần khác CHƯA an toàn** ([20 §3.1](20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md)): rate limit, token tạm
+  bước 2 TOTP và cache bộ đếm vẫn nằm trong RAM từng pod. Hệ quả thật: admin bật TOTP có thể **đăng
+  nhập không được** nếu bước 2 rơi vào pod khác ⇒ trước khi chạy >1 replica phải bật
+  `sessionAffinity`/sticky cookie ở ingress (hoặc chạy 1 replica) cho tới khi xử lý nợ này.
+- File tạm mồ côi (pod bị kill giữa lúc ghi) là file ẩn, không bao giờ được phục vụ. Dọn định kỳ
+  nếu muốn: `find /app/uploads -name '.*.tmp' -mmin +60 -delete`.
+
+Ví dụ phần liên quan trong Deployment (chỉ để minh hoạ — manifest thật do bên vận hành quản lý):
+
+```yaml
+spec:
+  template:
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+      containers:
+        - name: web
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+          livenessProbe:
+            httpGet: { path: /khu-pho-biet-thuong/api/v1/counters, port: 3000 }
+          readinessProbe:
+            httpGet: { path: /khu-pho-biet-thuong/api/v1/counters, port: 3000 }
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: khupho-uploads   # accessModes: [ReadWriteMany], NFS
+```
+
+### 12.3 Đã kiểm bằng Docker (17/9, không có cluster thật)
+
+| Điều kiện k8s/NFS | Cách mô phỏng | Kết quả |
+|---|---|---|
+| 2 replica chung PVC | 2 container `web` cùng mount một volume | Upload ở A xem ngay ở B và ngược lại; thay ảnh thì URL cũ 404 ở cả hai; 20 lần upload đồng thời cùng một key từ A và B → 20×200, file cuối giải mã được, không sót `.tmp` |
+| Export NFS sai chủ sở hữu | Volume thuộc UID 2000, mode 755 | Container vẫn `healthy`, `/` và `/api/v1/counters` 200, ảnh có sẵn vẫn đọc được; upload **500** câu chung, log `code=EACCES` |
+| `readOnlyRootFilesystem` | `docker run --read-only`, chỉ `/app/uploads` là volume | **Không cần tmpfs**. Trang chủ, 4 route OG, `/bien`, `/dai-su`, `/khu-pho`, admin login, các API + upload/thay/xem ảnh đều chạy; log không có `EROFS` |
+| Next.js có ghi `.next/cache`? | `docker diff` container thường sau khi gọi hết các route trên | **Rỗng** — không ghi gì ngoài volume. App không dùng `next/image`, ISR `revalidate` hay fetch cache nên Next không cần `.next/cache`. Nếu sau này thêm các thứ đó thì mount `emptyDir` vào `/app/.next/cache` |
+
+---
+
+## 13. Chuyển ảnh cũ sang filesystem (một lần)
+
+Chỉ cần khi nâng cấp một hệ thống **đã có ảnh trong MinIO** (bản trước 17/9). Key trong DB giữ
+nguyên — chỉ chép file, **không migration DB**.
+
+> ⚠️ **Không chép thẳng thư mục dữ liệu của MinIO** (volume `minio_data`, đường dẫn `/data/<bucket>/…`):
+> MinIO lưu mỗi object thành **một thư mục chứa `xl.meta`**, không phải file ảnh. Phải xuất qua
+> `mc mirror` như dưới đây.
+
+Trong lúc chuyển, **tạm dừng upload ảnh ở admin** (ảnh upload sau bước 1 sẽ không có trong bản xuất;
+hoặc chạy lại bước 1 ngay trước bước 3 — `mc mirror` chỉ chép phần mới).
+
+**Bước 1 — xuất bucket ra host** (stack CŨ còn chạy; ví dụ mode B, bucket mặc định `khupho`):
+
+```bash
+cd /opt/khu_pho && F=docker-compose.prod.yml
+BUCKET=$(grep -E '^MINIO_BUCKET=' .env | cut -d= -f2); BUCKET=${BUCKET:-khupho}
+docker compose -f $F exec -T storage sh -c "mc alias set src http://127.0.0.1:9000 \"\$MINIO_ROOT_USER\" \"\$MINIO_ROOT_PASSWORD\" >/dev/null \
+  && rm -rf /tmp/kp-export && mc mirror --quiet src/$BUCKET /tmp/kp-export >/dev/null && mc du src/$BUCKET"
+# image MinIO không có tar/find ⇒ lấy ra bằng docker cp (đặt NGOÀI thư mục repo)
+sudo mkdir -p /var/backups/khupho && sudo chown $USER /var/backups/khupho
+docker cp khupho-storage-1:/tmp/kp-export /var/backups/khupho/minio-export
+find /var/backups/khupho/minio-export -type f | wc -l     # PHẢI bằng số "objects" mc du in ra
+```
+
+**Bước 2 — deploy code mới** như [§5](#5-deploy-các-lần-sau). Compose báo container `storage` là
+*orphan* — **để nguyên nó chạy** tới khi kiểm xong bước 4.
+
+**Bước 3 — nạp vào volume ảnh mới** (giải nén trong container `web` ⇒ file thuộc đúng UID/GID 1001):
+
+```bash
+COPYFILE_DISABLE=1 tar czf - -C /var/backups/khupho/minio-export . \
+  | docker compose -f $F exec -T web tar xzf - -C /app/uploads
+```
+
+`COPYFILE_DISABLE=1` chỉ có tác dụng khi chạy `tar` **trên macOS**: thiếu nó, tar của macOS nhét
+thêm file AppleDouble `._<tên>` cho mỗi file/thư mục (đo thật: 95 ảnh thành 273 file). File đó bắt
+đầu bằng `.` nên không bao giờ bị phục vụ, nhưng là rác. Trên Linux biến này vô hại.
+
+**Kubernetes/NFS**: chép nội dung `minio-export/` vào **gốc** thư mục export NFS (cùng cấp với
+`public/`, `private/`) rồi `chown -R 1001:1001` phía NFS server.
+
+**Bước 4 — đối chiếu mọi key trong DB với file** (kỳ vọng `thiếu file: 0`):
+
+```bash
+docker compose -f $F exec -T db psql -U khupho -d khupho -Atc "
+  SELECT photo_key FROM neighborhood_photos
+  UNION ALL SELECT certificate_photo_key FROM neighborhoods WHERE certificate_photo_key IS NOT NULL
+  UNION ALL SELECT map_image_key FROM neighborhoods WHERE map_image_key IS NOT NULL
+  UNION ALL SELECT map_stylized_key FROM neighborhoods WHERE map_stylized_key IS NOT NULL
+  UNION ALL SELECT photo_key FROM issues WHERE photo_key IS NOT NULL
+  UNION ALL SELECT image_key FROM suggestions WHERE image_key IS NOT NULL" \
+| docker compose -f $F exec -T web sh -c 'n=0; t=0; while read k; do t=$((t+1));
+    [ -f "/app/uploads/$k" ] || { echo "THIẾU $k"; n=$((n+1)); }; done; echo "key trong DB: $t · thiếu file: $n"'
+```
+
+(Kubernetes: thay `docker compose … exec -T web` bằng `kubectl exec -i deploy/<web> --`.) Mở thử vài ảnh
+trên trang chủ / popup khu phố.
+
+**Bước 5 — dọn** (sau vài ngày chạy ổn):
+
+```bash
+docker compose -f $F up -d --remove-orphans     # dừng + xoá container storage cũ
+docker volume rm khupho_minio_data               # KHÔNG hoàn tác được — backup uploads trước (§9.1)
+sed -i '/^MINIO_/d' .env                         # các biến này không còn được đọc
+rm -rf /var/backups/khupho/minio-export
+```
+
+Đã chạy thử toàn bộ bước 1 → 4 trên dữ liệu dev (95 object): 95 file, băm SHA-256 khớp từng object
+lấy mẫu, 95/95 key trong DB có file, mọi file thuộc UID/GID 1001.

@@ -1,5 +1,5 @@
 // Bộ đồ nghề cho test E2E: gọi THẲNG vào server đang chạy (dev hoặc `next start`),
-// không mock gì cả — đi qua route thật, DB thật, MinIO thật.
+// không mock gì cả — đi qua route thật, DB thật, thư mục ảnh thật.
 //
 // Vì sao không dùng Playwright: dự án chưa có runtime trình duyệt trong node_modules và
 // phần cần trình duyệt thật (số đo px, media query, prefers-reduced-motion) đằng nào

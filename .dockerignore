@@ -16,7 +16,9 @@ coverage
 # Backup sinh ngay trong /opt/khu_pho khi vận hành (docs/18 §9) — file vài trăm MB,
 # lọt vào build context là mỗi lần deploy phải gửi lại toàn bộ cho daemon.
 backup-*.sql.gz
-minio-*.tar.gz
+uploads-*.tar.gz
+# Ảnh upload lúc dev ngoài Docker — không nướng vào image (container có volume riêng)
+uploads
 *.bak
 *.log
 *.tsbuildinfo

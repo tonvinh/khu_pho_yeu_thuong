@@ -2,7 +2,7 @@
 
 Website hub chiến dịch **"Khu phố biết thương"** — FPT Telecom.
 Toàn bộ đặc tả nằm trong `docs/` (đọc `docs/CLAUDE.md` để biết thứ tự đọc và các quy tắc cứng:
-4N chấm thủ công, không OTP/SMS, bảo mật SĐT, Docker 4 service...).
+4N chấm thủ công, không OTP/SMS, bảo mật SĐT, Docker 3 service...).
 
 - **Production**: https://khupho.ailab.city · Admin: https://khupho.ailab.city/admin
 - **Repo**: gốc git chính là thư mục app. Trên VM, repo clone tại `/opt/khu_pho` và mọi lệnh
@@ -14,13 +14,12 @@ Toàn bộ đặc tả nằm trong `docs/` (đọc `docs/CLAUDE.md` để biết
 
 ## 1. Stack & kiến trúc
 
-Next.js 15 (App Router) · React 19 · TailwindCSS 4 · PostgreSQL 16 · MinIO · Caddy · Docker · pnpm 9 · Node 22.
+Next.js 15 (App Router) · React 19 · TailwindCSS 4 · PostgreSQL 16 · Caddy · Docker · pnpm 9 · Node 22.
 
 | Thành phần | Vai trò |
 |---|---|
-| `web` | Next.js standalone (multi-stage Dockerfile, non-root, healthcheck `/api/v1/counters`) |
+| `web` | Next.js standalone (multi-stage Dockerfile, non-root UID/GID **1001**, healthcheck `/api/v1/counters`). Ảnh upload lưu ở `/app/uploads` (volume `uploads_data`; production Kubernetes mount PVC NFS) — key `public/...` stream qua `/api/img/[...key]`, `private/...` chỉ admin |
 | `db` | PostgreSQL 16 — schema ở `db/migrations/`, chạy bằng `scripts/migrate.mjs` |
-| `storage` | MinIO — ảnh `public/...` (stream qua `/api/img/[...key]`) và `private/...` (chỉ admin) |
 | `proxy` | Caddy — service duy nhất mở port, TLS tự động, security headers (`deploy/Caddyfile`) |
 
 Điểm thiết kế chính:
@@ -42,9 +41,9 @@ src/lib/             crypto, phone, session, csrf, score-service, storage, styli
 src/app/api/v1/      API public + cư dân (docs/03 §4)
 src/app/api/admin/   API admin (duyệt, biển, leads, import, fraud)
 src/app/             trang chủ, share (/dai-su /bien /khu-pho + OG động), admin UI
-deploy/Caddyfile             proxy + TLS cho mode 4-service
+deploy/Caddyfile             proxy + TLS cho mode 3-service
 deploy/khupho-headers.caddy  security header — NGUỒN DUY NHẤT, cả 2 mode đều import
-docker-compose.yml           compose "chuẩn" 4 service — máy/VM riêng (mode A)
+docker-compose.yml           compose "chuẩn" 3 service — máy/VM riêng (mode A)
 docker-compose.prod.yml      compose production thực tế — VM dùng chung, không có proxy (mode B)
 Dockerfile                   multi-stage node:22-alpine, pnpm@9 ghim cứng
 .github/workflows/deploy.yml CI/CD — self-hosted runner trên VM
@@ -60,17 +59,16 @@ Bảng đầy đủ + cách sinh/backup secrets: [docs/18 §2](docs/18-TRIEN-KHA
 | `PHONE_PEPPER` | ✅ | Pepper cho HMAC SĐT — `openssl rand -hex 32`. **KHÔNG xoay được giữa chừng** (đổi là mất toàn bộ định danh cư dân). |
 | `PHONE_AES_KEY` | ✅ | Khoá AES-256-GCM mã hoá SĐT lead — `openssl rand -base64 32`. Tách biệt hoàn toàn với PEPPER. |
 | `POSTGRES_PASSWORD` | ✅ | Mật khẩu Postgres (user/db mặc định `khupho`). |
-| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | ✅ | Credentials MinIO. |
 | `DATABASE_URL` | dev | Chỉ cần khi chạy ngoài Docker. Trong compose bị override thành `@db:5432`. |
 | `BASE_PATH` | | **Chốt 8/9: `/khu-pho-biet-thuong`** (`https://fpt.vn/khu-pho-biet-thuong`); `""` nếu dùng domain riêng. Là **build arg** — đổi phải rebuild. |
 | `SITE_ORIGIN` | | Origin tuyệt đối cho OG tag / share link — **chỉ origin, KHÔNG kèm path** (code tự ghép `basePath`). Production dự kiến: `https://fpt.vn`; bản đang chạy thử: `https://khupho.ailab.city`. |
 | `SITE_ADDRESS` | | Chỉ dùng cho mode 4-service: `:80` local, hoặc domain để Caddy tự cấp TLS. |
-| `MINIO_BUCKET` | | Mặc định `khupho` (bucket tự tạo ở lần upload đầu). |
+| `UPLOAD_DIR` | | Thư mục ảnh upload, mặc định `/app/uploads` (compose ghi đè sẵn). Dev ngoài Docker: `./uploads`. |
 | `SEED_ADMIN_PASSWORD` | | Tuỳ chọn, cho `pnpm seed`. |
 
 ## 4. Chạy dev local
 
-Yêu cầu: Node ≥ 22, pnpm 9, Postgres 16 + MinIO (cài trực tiếp hoặc mượn container từ compose).
+Yêu cầu: Node ≥ 22, pnpm 9, Postgres 16 (cài trực tiếp hoặc mượn container từ compose). Ảnh upload ghi vào `./uploads` (đặt `UPLOAD_DIR=./uploads` trong `.env`, thư mục đã gitignore).
 
 ```bash
 cp .env.example .env             # điền PHONE_PEPPER, PHONE_AES_KEY, DATABASE_URL localhost
@@ -89,8 +87,8 @@ pnpm create-admin <email@fpt.com> <mật_khẩu_≥12_ký_tự> [--totp]
 pnpm seed:admin-demo             # dữ liệu demo cho màn admin
 ```
 
-Mượn Postgres/MinIO từ compose cho nhanh: `docker compose up -d db storage`
-(hai service này không publish port — thêm `ports` trong file compose override local nếu cần).
+Mượn Postgres từ compose cho nhanh: `docker compose up -d db`
+(service này không publish port — thêm `ports` trong file compose override local nếu cần).
 
 ## 5. Deploy production — tóm tắt
 
@@ -100,14 +98,14 @@ Mượn Postgres/MinIO từ compose cho nhanh: `docker compose up -d db storage`
 
 Hai mode:
 
-| | Mode A — compose 4 service | Mode B — VM dùng chung *(đang chạy thật)* |
+| | Mode A — compose 3 service | Mode B — VM dùng chung *(đang chạy thật)* |
 |---|---|---|
 | File | `docker-compose.yml` | `docker-compose.prod.yml` |
 | Proxy/TLS | service `proxy` trong Docker | Caddy systemd **trên host** |
 | `web` | không publish port | publish `127.0.0.1:3001` |
 | Dùng khi | máy/VM riêng cho dự án | VM dùng chung với app khác |
 
-**Mode A** ([docs/18 §4](docs/18-TRIEN-KHAI-VAN-HANH.md#4-mode-a--compose-4-service-máyvm-riêng)):
+**Mode A** ([docs/18 §4](docs/18-TRIEN-KHAI-VAN-HANH.md#4-mode-a--compose-3-service-máyvm-riêng)):
 
 ```bash
 cp .env.example .env             # điền secrets thật; SITE_ADDRESS=<domain> để tự động TLS
@@ -145,7 +143,7 @@ Làm tay hoặc rollback: [docs/18 §5](docs/18-TRIEN-KHAI-VAN-HANH.md#5-deploy-
 Đầy đủ (log, cron backup, restore, theo dõi sức khoẻ): [docs/18 §8–§9](docs/18-TRIEN-KHAI-VAN-HANH.md#8-vận-hành-hằng-ngày).
 
 ```bash
-F=docker-compose.prod.yml   # (bỏ "-f $F" nếu dùng mode 4-service)
+F=docker-compose.prod.yml   # (bỏ "-f $F" nếu dùng mode 3-service)
 
 docker compose -f $F ps                               # trạng thái + healthcheck
 docker compose -f $F logs -f --tail=200 web           # log app
@@ -153,9 +151,15 @@ docker compose -f $F exec db psql -U khupho khupho    # vào Postgres
 
 # Backup DB (db không publish port — backup qua exec)
 docker compose -f $F exec -T db pg_dump -U khupho khupho | gzip > backup-$(date +%F).sql.gz
+# Backup ảnh upload (stream tar ra host — không phụ thuộc tên volume)
+docker compose -f $F exec -T web tar czf - -C /app/uploads . > uploads-$(date +%F).tar.gz
 # Restore
 gunzip -c backup-YYYY-MM-DD.sql.gz | docker compose -f $F exec -T db psql -U khupho khupho
+docker compose -f $F exec -T web tar xzf - -C /app/uploads < uploads-YYYY-MM-DD.tar.gz
 ```
+
+Production **Kubernetes** (ảnh trên PVC NFS, không dùng compose): yêu cầu cho bên vận hành ở
+[docs/18 §12](docs/18-TRIEN-KHAI-VAN-HANH.md#12-kubernetes--nfs--yêu-cầu-cho-bên-vận-hành).
 
 ⚠️ Backup DB **vô dụng nếu mất `PHONE_PEPPER`** — cất 2 khoá trong `.env` ở nơi khác, tách khỏi dump DB.
 

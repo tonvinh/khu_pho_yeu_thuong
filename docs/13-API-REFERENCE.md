@@ -60,7 +60,7 @@ tiếng Việt trong `error`.
 
 - **Không endpoint nào trả về SĐT gốc** trừ 2 chỗ dành riêng cho admin và **đều ghi audit log**: `GET /api/admin/leads/{id}` và `GET /api/admin/leads?format=csv`.
 - Không endpoint public nào trả `phone_hash`, `*_key` ảnh nội bộ, `review_note`, `select_note`.
-- Ảnh trả về dưới dạng `*_url` đã qua `imgUrl()`, không phải key MinIO thô.
+- Ảnh trả về dưới dạng `*_url` đã qua `imgUrl()`, không phải key lưu trữ thô.
 
 ---
 
@@ -387,7 +387,7 @@ Thu hồi phiên (`revoked=true`) + xoá cookie. `{ "ok": true }`.
 
 ### 2.15 `GET /api/img/{key…}`
 
-Stream ảnh từ MinIO. **Chỉ** phục vụ key bắt đầu `public/`; chứa `..` hoặc prefix khác → 404.
+Stream ảnh từ thư mục upload (`UPLOAD_DIR`, mặc định `/app/uploads`). **Chỉ** phục vụ key bắt đầu `public/`; key sai quy ước (`..`, `\`, byte null, đoạn bắt đầu bằng `.`), prefix khác, hoặc file không tồn tại → 404.
 `Cache-Control: public, max-age=86400, immutable`. Content-Type suy từ đuôi (`.webp`/`.png`/mặc định jpeg).
 
 ---
@@ -529,7 +529,8 @@ dù câu không cao phiếu nhất (admin chọn có chủ đích từ drawer, `
 dòng audit nào**. Xem [`20`](20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md) §3.
 
 `POST /api/admin/suggestions/{id}/photo` (~~`/sign-photo`~~) — multipart `file` (≤10MB) →
-`public/signs/{id}/photo.webp`, ghi `suggestions.image_key`, trả `image_url`.
+`public/signs/{id}/photo.webp`, ghi `suggestions.image_key`, trả `image_url`. Ghi file lỗi → **500**
+`{"error":"Không lưu được ảnh, vui lòng thử lại sau"}`.
 
 `POST /api/admin/suggestions/import` — import **câu duyệt** từ Excel/CSV 5 cột
 (`Câu | Tên khu phố (phải có sẵn) | Vị trí treo biển | Chủ đề (mã hoặc tên) | Người đăng`);
@@ -542,14 +543,14 @@ tạo mới ở `waiting` rồi chuyển `voting`, người đăng chưa có th�
 
 | Endpoint | Mô tả |
 |---|---|
-| `GET /api/admin/neighborhoods` | Danh sách **kể cả khu đã xoá mềm** (kèm `deleted_at` — bảng admin có tab "🗑 Đã xoá", các tab khác lọc ở client). Trả `visible` (= `NOT hidden`), `is_featured`, `featured_position`, `certified_4n`, `certified_at`, `certificate_photo_url`, `photos[{position,url}]`, `total_issues`, `signed_issues`. **Không trả key MinIO thô** |
+| `GET /api/admin/neighborhoods` | Danh sách **kể cả khu đã xoá mềm** (kèm `deleted_at` — bảng admin có tab "🗑 Đã xoá", các tab khác lọc ở client). Trả `visible` (= `NOT hidden`), `is_featured`, `featured_position`, `certified_4n`, `certified_at`, `certificate_photo_url`, `photos[{position,url}]`, `total_issues`, `signed_issues`. **Không trả key lưu trữ thô** |
 | `POST /api/admin/neighborhoods` | `{ "name", "city", "ward", "slug?", "visible?" }` — ~~`district`~~ đã bỏ; **`city` và `ward` bắt buộc** và phải khớp danh mục 34 tỉnh (`geoError()`). Slug tự sinh nếu bỏ trống. Trùng tên → **409**; nếu tên đó thuộc khu **đã xoá** thì lỗi nói rõ *"vào tab 'Đã xoá' để khôi phục thay vì tạo mới"* |
 | `PATCH /api/admin/neighborhoods/{id}` | `{ name?, ward?, city?, visible?, is_featured?, featured_position? }`. **Từ 7/9 ba trạng thái bật/tắt KHÔNG điều kiện** (trước: tiêu biểu bắt buộc đang hiển thị). `featured_position` là **slot slide 1–10**; trùng slot của khu khác ⇒ **HOÁN ĐỔI** hai khu, không báo lỗi. Bỏ `is_featured` ⇒ nhả slot. Khu đã xoá → **409** "khôi phục trước khi sửa" |
 | `PATCH /api/admin/neighborhoods/{id}` với `{ "restore": true }` | **Khôi phục** khu đã xoá — về trạng thái **ẩn** (`hidden=true`) để admin kiểm rồi mới bật |
 | `DELETE /api/admin/neighborhoods/{id}` | **Xoá mềm**: `deleted_at = now()`, `hidden = true`, `is_featured = false`, nhả slot. Dữ liệu (góc phố, câu nhắc, phiếu, điểm) **giữ nguyên**. Xoá lại khu đã xoá → 200, không đổi gì |
 | `PATCH /api/admin/neighborhoods/{id}/certify` | `{}` → cấp chứng nhận. **Từ 7/9 BỎ điều kiện "100% biển đã treo"** — chứng nhận là quyết định vận hành (có buổi trao biển ngoài đời), UI chỉ hiện tiến độ để tham khảo.<br>`{ "certified_at": "2026-09-01" }` đặt ngày thủ công · `{ "revoke": true }` thu hồi (**không** xoá ảnh chứng nhận). Khu đã xoá → 409 |
-| `POST` · `DELETE /api/admin/neighborhoods/{id}/photos` | Ảnh tổng quan khu phố, **tối đa 4**: multipart `{ file, position? (1–4) }` — không gửi `position` thì lấy slot trống đầu tiên (đủ 4 → **409**). Server chuẩn hoá **1280×720 WebP** nên các slot luôn cùng cỡ |
-| `POST` · `DELETE /api/admin/neighborhoods/{id}/certificate` | Ảnh chứng nhận 4N, **tối đa 1**, upload được bất kỳ lúc nào (không phụ thuộc `certified_4n` — migration 005). Ảnh cũ bị xoá khỏi MinIO khi thay |
+| `POST` · `DELETE /api/admin/neighborhoods/{id}/photos` | Ảnh tổng quan khu phố, **tối đa 4**: multipart `{ file, position? (1–4) }` — không gửi `position` thì lấy slot trống đầu tiên (đủ 4 → **409**). Server chuẩn hoá **1280×720 WebP** nên các slot luôn cùng cỡ. Ghi file lỗi → **500** câu chung (như dòng chứng nhận) |
+| `POST` · `DELETE /api/admin/neighborhoods/{id}/certificate` | Ảnh chứng nhận 4N, **tối đa 1**, upload được bất kỳ lúc nào (không phụ thuộc `certified_4n` — migration 005). Ảnh cũ bị xoá khỏi thư mục upload khi thay. Ghi file lỗi (volume chưa mount/không có quyền) → **500** `{"error":"Không lưu được ảnh, vui lòng thử lại sau"}` — chi tiết chỉ ở log server |
 | `GET` · `POST /api/admin/neighborhoods/import` | `GET` tải template `.xlsx`; `POST` multipart `{ file, mode: validate\|commit }` — Excel/CSV **3 cột** `Tên khu phố \| Tỉnh/Thành phố \| Phường/Xã`, all-or-nothing. `maxDuration = 60s` |
 
 ~~`POST` / `GET /api/admin/neighborhoods/{id}/map-image`~~ — **hai route này không tồn tại trong code.**
@@ -681,7 +682,7 @@ Kiểm tra từng dòng: thiếu trường bắt buộc · trùng tên trong fil
 
 `mode=commit`:
 - Còn lỗi → **422**, **không ghi gì** (all-or-nothing).
-- Sạch lỗi → ghi toàn bộ trong **một transaction**; issue import vào thẳng `waiting`. Ảnh upload lên MinIO **sau khi DB commit** để lỗi upload không phá dữ liệu:
+- Sạch lỗi → ghi toàn bộ trong **một transaction**; issue import vào thẳng `waiting`. Ảnh ghi vào thư mục upload **sau khi DB commit** để lỗi upload không phá dữ liệu:
   ```json
   { "mode": "commit", "ok": true,
     "created": { "neighborhoods": 20, "issues": 45 }, "upload_errors": [] }

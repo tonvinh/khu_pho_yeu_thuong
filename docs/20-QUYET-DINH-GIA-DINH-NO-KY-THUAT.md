@@ -1,6 +1,6 @@
 # 20 — Quyết định, giả định & nợ kỹ thuật
 
-> Cập nhật: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9.
+> Cập nhật: 17/9/2026 — bỏ object storage, ảnh lưu filesystem/NFS (§2, §3.1). Trước đó 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9.
 > Nơi ghi "vì sao hệ thống làm thế này" và "chỗ nào còn thiếu". Cập nhật mỗi khi có quyết định kiến trúc mới.
 
 ## 1. Quyết định đã chốt (từ `07-NFR-TECH.md` §4)
@@ -16,7 +16,7 @@
 | **Q7** | Có vai trò gov_viewer? | **Không** — chỉ admin | Không có phân quyền con trong `admin_users` |
 | **Q8** | Chia sẻ mạng xã hội? | **OG image động** cho 3 loại trang share | `src/lib/og.tsx` + 3 route `opengraph-image.tsx` |
 | **D11** | Đăng nhập admin? | Email `@fpt.com` + Argon2id + TOTP tuỳ chọn, phiên tách biệt | `admin_users`/`admin_sessions`, cookie `kp_admin_session` Strict 8h |
-| **D12** | Hạ tầng? | **Toàn bộ Docker**, chỉ proxy mở port, migration là lệnh riêng | `docker-compose.yml` 4 service + `deploy/Caddyfile` |
+| **D12** | Hạ tầng? | **Toàn bộ Docker**, chỉ proxy mở port, migration là lệnh riêng | `docker-compose.yml` 3 service (4 cho tới 17/9 — bỏ `storage`) + `deploy/Caddyfile` |
 
 ## 2. Quyết định phát sinh trong lúc triển khai
 
@@ -24,11 +24,11 @@
 |---|---|---|
 | **Phiên bằng cookie + bảng `sessions`**, không dùng JWT (dù `03-DATA-MODEL` §4 ghi "Resident (JWT)") | Cần **thu hồi được phiên** ngay lập tức (shadow-ban, yêu cầu xoá dữ liệu). JWT không thu hồi được nếu không có blacklist — mà blacklist thì đã là session | Mỗi request có thêm 1 truy vấn DB (rất rẻ, có index UNIQUE trên `token_hash`) |
 | **Lưu SĐT mã hoá trong `sessions`** | Đặc tả yêu cầu lead tầng 1 không hỏi lại SĐT, nhưng hash một chiều không khôi phục được | SĐT mã hoá tồn tại theo vòng đời phiên kể cả khi chưa opt-in. Đã ghi ASSUMPTION trong `001_init.sql` và báo PM |
-| **Rate limit / TOTP pending / cache counters lưu in-memory** | MVP chốt chạy 1 instance; tránh thêm Redis vào 4 service đã quyết | Không scale ngang được (xem §3) |
+| **Rate limit / TOTP pending / cache counters lưu in-memory** | MVP chốt chạy 1 instance; tránh thêm Redis vào bộ service đã quyết | Không scale ngang được (xem §3) |
 | **Polling 20s thay vì WebSocket** | NFR chỉ yêu cầu cập nhật ≤30s; WebSocket thêm phức tạp hạ tầng | Tải nhẹ nhưng đều đặn lên server; chấp nhận được ở quy mô chiến dịch |
 | **Seed dùng con số khớp CÔNG THỨC, không khớp design** | Vài con số trong design (VD "52 lượt thương" của Bà Liên) mâu thuẫn công thức điểm đã duyệt. Test case 05 §4 là nguồn sự thật | Ảnh chụp màn hình demo lệch nhẹ so với file design |
 | **Người "đóng góp" không tính người chỉ bình chọn** | Cần khớp seed 06 §5 và tinh thần "người góp lời" | Con số nhỏ hơn nếu tính cả người bấm thương. Đã ghi ASSUMPTION trong `counters.ts` |
-| **Import ghi DB trước, upload ảnh sau** | Lỗi upload MinIO không được phép phá vỡ tính all-or-nothing của dữ liệu | Có thể tồn tại bản ghi trỏ tới ảnh chưa upload được; API trả `upload_errors` để admin biết mà bổ sung |
+| **Import ghi DB trước, upload ảnh sau** | Lỗi ghi ảnh không được phép phá vỡ tính all-or-nothing của dữ liệu | Có thể tồn tại bản ghi trỏ tới ảnh chưa upload được; API trả `upload_errors` để admin biết mà bổ sung |
 | **Scripts giữ `.mjs` thuần, không TypeScript** | Chạy được trực tiếp trong image production (không có tsx/ts-node ở runner) | Không có kiểm kiểu ở scripts |
 | **Bulk import đưa issue thẳng vào `waiting`** | Dữ liệu do admin nhập ⇒ coi như đã duyệt | Không sinh điểm cho ai (không có `proposed_by`) — đúng ý đồ |
 | **DESIGN 18/8 THẮNG SPEC 02/06 (chốt 2/9)** — xem §2.1 | PM chốt "bám thiết kế đã duyệt 100%" | 4 khối copy bắt buộc trong đặc tả gốc bị gỡ khỏi giao diện |
@@ -38,6 +38,7 @@
 | **`featured_position` = slot slide, đúng 10 chỗ, duy nhất** (7/9) | Trước đó slider lọc theo `certified_4n` nên cả cờ tiêu biểu lẫn vị trí đều **vô nghĩa** — admin xếp mà trang chủ không đổi | Unique index bộ phận + PATCH 3 bước trong 1 transaction để **hoán đổi** hai khu |
 | **Tab 1 chỉ hiện góc phố chưa có câu nào** (7/9) | Góc đã có câu thuộc về tab 2 (bình chọn từng câu); không lọc thì hai tab trùng nội dung | Bộ lọc đặt ở **client** trong `IssueBoard`, KHÔNG ở `/api/v1/issues` — `SpotPickerModal` vẫn cần thấy mọi góc phố chưa treo biển |
 | **Bỏ ô "câu nhắc gửi kèm" ở popup đề xuất** (7/9) | `.fig` bản 2/9 không vẽ ô này | Client không gửi `suggested_content`; **route vẫn nhận** để bật lại được. Admin cũng gỡ khối "💬 Câu nhắc gửi kèm" nhưng **hành vi backend giữ nguyên** |
+| **Bỏ service object storage — ảnh lưu filesystem `/app/uploads`** (17/9, đã duyệt; quy tắc cứng 11 đổi theo) | Production chạy Kubernetes, bên vận hành mount NFS (PVC ReadWriteMany) vào `/app/uploads`; bớt một service phải vận hành/backup/cấp secret | Key trong DB giữ nguyên (`public/…`, `private/…` = đường dẫn tương đối dưới `UPLOAD_DIR`) nên **không migration**, URL `/api/img/<key>` không đổi. Key thành đường dẫn file ⇒ phải kiểm chặt (`resolveKey`). NFS không áp `fsGroup` ⇒ image chốt **UID/GID 1001**. Không thêm dependency (CI FPT dùng base image cài sẵn `node_modules`) |
 | **`SpotPickerModal` tự thiết kế** (5/9) | Design chưa vẽ frame cho popup chọn góc phố, nhưng luồng bắt buộc phải có | Dựng theo khung `Modal` chung + mượn cấu trúc dòng tab 1; nếu Design vẽ sau thì phải đối chiếu lại |
 | **Nguồn design = `.fig` HIỆN TẠI trong repo** (chốt 4/9) | File trên figma.com đã đi trước bản `.fig` local; xin export mới thì chờ | Ngoại lệ duy nhất: hai nhãn nút chốt bằng lời (tab 2 `Bình chọn` xanh, tab 3 `Xem lời nhắc` cam). Số đo px của bản live **chưa đo được** |
 | **Chân trang giữ đủ 4 dòng** (chốt 4/9) | Dòng "Đã là khách hàng của FPT… 1900 6600" là cam kết với người dùng | Khối chữ cao 134 vs `.fig` 84 — **lệch có chủ ý**, đừng "sửa" lại theo `.fig` |
@@ -106,6 +107,11 @@ Xếp theo mức độ cần xử lý.
 
 ### 3.1 Chặn scale ngang (cần làm trước khi chạy >1 instance)
 
+> **Ảnh upload KHÔNG còn chặn scale ngang** (17/9): lưu file trên NFS dùng chung, ghi tạm rồi
+> `rename`, không cache trạng thái file trong RAM — đã thử 2 container ghi/đọc chéo cùng volume và
+> 20 lần ghi đồng thời cùng một key. Nhưng **ba dòng dưới vẫn còn nguyên**: production k8s chạy
+> >1 replica thì đăng nhập admin có TOTP cần sticky session (hoặc xử lý dòng 2) trước.
+
 | Vấn đề | Nơi | Hệ quả nếu bỏ qua | Hướng xử lý |
 |---|---|---|---|
 | Rate limit in-memory | `src/lib/rate-limit.ts` | Hạn mức nhân lên theo số instance ⇒ chống lạm dụng yếu đi | Chuyển sang Redis hoặc bảng đếm trong Postgres |
@@ -121,7 +127,7 @@ Xếp theo mức độ cần xử lý.
 | **Sửa câu nhắc qua drawer không ghi audit** | `PATCH /api/admin/suggestions/[id]` với `action:"update"` chỉ ghi `audit_logs` khi request có đổi `status`. Sửa nội dung câu, chủ đề, vị trí, **tên hiển thị của tác giả** (ghi thẳng vào `users.display_name`) ⇒ không để lại dòng nào | Ghi một audit `suggestion_edit` kèm diff các trường, độc lập với việc đổi trạng thái |
 | **Chưa có script xoay `PHONE_AES_KEY`** | Xoay khoá cần giải mã bằng khoá cũ + mã hoá lại toàn bộ `leads.phone_encrypted`, `users.phone_encrypted`, `sessions.phone_encrypted` | Viết migration script nhận cả 2 khoá |
 | **`redactPhonesInText` chưa gắn vào logger** | Hàm đã có + đã test nhưng chưa có logger tập trung gọi nó | Bọc một `log()` chung, dùng thay `console.*` |
-| **Chưa có backup tự động** | Backup DB/MinIO hiện là lệnh chạy tay | Thêm cron trên VM + kiểm tra restore định kỳ |
+| **Chưa có backup tự động** | Backup DB + thư mục ảnh upload hiện là lệnh chạy tay (production k8s: backup NFS do bên vận hành lo) | Thêm cron trên VM + kiểm tra restore định kỳ |
 
 ### 3.3 Nghiệp vụ chưa hoàn chỉnh
 

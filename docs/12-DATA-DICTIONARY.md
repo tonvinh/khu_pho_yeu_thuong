@@ -41,7 +41,7 @@ admin thay/xoá ảnh.
 | `name` | varchar(200) | NOT NULL, **UNIQUE** | Tên hiển thị. UNIQUE là chốt chặn chống trùng khi bulk import |
 | `ward` / `city` | varchar(120) | | Phường·xã / tỉnh·thành, lưu **TÊN chính thức** theo danh mục `wards`/`provinces`. ~~`district`~~ **đã DROP** (migration 003 — địa giới mới 1/7/2025 bỏ cấp quận/huyện) |
 | `slug` | varchar(120) | NOT NULL, **UNIQUE** | Dùng cho URL share `/khu-pho/{slug}`; sinh từ tên (bỏ dấu, `đ`→`d`) |
-| `map_image_key` | varchar(500) | | Key MinIO ảnh bản đồ **GỐC** — `private/maps/{id}/original.webp`, **chỉ admin**. ⚠️ Trang chủ bỏ bản đồ từ 1/8 ⇒ **không route nào còn ghi/đọc cột này** (chỉ `scripts/seed-images.mjs`) |
+| `map_image_key` | varchar(500) | | Key ảnh bản đồ **GỐC** — `private/maps/{id}/original.webp`, **chỉ admin**. ⚠️ Trang chủ bỏ bản đồ từ 1/8 ⇒ **không route nào còn ghi/đọc cột này** (chỉ `scripts/seed-images.mjs`) |
 | `map_stylized_key` | varchar(500) | | Key bản **cách điệu** — `public/maps/{id}/stylized.webp`. Nay chỉ còn là **ảnh dự phòng** cho slider/popup khi khu chưa có `neighborhood_photos` |
 | `certified_4n` | boolean | NOT NULL DEFAULT false | Đã đạt chứng nhận "Khu phố biết thương". **Từ 7/9 admin bật/tắt tự do** — bỏ điều kiện "100% biển đã treo" (quyết định vận hành, có buổi trao biển ngoài đời) |
 | `certified_at` | date | | Ngày cấp chứng nhận |

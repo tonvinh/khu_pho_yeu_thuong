@@ -45,7 +45,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   const buf = Buffer.from(await file.arrayBuffer());
   const key = `public/neighborhoods/${id}/photo-${position}-${Date.now()}.webp`;
-  await putObject(key, await toCover(buf), "image/webp");
+  const webp = await toCover(buf);
+  // Lỗi ghi (NFS chưa mount/không có quyền) đã log chi tiết trong storage — client chỉ
+  // nhận câu chung, không lộ đường dẫn hay mã lỗi hệ thống.
+  const saved = await putObject(key, webp).catch(() => null);
+  if (!saved) return jsonError(500, "Không lưu được ảnh, vui lòng thử lại sau");
 
   const old = taken.find((p) => p.position === position);
   await q(

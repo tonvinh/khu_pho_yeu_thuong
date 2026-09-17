@@ -2,7 +2,7 @@
 //
 // Tách riêng vì màn admin "Lời nhắc" là client component nhưng cần
 // SITE_CONTENT_DEFAULTS để preview biển (SignCard). Import thẳng từ
-// ./site-content sẽ kéo cả `pg` và `minio` vào bundle client → webpack báo
+// ./site-content sẽ kéo cả `pg` vào bundle client → webpack báo
 // "Can't resolve 'tls'/'net'/'fs'/'dns'" và build production CHẾT (dev server
 // biên dịch lười nên không lộ ra khi chạy `pnpm dev`).
 //

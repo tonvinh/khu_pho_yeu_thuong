@@ -1,52 +1,92 @@
-// MinIO (S3-compatible) — bucket private; public truy cập qua route stream /api/img.
-// Key prefix: public/... (ảnh địa điểm, ảnh biển, bản đồ cách điệu, ảnh khu phố)
-//             private/... (ảnh bản đồ GỐC — chỉ admin, Q3)
-import { Client } from "minio";
+// Ảnh upload lưu FILESYSTEM (17/9 — thay object storage): file nằm ở `${UPLOAD_DIR}/${key}`.
+// Production (Kubernetes) mount PVC NFS ReadWriteMany vào /app/uploads, nhiều pod cùng
+// ghi/đọc một thư mục ⇒ module này KHÔNG giữ trạng thái nào trong bộ nhớ (không cache
+// danh sách file, không cache "thư mục đã tạo"), mọi lần ghi là ghi tạm rồi rename.
+//
+// Key giữ nguyên quy ước cũ (không migration DB, không đổi URL /api/img/<key>):
+//   public/...   ảnh khu phố, chứng nhận, biển, bản đồ cách điệu — stream qua /api/img
+//   private/...  ảnh bản đồ GỐC — chỉ admin (Q3), /api/img từ chối
+import { randomBytes } from "node:crypto";
+import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
+import path from "node:path";
 import { env } from "./env";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __kpMinio: Client | undefined;
-}
+const KEY_PREFIXES = ["public", "private"];
+// Mỗi đoạn key chỉ gồm chữ/số/._- và KHÔNG bắt đầu bằng "." — vừa chặn "."/"..",
+// vừa bảo đảm file tạm (".<tên>.<ngẫu nhiên>.tmp") không bao giờ phục vụ ra ngoài.
+const SEGMENT = /^[A-Za-z0-9_-][A-Za-z0-9._-]*$/;
 
-export function minio(): Client {
-  if (!globalThis.__kpMinio) {
-    const c = env.MINIO;
-    globalThis.__kpMinio = new Client({
-      endPoint: c.endPoint,
-      port: c.port,
-      useSSL: c.useSSL,
-      accessKey: c.accessKey,
-      secretKey: c.secretKey,
-    });
+export class InvalidKeyError extends Error {
+  constructor(key: string) {
+    super(`Key ảnh không hợp lệ: ${JSON.stringify(key.slice(0, 200))}`);
+    this.name = "InvalidKeyError";
   }
-  return globalThis.__kpMinio;
 }
 
-export async function ensureBucket(): Promise<void> {
-  const { bucket } = env.MINIO;
-  const exists = await minio().bucketExists(bucket).catch(() => false);
-  if (!exists) await minio().makeBucket(bucket);
+/** Key → đường dẫn tuyệt đối trong UPLOAD_DIR. Ném InvalidKeyError với mọi key lạ:
+ *  prefix khác public/private, đường dẫn tuyệt đối, `..`, `\`, byte null, đoạn rỗng. */
+export function resolveKey(key: string): string {
+  if (typeof key !== "string" || key.length === 0 || key.length > 500) {
+    throw new InvalidKeyError(String(key));
+  }
+  const parts = key.split("/");
+  if (parts.length < 2 || !KEY_PREFIXES.includes(parts[0]) || !parts.every((p) => SEGMENT.test(p))) {
+    throw new InvalidKeyError(key);
+  }
+  const root = env.UPLOAD_DIR;
+  const file = path.resolve(root, ...parts);
+  // Lớp chặn thứ hai — regex ở trên đã loại hết, đây chỉ là chốt an toàn.
+  if (!file.startsWith(root.endsWith(path.sep) ? root : root + path.sep)) throw new InvalidKeyError(key);
+  return file;
 }
 
-export async function putObject(key: string, buf: Buffer, contentType: string): Promise<string> {
-  await ensureBucket();
-  await minio().putObject(env.MINIO.bucket, key, buf, buf.length, {
-    "Content-Type": contentType,
-  });
-  return key;
+function errCode(e: unknown): string {
+  return (e as NodeJS.ErrnoException)?.code || (e as Error)?.name || "UNKNOWN";
 }
 
-/** Xoá object (dọn ảnh cũ khi thay/xoá ảnh khu phố). Lỗi nuốt lặng — key mồ côi vô hại. */
+/** Lỗi đọc vì file không tồn tại (route ảnh trả 404 mà không cần log). */
+export function isMissingFile(e: unknown): boolean {
+  return (e as NodeJS.ErrnoException)?.code === "ENOENT";
+}
+
+/** Ghi ảnh: ghi file tạm CÙNG thư mục → fsync → rename. rename trong cùng thư mục là
+ *  nguyên tử (kể cả trên NFS) nên người đọc không bao giờ thấy file dở; hai pod ghi
+ *  cùng key thì bản rename sau thắng, không file nào hỏng. */
+export async function putObject(key: string, buf: Buffer): Promise<string> {
+  const file = resolveKey(key);
+  const dir = path.dirname(file);
+  const tmp = path.join(dir, `.${path.basename(file)}.${randomBytes(8).toString("hex")}.tmp`);
+  try {
+    await mkdir(dir, { recursive: true });
+    const fh = await open(tmp, "wx");
+    try {
+      await fh.writeFile(buf);
+      await fh.sync();
+    } finally {
+      await fh.close();
+    }
+    await rename(tmp, file);
+    return key;
+  } catch (e) {
+    await rm(tmp, { force: true }).catch(() => {});
+    console.error(`[storage] ghi ảnh thất bại UPLOAD_DIR=${env.UPLOAD_DIR} code=${errCode(e)} key=${key}`);
+    throw e;
+  }
+}
+
+/** Xoá ảnh (dọn ảnh cũ khi thay/xoá). File không tồn tại = đã xong. Lỗi khác chỉ log —
+ *  file mồ côi vô hại, không được làm hỏng thao tác admin đã ghi DB xong. */
 export async function removeObject(key: string): Promise<void> {
-  await minio().removeObject(env.MINIO.bucket, key).catch(() => {});
+  try {
+    await rm(resolveKey(key), { force: true });
+  } catch (e) {
+    console.error(`[storage] xoá ảnh thất bại UPLOAD_DIR=${env.UPLOAD_DIR} code=${errCode(e)} key=${key}`);
+  }
 }
 
+/** Đọc ảnh. File thiếu → ném lỗi có `code === "ENOENT"` (kiểm bằng isMissingFile). */
 export async function getObjectBuffer(key: string): Promise<Buffer> {
-  const stream = await minio().getObject(env.MINIO.bucket, key);
-  const chunks: Buffer[] = [];
-  for await (const chunk of stream) chunks.push(chunk as Buffer);
-  return Buffer.concat(chunks);
+  return readFile(resolveKey(key));
 }
 
 /** URL public cho ảnh key prefix public/ — đi qua route stream của web app */

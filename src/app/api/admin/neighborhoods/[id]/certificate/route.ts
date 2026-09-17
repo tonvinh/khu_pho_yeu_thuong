@@ -31,7 +31,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   const buf = Buffer.from(await file.arrayBuffer());
   const key = `public/neighborhoods/${id}/certificate-${Date.now()}.webp`;
-  await putObject(key, await toWebp(buf, 1600, 85), "image/webp");
+  const webp = await toWebp(buf, 1600, 85);
+  const saved = await putObject(key, webp).catch(() => null);
+  if (!saved) return jsonError(500, "Không lưu được ảnh, vui lòng thử lại sau");
   await q(`UPDATE neighborhoods SET certificate_photo_key = $2 WHERE id = $1`, [id, key]);
   if (nb.certificate_photo_key) await removeObject(nb.certificate_photo_key);
 

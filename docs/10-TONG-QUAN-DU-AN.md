@@ -97,7 +97,7 @@ src/lib/                        Lõi nghiệp vụ & hạ tầng (không phụ t
   session.ts   Phiên cư dân                     admin-session.ts  Phiên admin
   admin-totp.ts Token tạm bước 2 TOTP           csrf.ts      Double-submit token
   api.ts       Guard requireUserWrite/requireAdmin, ipHash/uaHash, jsonError
-  rate-limit.ts In-memory bucket                storage.ts   MinIO + imgUrl
+  rate-limit.ts In-memory bucket                storage.ts   Ảnh trên filesystem + imgUrl
   stylize.ts   sharp: cách điệu bản đồ, WebP    og.tsx       OG image động (satori)
   scoring.ts   Công thức điểm + passes4N        score-service.ts  Ghi/vô hiệu event + side-effects
   leaderboard.ts Xếp hạng đại sứ & khu phố      counters.ts  4 bộ đếm (cache 15s)
@@ -108,7 +108,7 @@ src/app/
   page.tsx                      Trang chủ (SSR) → HomeShell
   api/v1/…                      API public + cư dân
   api/admin/…                   API admin
-  api/img/[...key]              Stream ảnh public/ từ MinIO
+  api/img/[...key]              Stream ảnh public/ từ UPLOAD_DIR
   admin/login, admin/(panel)/…  9 màn admin
   bien/[id], dai-su/[slug], khu-pho/[slug]   Trang share + opengraph-image động
   chinh-sach-du-lieu            Chính sách dữ liệu (PDPD)
@@ -120,8 +120,8 @@ src/components/
   admin/AdminShell.tsx          Khung admin (sidebar, guard, Card/Btn dùng chung)
 
 tests/                          vitest: scoring (3 case bắt buộc), four-n, phone
-deploy/Caddyfile                Proxy + TLS + security headers (mode 4 service)
-docker-compose.yml              Mode "chuẩn": web + db + storage + proxy
+deploy/Caddyfile                Proxy + TLS + security headers (mode 3 service)
+docker-compose.yml              Mode "chuẩn": web + db + proxy (ảnh: volume uploads_data)
 docker-compose.prod.yml         Mode production thực tế (VM dùng chung, Caddy trên host)
 Dockerfile                      Multi-stage, standalone, non-root, healthcheck
 .github/workflows/deploy.yml    CI/CD self-hosted runner trên VM
@@ -134,7 +134,7 @@ Dockerfile                      Multi-stage, standalone, non-root, healthcheck
 | Web | Next.js 15 App Router · React 19 · TypeScript strict | `output: standalone` |
 | Style | TailwindCSS 4 (`@theme` token trong `globals.css`) | Font Be Vietnam Pro + Baloo 2 (self-host) |
 | DB | PostgreSQL 16 | driver `pg`, pool max 10, `pgcrypto` cho `gen_random_uuid()` |
-| Ảnh | MinIO (S3-compatible) | prefix `public/` (stream qua app) và `private/` (chỉ admin) |
+| Ảnh | Filesystem `/app/uploads` (volume Docker; production k8s: PVC NFS RWX) — đổi 17/9 | prefix `public/` (stream qua app) và `private/` (chỉ admin) |
 | Xử lý ảnh | sharp | convert WebP + `toCover` chuẩn hoá 1280×720 cho ảnh khu phố. *(`stylizeMap` duotone nay mồ côi)* |
 | Mật khẩu | @node-rs/argon2 (Argon2id, m=19456, t=2, p=1) | chỉ dùng cho admin |
 | 2FA | otplib (TOTP) | tuỳ chọn từng tài khoản admin |

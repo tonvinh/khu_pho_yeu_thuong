@@ -1,11 +1,12 @@
 # 11 — Kiến trúc hệ thống
 
-> Cập nhật: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9 (đổi ở §6 pipeline ảnh).
+> Cập nhật: 17/9/2026 — **bỏ object storage**: ảnh lưu filesystem `/app/uploads` (§1, §6, §7, §8, §9).
+> Trước đó: 8/9/2026 — đồng bộ với code sau các đợt 18/8, 2–4/9, 7/9 (đổi ở §6 pipeline ảnh).
 > Mô tả kiến trúc **như đã triển khai**. Yêu cầu kiến trúc gốc ở `07-NFR-TECH.md` §2.
 
 ## 1. Sơ đồ tổng thể
 
-### 1.1 Mode "chuẩn" — `docker-compose.yml` (4 service, máy/VM riêng)
+### 1.1 Mode "chuẩn" — `docker-compose.yml` (3 service, máy/VM riêng)
 
 ```
                     Internet
@@ -19,12 +20,12 @@
      │  web — Next.js standalone, non-root │  healthcheck /api/v1/counters
      │  SSR + API routes + stream ảnh      │
      └───────┬───────────────────┬─────────┘
-             │ pg (5432)         │ S3 API (9000)
-     ┌───────▼────────┐  ┌───────▼──────────┐
-     │ db  Postgres16 │  │ storage  MinIO   │
-     │ volume db_data │  │ volume minio_data│
-     └────────────────┘  └──────────────────┘
-        (không publish port)   (không publish port)
+             │ pg (5432)         │ đọc/ghi file
+     ┌───────▼────────┐  ┌───────▼──────────────┐
+     │ db  Postgres16 │  │ /app/uploads         │
+     │ volume db_data │  │ volume uploads_data  │
+     └────────────────┘  └──────────────────────┘
+        (không publish port)   (thư mục trong web, không phải service)
                      network: internal (bridge)
 ```
 
@@ -34,8 +35,16 @@ VM GCP dùng chung (`ai-law`, Singapore) đã chạy app khác, nên:
 
 - **Không có service `proxy`** — Caddy chạy trên **host** (systemd), lo TLS/reverse-proxy cho nhiều app.
 - `web` publish **chỉ nội bộ** `127.0.0.1:3001` (cổng 3000/8000 đã bị app khác dùng).
-- `db` và `storage` **không publish port nào** (tránh đụng Postgres/MinIO của app kia).
-- Compose project name cố định `khupho` → container `khupho-web|db|storage`.
+- `db` **không publish port nào** (tránh đụng Postgres của app kia).
+- Ảnh upload nằm trong volume `uploads_data` mount vào `web:/app/uploads`.
+- Compose project name cố định `khupho` → container `khupho-web|db`.
+
+### 1.3 Production Kubernetes (bên vận hành FPT quản lý)
+
+Repo **không** chứa manifest k8s — GitLab CI của FPT build image theo template riêng và bên vận
+hành tự deploy. Phía app chỉ cam kết: ảnh nằm ở `/app/uploads` (mount PVC NFS **ReadWriteMany**),
+chạy nhiều replica cùng lúc được về mặt **lưu ảnh**, UID/GID cố định 1001, không ghi đâu ngoài
+`/app/uploads`. Yêu cầu chi tiết cho bên vận hành: [`18`](18-TRIEN-KHAI-VAN-HANH.md) §12.
 
 Chi tiết vận hành ở [`18-TRIEN-KHAI-VAN-HANH.md`](18-TRIEN-KHAI-VAN-HANH.md).
 
@@ -149,6 +158,18 @@ Quy ước:
    └─ toWebp(buf, 1400, q80)   → public/signs/{id}/photo.webp          (suggestions.image_key)
 ```
 
+**Lưu file** (`src/lib/storage.ts`, từ 17/9 — trước đó là object storage, key giữ nguyên nên không migration):
+
+- `putObject(key, buf)` → `${UPLOAD_DIR}/${key}`: tạo thư mục cha → ghi `.<tên>.<hex>.tmp` **cùng
+  thư mục** → `fsync` → `rename` đè lên file đích. Người đọc không bao giờ thấy file dở; hai
+  instance ghi cùng key thì bản `rename` sau thắng. Lỗi thì xoá file tạm, log
+  `[storage] ghi ảnh thất bại UPLOAD_DIR=… code=EACCES|EROFS|ENOENT… key=…` và route trả **500 câu
+  chung** "Không lưu được ảnh, vui lòng thử lại sau".
+- `removeObject(key)` = `rm --force`: file không tồn tại coi như xong; lỗi khác chỉ log.
+- `getObjectBuffer(key)` = `readFile`; file thiếu ném `ENOENT` (`isMissingFile()`) → `/api/img` 404.
+- Không cache trạng thái filesystem trong RAM. `scripts/seed-images.mjs` chép lại đúng quy ước này
+  (không import `src/` vì phải chạy trong image production).
+
 ~~Pipeline ảnh bản đồ (`toWebp` 2400/q90 → `private/maps/…` + `stylizeMap` → `public/maps/…`)~~ —
 **không còn route nào chạy**: trang chủ bỏ bản đồ từ 1/8, hai route `map-image` đã xoá.
 Hàm `stylizeMap()` (duotone đỏ gạch) vẫn nằm trong `src/lib/stylize.ts` nhưng **mồ côi**, chỉ
@@ -156,8 +177,11 @@ Hàm `stylizeMap()` (duotone đỏ gạch) vẫn nằm trong `src/lib/stylize.ts
 
 Quy tắc truy cập (quy tắc cứng 10) — **vẫn nguyên vẹn cho mọi ảnh `private/`**:
 
-- Bucket MinIO **private**; không expose MinIO ra internet.
-- `/api/img/[...key]` chỉ phục vụ key bắt đầu bằng `public/` và chặn `..` → mọi thứ khác trả 404.
+- Thư mục ảnh `/app/uploads` **không** được publish thẳng qua proxy/web server tĩnh — mọi ảnh đi
+  qua `/api/img/[...key]`.
+- `/api/img/[...key]` chỉ phục vụ key bắt đầu bằng `public/`; key được kiểm bằng `resolveKey()`
+  (`src/lib/storage.ts`: chỉ `public|private` + đoạn `[A-Za-z0-9._-]` không bắt đầu bằng `.`, chặn
+  `..`, `\`, byte null, đường dẫn tuyệt đối) → mọi thứ khác trả 404.
 - ~~Ảnh bản đồ gốc đọc qua `GET /api/admin/neighborhoods/[id]/map-image`~~ — route đã xoá; hiện
   **không có ảnh `private/` nào được sinh ra nữa** (chỉ seed cũ còn lại).
 
@@ -168,7 +192,8 @@ Quy tắc truy cập (quy tắc cứng 10) — **vẫn nguyên vẹn cho mọi �
 | `src/lib/env.ts` | Getter lười cho secret. Production thiếu biến bắt buộc → **ném lỗi ngay**; dev có fallback rõ ràng ("dev-only-…") |
 | `BASE_PATH` | **Build arg** (`next.config.ts` đọc lúc build, đẩy sang client qua `NEXT_PUBLIC_BASE_PATH`). Đổi domain kiểu path ⇒ phải rebuild image |
 | `SITE_ORIGIN` | Chỉ dùng cho URL tuyệt đối (OG, share link). Đổi runtime được, chỉ cần `up -d web` |
-| `serverExternalPackages` | `sharp`, `minio`, `@node-rs/argon2`, `xlsx`, `adm-zip` không bị bundle (native/binary) |
+| `serverExternalPackages` | `sharp`, `@node-rs/argon2`, `xlsx`, `adm-zip` không bị bundle (native/binary) |
+| `UPLOAD_DIR` | Thư mục gốc chứa ảnh, mặc định `/app/uploads` (image đặt sẵn `ENV`). Dev ngoài Docker đặt `./uploads`; luôn resolve thành đường dẫn tuyệt đối, đọc lại mỗi lần gọi |
 | Header | `X-Robots-Tag: noindex, nofollow` cho `/admin/*`; `poweredByHeader: false`; security header còn lại do Caddy đặt |
 
 ## 8. Trạng thái lưu trong RAM (giới hạn 1 instance)
@@ -181,18 +206,21 @@ Ba thứ sau **không nằm trong DB**, gắn với tiến trình `web`:
 | Token tạm bước 2 TOTP (5 phút) | `admin-totp.ts` | Nhiều instance ⇒ đăng nhập TOTP hỏng nếu request 2 rơi vào instance khác |
 | Cache 4 bộ đếm (15s) | `counters.ts` | Chỉ ảnh hưởng độ tươi số liệu |
 
+**Ảnh upload KHÔNG nằm trong danh sách này**: lưu file ở `/app/uploads` (NFS dùng chung khi chạy
+k8s), module `storage.ts` không cache gì, ghi tạm rồi `rename` ⇒ nhiều instance cùng ghi/đọc an toàn.
+
 MVP chốt chạy **1 instance** nên chấp nhận được. Khi scale ngang phải chuyển sang Redis/DB — xem [`20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md`](20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md) §3.
 
 ## 9. Bảo mật ở mức kiến trúc
 
 | Lớp | Biện pháp |
 |---|---|
-| Mạng | Chỉ proxy mở port (mode 4 service) / chỉ `127.0.0.1:3001` (mode VM chung). DB & MinIO không ra internet |
+| Mạng | Chỉ proxy mở port (mode 3 service) / chỉ `127.0.0.1:3001` (mode VM chung). DB không ra internet; thư mục ảnh không publish trực tiếp |
 | Vận chuyển | TLS do Caddy (Let's Encrypt tự động) + HSTS 1 năm |
 | Header | X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy no-referrer, CSP `default-src 'self'` |
 | Ứng dụng | CSRF double-submit mọi request ghi; session token chỉ lưu SHA-256 trong DB; rate limit; Argon2id cho admin |
 | Dữ liệu | SĐT: HMAC-SHA256+PEPPER (định danh, một chiều) và AES-256-GCM (liên hệ, chỉ khi opt-in) — hai khoá tách biệt |
-| Container | Image chạy user `khupho` non-root, `output: standalone` (không mang toàn bộ `node_modules`) |
+| Container | Image chạy user `khupho` non-root **UID/GID cố định 1001** (`USER 1001:1001`), `output: standalone` (không mang toàn bộ `node_modules`); chỉ ghi vào `/app/uploads` nên chạy được với root filesystem read-only |
 | Vận hành | Migration là lệnh riêng; CI chặn deploy nếu `.env` thiếu `PHONE_PEPPER` |
 
 Chi tiết đầy đủ ở [`14-BAO-MAT-VA-QUYEN-RIENG-TU.md`](14-BAO-MAT-VA-QUYEN-RIENG-TU.md).

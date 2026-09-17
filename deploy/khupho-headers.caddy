@@ -1,5 +1,5 @@
 # Security header của Khu Phố Của Tôi — NGUỒN DUY NHẤT, dùng chung cho cả 2 mode:
-#   - mode 4 service: deploy/Caddyfile import file này (docker-compose.yml mount vào)
+#   - mode 3 service: deploy/Caddyfile import file này (docker-compose.yml mount vào)
 #   - mode production (VM ai-law dùng chung): CI copy file này vào
 #     /etc/caddy/conf.d/khupho-headers.caddy rồi reload caddy (.github/workflows/deploy.yml)
 #

@@ -31,7 +31,7 @@ Phiên bản 1.0
 | Auth | Định danh SĐT băm (HMAC-SHA256 + pepper) + session cookie server-side | Không OTP — quyết định PM; chi tiết 02 §8, bảo mật §2.1 |
 | Realtime | Polling 15–30s (MVP) → SSE nếu cần | Đơn giản, đủ dùng |
 | ~~Bản đồ~~ | ~~Ảnh upload + filter cách điệu + pins toạ độ %~~ → **ĐÃ GỠ khỏi sản phẩm 1/8**, thay bằng slider ảnh khu phố (`NeighborhoodSlider`) | Q3 hết hiệu lực — xem `20` §1 |
-| Ảnh | Upload lên object storage (MinIO S3-compatible), resize/WebP tự động | Ảnh tổng quan khu phố (4/khu, chuẩn hoá 1280×720), ảnh chứng nhận, ảnh biển. **Biển trên trang chủ nay render bằng HTML/CSS** (`SignCard`), không phải ảnh upload |
+| Ảnh | Upload lưu **filesystem** `/app/uploads` (volume Docker; production Kubernetes: PVC NFS ReadWriteMany) — **đổi 17/9**, trước đó là object storage S3-compatible; resize/WebP tự động | Ảnh tổng quan khu phố (4/khu, chuẩn hoá 1280×720), ảnh chứng nhận, ảnh biển. **Biển trên trang chủ nay render bằng HTML/CSS** (`SignCard`), không phải ảnh upload |
 | OG image | Route render ảnh động (@vercel/og hoặc satori + resvg) | Phục vụ share MXH (Q8) |
 | Deploy | **Toàn bộ infra chạy Docker** trên hạ tầng FPT · domain **chốt 8/9**: `fpt.vn/khu-pho-biet-thuong` (chạy dưới path) | Đã chốt — chi tiết §2.2. `basePath` cấu hình bằng biến env (`''` cho subdomain, `'/khu-pho-biet-thuong'` cho path); mọi link/asset/OG qua helper URL, không hard-code |
 | Font/màu | ~~`Khu Pho Yeu Thuong.dc.html`: nền kem, đỏ gạch primary~~ → **skin cam FPT** (`#FF8206` primary, nhấn xanh `#2323FF`) + font **FPT SongVui** (Light 300 / Regular 400 / Bold 700 — **không có 600/800**). Nguồn design chuẩn: `docs/lp/LandingpageFCM.fig` | Chi tiết token + bẫy CSS: `16-FRONTEND-UI.md` §5 |
@@ -77,20 +77,23 @@ Phiên bản 1.0
 
 **Một `docker-compose.yml` chạy được toàn hệ thống**, dùng chung cho dev và production (khác nhau bằng file env + compose override).
 
+> **Đổi 17/9/2026 (đã duyệt):** bỏ service `storage` (object storage). Còn **3 service**; ảnh upload
+> lưu filesystem `/app/uploads` của `web` — compose mount volume `uploads_data`, production chạy
+> Kubernetes mount PVC NFS ReadWriteMany vào đúng đường dẫn đó. Yêu cầu cho bên vận hành: `18` §12.
+
 | Service | Image | Vai trò | Ghi chú |
 |---------|-------|---------|---------|
-| `web` | Build từ `Dockerfile` (Next.js, multi-stage) | App public + admin + API | Multi-stage: builder → runner `node:20-alpine`, output standalone, chạy user non-root, image cuối < 300MB |
+| `web` | Build từ `Dockerfile` (Next.js, multi-stage) | App public + admin + API + stream ảnh | Multi-stage: builder → runner `node:20-alpine`, output standalone, chạy user non-root **UID/GID cố định 1001**, image cuối < 300MB. Ảnh upload ở `/app/uploads` (volume riêng) |
 | `db` | `postgres:16-alpine` | PostgreSQL | Volume named cho data; KHÔNG expose port ra ngoài host ở production (chỉ mạng nội bộ compose) |
-| `storage` | `minio/minio` | Object storage S3-compatible | Ảnh bản đồ, ảnh địa điểm, ảnh biển; volume riêng; bucket private, web truy cập qua presigned URL |
 | `proxy` | `caddy` (hoặc `nginx`) | Reverse proxy + TLS | HTTPS/HSTS, security headers (CSP, X-Frame-Options...), gzip; là service DUY NHẤT mở port ra ngoài |
 
 **Quy tắc vận hành Docker:**
-- **Secrets** (PEPPER, khoá AES, DB password, MinIO keys) qua biến môi trường từ file `.env` KHÔNG commit (có `.env.example` đủ biến, giá trị giả) hoặc Docker secrets — tuyệt đối không nướng secret vào image.
-- **Healthcheck** cho từng service; `web` depends_on `db` + `storage` với `condition: service_healthy`.
+- **Secrets** (PEPPER, khoá AES, DB password) qua biến môi trường từ file `.env` KHÔNG commit (có `.env.example` đủ biến, giá trị giả) hoặc Docker secrets — tuyệt đối không nướng secret vào image.
+- **Healthcheck** cho từng service; `web` depends_on `db` với `condition: service_healthy`. Healthcheck `web` (`/api/v1/counters`) **không** chạm thư mục ảnh — volume ảnh lỗi thì chỉ upload lỗi, app vẫn sống.
 - **Migration DB** chạy như một bước riêng (`docker compose run web npm run migrate`), không tự chạy ngầm lúc container khởi động ở production.
-- **Backup**: volume Postgres dump định kỳ (cron trên host hoặc sidecar container), lưu ngoài máy chạy.
+- **Backup**: volume Postgres dump định kỳ (cron trên host hoặc sidecar container) + `tar` thư mục ảnh upload, lưu ngoài máy chạy.
 - **Log** ra stdout/stderr theo chuẩn container (không ghi file trong container); filter pattern SĐT trước khi log (§2.1) áp dụng ở tầng ứng dụng.
-- Mạng: `db` và `storage` chỉ ở internal network; chỉ `proxy` publish port 80/443.
+- Mạng: `db` chỉ ở internal network; chỉ `proxy` publish port 80/443. Thư mục ảnh không publish trực tiếp — mọi ảnh qua `/api/img`.
 - CI build image có tag theo git SHA; deploy = kéo image mới + `docker compose up -d` (zero-downtime không bắt buộc cho MVP).
 
 ## 3. Kế hoạch triển khai gợi ý (4 tuần)

@@ -1,4 +1,5 @@
-# Toàn bộ infra Docker (07 §2.2 — quyết định D12): 4 service, chỉ proxy mở port.
+# Toàn bộ infra Docker (07 §2.2 — quyết định D12): 3 service, chỉ proxy mở port.
+# Ảnh upload lưu filesystem trong volume uploads_data (không còn service `storage` riêng từ 17/9).
 # Khởi động từ máy sạch: cp .env.example .env (điền secret) → docker compose up -d
 #   → docker compose run --rm web node scripts/migrate.mjs
 services:
@@ -11,12 +12,15 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-khupho}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-khupho}
-      MINIO_ENDPOINT: storage
-      MINIO_PORT: "9000"
+      # Ghi đè giá trị trong .env (dev ngoài Docker đặt ./uploads) — trong container luôn là
+      # thư mục đã mount volume ở dưới.
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      # Ảnh upload (từ 17/9). Volume mới được Docker chép quyền từ image nên
+      # thuộc UID/GID cố định 1001 của app. Production Kubernetes mount PVC NFS vào đây.
+      - uploads_data:/app/uploads
     depends_on:
       db:
-        condition: service_healthy
-      storage:
         condition: service_healthy
     networks: [internal]
     # KHÔNG expose port — chỉ proxy được ra ngoài
@@ -32,22 +36,6 @@ services:
       - db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-khupho} -d ${POSTGRES_DB:-khupho}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks: [internal]
-
-  storage:
-    image: minio/minio:latest
-    restart: unless-stopped
-    command: server /data
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
-    volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -79,7 +67,7 @@ services:
 
 volumes:
   db_data:
-  minio_data:
+  uploads_data:
   caddy_data:
   caddy_config:
 

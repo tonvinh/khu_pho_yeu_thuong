@@ -16,7 +16,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (file.size > 10 * 1024 * 1024) return jsonError(400, "Ảnh tối đa 10MB");
   const buf = Buffer.from(await file.arrayBuffer());
   const key = `public/signs/${id}/photo.webp`;
-  await putObject(key, await toWebp(buf), "image/webp");
+  const webp = await toWebp(buf);
+  const saved = await putObject(key, webp).catch(() => null);
+  if (!saved) return jsonError(500, "Không lưu được ảnh, vui lòng thử lại sau");
   const rows = await q(
     `UPDATE suggestions SET image_key = $2 WHERE id = $1 RETURNING id`,
     [id, key]

@@ -122,7 +122,6 @@ Biện pháp phòng thủ khác:
 | `PHONE_PEPPER` | `openssl rand -hex 32` | ⚠️ **KHÔNG XOAY ĐƯỢC.** Đổi pepper = mọi `phone_hash` cũ không còn khớp = **toàn bộ cư dân mất tài khoản, điểm, phiếu** |
 | `PHONE_AES_KEY` | `openssl rand -base64 32` (đúng 32 byte) | Xoay được nhưng phải viết migration giải mã bằng khoá cũ + mã hoá lại bằng khoá mới (**chưa có script**) |
 | `POSTGRES_PASSWORD` | ngẫu nhiên mạnh | Xoay được (đổi env + recreate container) |
-| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | ngẫu nhiên mạnh | Xoay được |
 
 Quy tắc vận hành:
 
@@ -142,7 +141,7 @@ Quy tắc vận hành:
 | **Minh bạch** | Trang công khai `/chinh-sach-du-lieu` giải thích rõ băm một chiều vs mã hoá, và quyền của người dùng |
 | **Nhật ký truy cập dữ liệu cá nhân** | `audit_logs` ghi mọi lần admin hiện SĐT hoặc export CSV |
 | **Quyền xoá** | Chính sách công bố: yêu cầu qua hotline **1900 6600**; khi xoá → xoá SĐT mã hoá + thu hồi phiên, giữ điểm/câu nhắc ở dạng ẩn danh để không phá kết quả bình chọn của cả xóm |
-| **Bảo mật khi truyền/lưu** | TLS bắt buộc; AES-256-GCM cho dữ liệu liên hệ; DB/MinIO không mở ra internet |
+| **Bảo mật khi truyền/lưu** | TLS bắt buộc; AES-256-GCM cho dữ liệu liên hệ; DB không mở ra internet; thư mục ảnh không publish trực tiếp |
 
 ⚠️ **Khoảng trống cần biết:** quy trình xoá theo yêu cầu hiện là **thủ công qua psql**, chưa có nút trên giao diện admin. Xem [`20`](20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md) §3.
 
@@ -156,7 +155,9 @@ Quy tắc vận hành:
 | Ảnh chứng nhận 4N | `public/neighborhoods/{id}/certificate-{ts}.webp` | Công khai |
 | Ảnh địa điểm / biển / khu phố | `public/…` | Công khai |
 
-`/api/img/[...key]` **chỉ** phục vụ key bắt đầu `public/` và chặn `..` — không có đường nào từ internet chạm tới `private/`. Bucket MinIO không expose ra ngoài; mọi ảnh đều đi qua ứng dụng.
+`/api/img/[...key]` **chỉ** phục vụ key bắt đầu `public/` — không có đường nào từ internet chạm tới `private/`. Ảnh lưu filesystem `/app/uploads` (từ 17/9; production k8s là PVC NFS) và thư mục này **không được publish trực tiếp** qua proxy/web server tĩnh; mọi ảnh đều đi qua ứng dụng.
+
+Key ảnh trở thành **đường dẫn file** nên `resolveKey()` (`src/lib/storage.ts`) kiểm chặt trước mọi thao tác đọc/ghi/xoá: prefix đúng `public|private`, mỗi đoạn chỉ `[A-Za-z0-9._-]` và không bắt đầu bằng `.` (chặn `..`, file tạm `.…tmp`, file ẩn), không `\`, không byte null, không đường dẫn tuyệt đối, và đường dẫn sau `path.resolve` phải nằm dưới `UPLOAD_DIR`. Sai quy ước → `/api/img` trả 404. Test khoá: `tests/storage.test.ts`, `tests/img-route.test.ts`.
 
 ## 10. Mô hình đe doạ rút gọn
 
