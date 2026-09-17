@@ -12,6 +12,10 @@ WORKDIR /app
 RUN npm install -g pnpm@9
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# pnpm-workspace.yaml chỉ dành cho pnpm 11 ở máy dev (allowBuilds). pnpm 9 trong image
+# thấy file này mà không có khoá `packages` sẽ chết "packages field missing or empty".
+# .dockerignore đã chặn, nhưng buildah/CI có thể không áp ignorefile → xoá thẳng cho chắc.
+RUN rm -f pnpm-workspace.yaml
 # basePath truyền lúc build (Q5): '' cho domain riêng, '/khu-pho-biet-thuong' cho
 # fpt.vn/khu-pho-biet-thuong (chốt 8/9). Giá trị NƯỚNG vào image — đổi là phải build lại.
 ARG BASE_PATH=""
