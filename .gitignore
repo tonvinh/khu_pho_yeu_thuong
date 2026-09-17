@@ -60,9 +60,6 @@ docs/lp/FONT v3 SONGVUI/
 
 # Ảnh Figma thô (14MB/2.4MB/1.1MB) — bản nén đã có ở public/brand/*.webp
 docs/lp/*.png
-# Trừ 2 tấm nhỏ (8KB/20KB) còn dùng đối chiếu số đo
-!docs/lp/Frame 151.png
-!docs/lp/Group 4.png
 
 # File yêu cầu/wording bản gốc (4.8MB + 1.0MB)
 docs/*.xlsx

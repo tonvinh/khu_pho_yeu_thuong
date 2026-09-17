@@ -94,8 +94,9 @@ dump hay prototype nào của design nữa**:
 | `KhuPhoCuaToi-prototype-v4.html` | 36KB | Prototype kem trước skin cam 18/8, chỉ còn giá trị lịch sử |
 | `import-template.xlsx` | 12KB | Template import đã bị thay bằng 2 route admin tự sinh template |
 
-**Còn track trong `lp/`, đúng 3 file nhỏ**: `Frame 151.png` (dải sọc cam),
-`Group 4.png`, `vuesax/linear/tick-circle.svg`.
+**Còn track trong `lp/`, đúng 1 file**: `vuesax/linear/tick-circle.svg`. Hai ảnh nhỏ
+`Frame 151.png` (dải sọc cam, 4KB) và `Group 4.png` (20KB) gỡ nốt ngày 17/9 — dải sọc đã
+dựng bằng CSS (`.kp-stripe-b`), số đo `Frame 151 1` còn ghi ở [`24`](24-QC-04-09.md).
 
 > Muốn QC giao diện: xin `.fig` ở Drive, `python3 scripts/figma/parse.py` rồi
 > `dump.py <node-id>`. Quy trình đầy đủ ở [`23-PROMPT-QC-MANUAL-04-09.md`](23-PROMPT-QC-MANUAL-04-09.md).

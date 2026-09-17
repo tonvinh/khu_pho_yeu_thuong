@@ -620,6 +620,7 @@ rồi chạy lại `migrate.mjs` (dump cũ có thể thiếu migration mới).
 | Triệu chứng | Nguyên nhân / cách xử lý |
 |---|---|
 | Build fail ở native deps (sharp/argon2/esbuild) | Dockerfile ghim `pnpm@9` **có chủ đích**: corepack mặc định kéo pnpm 11 (đòi Node ≥22.13 và hard-fail "ignored builds"). Nâng pnpm phải nâng lockfile cùng lúc |
+| Build chết `packages field missing or empty` | pnpm 9 đọc phải `pnpm-workspace.yaml` — file này CHỈ cho pnpm 11 ở máy dev (`allowBuilds` sharp/esbuild), không có khoá `packages`. `.dockerignore` đã chặn, nhưng buildah/CI có thể không áp ignorefile ⇒ Dockerfile `RUN rm -f pnpm-workspace.yaml` ngay sau `COPY . .` (17/9). Đừng gỡ dòng này; thêm cấu hình workspace thật thì phải xem lại cả hai chỗ |
 | Build bị kill giữa chừng, không rõ lỗi | Hết RAM. `free -h`, bật swap (`fallocate -l 4G /swapfile …`) rồi build lại |
 | Workflow không chạy khi push | Workflow phải nằm ở `.github/workflows/` tại **gốc repo**. Kiểm runner còn online: Settings → Actions → Runners |
 | Deploy fail ở bước "Ensure .env" | `/opt/khu_pho/.env` không tồn tại hoặc `PHONE_PEPPER` rỗng. Đây là chốt chặn cố ý — khôi phục `.env` từ backup, **đừng sinh pepper mới** |

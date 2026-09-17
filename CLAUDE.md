@@ -685,7 +685,8 @@ phải copy gốc.
 ## Dọn repo 8/9 — mọi nguồn/ảnh design ra khỏi git
 
 Repo **không còn giữ ảnh, dump hay prototype nào của design** — chỉ còn code, tài liệu
-`.md` và 3 ảnh nhỏ (`lp/Frame 151.png`, `lp/Group 4.png`, `lp/vuesax/tick-circle.svg`).
+`.md` và đúng 1 icon `lp/vuesax/linear/tick-circle.svg` (17/9 gỡ nốt `lp/Frame 151.png` +
+`lp/Group 4.png`).
 Muốn đối chiếu giao diện thì mở `.fig` trên Drive của team Design, hoặc dump lại bằng
 `scripts/figma/`. Danh sách đầy đủ "file nào ở Drive": `docs/README.md` §C; `.gitignore`
 đã chặn để không lọt lại.
@@ -840,3 +841,6 @@ Quy tắc cứng 11 đổi thành 3 service (đã duyệt). Chi tiết vận hà
   ⇒ `ERR_MODULE_NOT_FOUND`. Chưa sửa.
 - **E2E C2 (`tests/e2e/qc-fixes.e2e.ts`) chỉ qua với `next dev`**: nó tìm `@media (min-width: 640px)`
   trong CSS, bản build minify thành `(min-width:640px)` ⇒ luôn đỏ khi chạy trên stack Docker.
+- **`pnpm-workspace.yaml` làm pnpm 9 trong image chết** `packages field missing or empty`: file này chỉ
+  dành cho pnpm 11 ở máy dev (`allowBuilds` sharp/esbuild). `.dockerignore` đã chặn nhưng buildah/CI
+  có thể không áp ignorefile ⇒ Dockerfile `RUN rm -f pnpm-workspace.yaml` sau `COPY . .`. Đừng gỡ.
