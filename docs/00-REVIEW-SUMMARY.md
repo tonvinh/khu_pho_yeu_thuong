@@ -45,7 +45,7 @@ Cách đọc + bẫy: [`16-FRONTEND-UI.md`](16-FRONTEND-UI.md) đầu file.
 | D9 | **Không gov_viewer (Q7):** chính quyền nhận báo cáo offline | 04 §9 |
 | D10 | **Vinh danh (Q8):** leaderboard + share MXH (URL công khai + OG image động, FB/Zalo) | 02 §11 |
 | D11 | **Admin login:** email + mật khẩu, email bắt buộc đuôi **@fpt.com** (validate server-side), Argon2id, khoá 5 lần sai, bảng & cookie tách riêng | 04 §0 · 03 (admin_users) · 07 §2.1 |
-| D12 | **Toàn bộ infra Docker:** compose 4 service (web/db/storage/proxy); secrets qua .env; chỉ proxy mở port | 07 §2.2 · CLAUDE.md quy tắc 11 |
+| D12 | **Toàn bộ infra Docker:** compose ~~4 service (web/db/storage/proxy)~~ → **3 service (web/db/proxy) từ 17/9**, ảnh upload lưu filesystem `/app/uploads` (Kubernetes: PVC NFS); secrets qua .env; chỉ proxy mở port | 07 §2.2 · CLAUDE.md quy tắc 11 |
 
 ## 3. Điểm cần người duyệt quyết định / xác nhận
 
@@ -69,4 +69,4 @@ Cách đọc + bẫy: [`16-FRONTEND-UI.md`](16-FRONTEND-UI.md) đầu file.
 ## 5. Sau khi ký duyệt
 1. Đóng băng phiên bản 1.0.
 2. Đưa nguyên thư mục (kèm 2 file design HTML) vào repo, mở Claude Code — CLAUDE.md dẫn đường tự động.
-3. Tuần 1 bắt đầu: docker-compose 4 service + schema + định danh + trang chủ tĩnh.
+3. Tuần 1 bắt đầu: docker-compose 4 service *(kế hoạch gốc — từ 17/9 còn 3, bỏ `storage`)* + schema + định danh + trang chủ tĩnh.

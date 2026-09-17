@@ -100,7 +100,7 @@ Phiên bản 1.0
 
 | Tuần | Nội dung |
 |------|----------|
-| 1 | Setup dự án **+ docker-compose đủ 4 service chạy được ngay** (web, db, storage, proxy), DB schema + migration, định danh SĐT băm + session cookie + CSRF, trang chủ tĩnh theo design + seed data |
+| 1 | Setup dự án **+ docker-compose đủ 4 service chạy được ngay** (web, db, storage, proxy) *(kế hoạch gốc — từ 17/9 còn 3 service, bỏ `storage`, xem §2.2)*, DB schema + migration, định danh SĐT băm + session cookie + CSRF, trang chủ tĩnh theo design + seed data |
 | 2 | Luồng đề xuất → viết câu → thương (đủ state machine), bộ lọc 4N rule-based |
 | 3 | Trang Admin đầy đủ, hệ thống điểm + leaderboard, lead 2 tầng |
 | 4 | Chứng nhận khu phố, chống gian lận, share MXH + OG image, bulk import 20 khu phố pilot, QA + test theo fixtures 05/06, soft-launch |
