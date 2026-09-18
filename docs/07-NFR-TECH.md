@@ -88,7 +88,7 @@ Phiên bản 1.0
 | `proxy` | `caddy` (hoặc `nginx`) | Reverse proxy + TLS | HTTPS/HSTS, security headers (CSP, X-Frame-Options...), gzip; là service DUY NHẤT mở port ra ngoài |
 
 **Quy tắc vận hành Docker:**
-- **Secrets** (PEPPER, khoá AES, DB password) qua biến môi trường từ file `.env` KHÔNG commit (có `.env.example` đủ biến, giá trị giả) hoặc Docker secrets — tuyệt đối không nướng secret vào image.
+- **Secrets** (PEPPER, khoá AES, DB password) qua biến môi trường từ file `.env` KHÔNG commit (có `.env.example` đủ biến, giá trị giả) hoặc Docker secrets — tuyệt đối không nướng secret vào image. Riêng đường deploy **k8s bên FPT** lấy secret từ **Vault** (agent inject file JSON vào pod, `src/lib/vault-env.ts` nạp vào `process.env`) — xem [18 §2.4](18-TRIEN-KHAI-VAN-HANH.md).
 - **Healthcheck** cho từng service; `web` depends_on `db` với `condition: service_healthy`. Healthcheck `web` (`/api/v1/counters`) **không** chạm thư mục ảnh — volume ảnh lỗi thì chỉ upload lỗi, app vẫn sống.
 - **Migration DB** chạy như một bước riêng (`docker compose run web npm run migrate`), không tự chạy ngầm lúc container khởi động ở production.
 - **Backup**: volume Postgres dump định kỳ (cron trên host hoặc sidecar container) + `tar` thư mục ảnh upload, lưu ngoài máy chạy.

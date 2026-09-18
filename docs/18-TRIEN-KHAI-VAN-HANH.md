@@ -121,6 +121,42 @@ grep -E '^(PHONE_PEPPER|PHONE_AES_KEY)=' .env
 Backup database **vô dụng nếu mất `PHONE_PEPPER`**: dump SQL chỉ chứa hash, không khôi phục được
 liên kết SĐT → tài khoản. Vì vậy cất 2 khoá này **tách khỏi** nơi cất dump DB.
 
+### 2.4 Vault — CHỈ dùng khi deploy k8s bên FPT
+
+Áp dụng cho đường deploy k8s của ISC ([wiki nội bộ](https://iscdoc.fpt.net/pages/viewpage.action?pageId=52232317)).
+**Không liên quan** localhost và VM `khupho.ailab.city`: hai nơi đó không có `/vault/secrets` nên
+`loadVaultEnv()` thoát ngay, im lặng, chạy bằng `.env` như mục 2.1.
+
+Bên mình khai secret tại `isc-project/khu-pho-yeu-thuong/app-secret/<env>/khu-pho-yeu-thuong-web-portal`
+(env: `development` · `staging` · `production`) gồm **`PHONE_PEPPER`**, **`PHONE_AES_KEY`**,
+**`SITE_ORIGIN`**. Connect string DB do **đội DBA** khai ở nhánh `database/`. Hạ tầng merge cả hai
+thành MỘT file trong pod: `/vault/secrets/configuration.<env>.json`.
+
+| Điều | Quy tắc |
+|---|---|
+| Chọn file | `VAULT_SECRET_FILE` → `configuration.$NODE_ENV.json` → **file `configuration.*.json` duy nhất** trong thư mục |
+| Vì sao cần nhánh 3 | Next **ép `NODE_ENV=production` ở mọi môi trường**, nên pod staging vẫn mang giá trị `production` và nhánh 2 tìm nhầm tên file. Mỗi pod chỉ được inject 1 file nên không có gì để nhầm |
+| Nhiều file khớp | **Không đoán** — log cảnh báo rồi bỏ qua; app chết lúc khởi động theo đúng fail-fast của mục 2.1. Muốn chỉ định thì đặt `VAULT_SECRET_FILE` |
+| Thứ tự ưu tiên | **Biến môi trường THẮNG Vault** — khoá nào `process.env` đã có thì bỏ qua, để vận hành override được bằng `env:` trong manifest |
+| `DATABASE_URL` | Có nguyên chuỗi thì dùng luôn; không thì ghép từ `DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` (+ alias `POSTGRES_*`, `PG*`), user/password được URL-encode, `DB_SSLMODE` → `?sslmode=` |
+| Xoay secret | **Không** đọc lại file khi Vault renew — muốn nhận giá trị mới thì restart pod |
+| `BASE_PATH` | **KHÔNG** đưa vào Vault: là build arg, bake vào bundle lúc `next build`, inject runtime là quá muộn |
+
+Code: `src/lib/vault-env.ts` (app) và bản chép trong `scripts/migrate.mjs` — job migration chạy pod
+RIÊNG, file `.mjs` thuần nên không import được `src/`; **sửa một bên nhớ sửa bên kia**.
+
+Log lúc nạp chỉ ghi **tên khoá**, không bao giờ ghi giá trị:
+
+```
+[vault] nạp 4 biến từ /vault/secrets/configuration.production.json: PHONE_PEPPER, PHONE_AES_KEY, SITE_ORIGIN, DATABASE_URL
+```
+
+Không thấy dòng này trong log pod = secret chưa vào được: kiểm annotation Vault agent trước, rồi
+tới tên khoá trong Vault. Dòng `[vault] bỏ qua secret: …` nói rõ lý do.
+
+⚠️ `pg` cảnh báo `sslmode=require` sẽ đổi nghĩa ở pg v9 (hiện được hiểu như `verify-full`). Nếu DBA
+đặt `DB_SSLMODE=require` thì chốt ý định bằng `verify-full` hoặc `uselibpqcompat=true&sslmode=require`.
+
 ---
 
 ## 3. Mode B — deploy production thực tế, từng bước
@@ -694,6 +730,7 @@ là hợp đồng giữa app và hạ tầng — mọi điểm dưới đây đ�
 | 6 | Ingress cho body upload **≥ 12MB** | Route upload nhận tối đa 10MB/ảnh (multipart có thêm overhead). ingress-nginx mặc định `proxy-body-size: 1m` ⇒ ảnh >1MB bị **413** trước khi tới app: đặt annotation `nginx.ingress.kubernetes.io/proxy-body-size: "12m"` |
 | 7 | **Không** publish thư mục NFS qua ingress/web server tĩnh | Mọi ảnh đi qua `/api/img/…` — route chỉ phục vụ `public/`, `private/` không được lộ |
 | 8 | Không cần biến môi trường nào cho ảnh | `UPLOAD_DIR` mặc định `/app/uploads`. Không còn secret object storage |
+| 9 | **Vault agent inject vào `/vault/secrets`** | Annotation do bên vận hành đặt. App đọc file `configuration.*.json` trong thư mục này (chi tiết ở **§2.4**). Mỗi pod **đúng một file**; nhiều file thì app không đoán mà chết lúc khởi động. Thư mục này là volume riêng nên `readOnlyRootFilesystem: true` không ảnh hưởng. **Job migration cần y hệt** — nó chạy pod riêng và cũng đọc `/vault/secrets` |
 
 Khi volume **chưa ghi được** (chưa mount, sai quyền, NFS read-only): app **vẫn khởi động**, trang chủ và
 API trả 200 bình thường; chỉ upload trả **500** câu chung "Không lưu được ảnh, vui lòng thử lại sau",

@@ -844,3 +844,31 @@ Quy tắc cứng 11 đổi thành 3 service (đã duyệt). Chi tiết vận hà
 - **`pnpm-workspace.yaml` làm pnpm 9 trong image chết** `packages field missing or empty`: file này chỉ
   dành cho pnpm 11 ở máy dev (`allowBuilds` sharp/esbuild). `.dockerignore` đã chặn nhưng buildah/CI
   có thể không áp ignorefile ⇒ Dockerfile `RUN rm -f pnpm-workspace.yaml` sau `COPY . .`. Đừng gỡ.
+
+## Vault 18/9 — secret cho đường deploy k8s của FPT (KHÔNG đụng localhost/VM)
+
+Chi tiết: `docs/18` §2.4 + §12.1 dòng 9. Hạ tầng ISC merge 2 path Vault (`app-secret/<env>/
+khu-pho-yeu-thuong-web-portal` do mình khai + `database/<env>` do DBA khai) thành MỘT file
+`/vault/secrets/configuration.<env>.json` trong pod. `src/lib/vault-env.ts` đọc file đó nạp vào
+`process.env`. **Không thêm dependency** (chỉ `node:fs`/`node:path` — CI FPT dùng base image cài
+sẵn `node_modules`).
+
+- Gọi ở **đầu `src/lib/env.ts`**, KHÔNG dùng `instrumentation.ts`: mọi chỗ dùng secret
+  (`crypto.ts`, `db.ts`, `storage.ts`, `url.ts`) đều đi qua `env.ts` nên phủ hết entry point mà
+  không đổi output của `next build` — localhost và VM build ra y hệt như trước.
+- **Ngoài k8s là no-op IM LẶNG**: không có `/vault/secrets` thì thoát sau đúng 1 lần `existsSync`,
+  không log gì. Toàn bộ hàm bọc `try/catch` — không có đường nào làm chết dev server hay hỏng lượt
+  deploy tự động của VM.
+- **Chọn file**: `VAULT_SECRET_FILE` → `configuration.$NODE_ENV.json` → file `configuration.*.json`
+  **duy nhất**. Nhánh 3 là nhánh cứu thật sự: Next ép `NODE_ENV=production` ở MỌI môi trường nên pod
+  staging tìm nhầm tên file. Nhiều file khớp ⇒ **không đoán**, log rồi để `env.ts` fail-fast.
+- **Biến môi trường THẮNG Vault** (không ghi đè) để manifest k8s override được.
+- **Log chỉ ghi TÊN khoá**, không bao giờ ghi giá trị (pepper/khoá AES/mật khẩu DB).
+- `scripts/migrate.mjs` **chép lại** logic này (~40 dòng): job migration chạy pod RIÊNG, file `.mjs`
+  thuần không import được `src/`. **Sửa một bên nhớ sửa bên kia.**
+- Tên khoá DB bên DBA chưa chốt ⇒ có nhánh ghép `DATABASE_URL` từ `DB_HOST`/`DB_PORT`/`DB_USER`/
+  `DB_PASSWORD`/`DB_NAME` (+ alias `POSTGRES_*`, `PG*`), URL-encode user/pass. Thiếu mảnh thì KHÔNG
+  ghép nửa vời, log tên khoá nhận được để chỉnh nhanh.
+- `BASE_PATH` **không** đưa vào Vault — build arg, bake lúc `next build`.
+- Test: `tests/vault-env.test.ts` (13 ca). Bản trong `migrate.mjs` không có test tự động — đã kiểm
+  tay bằng cách chạy với `VAULT_SECRETS_DIR` trỏ thư mục giả.

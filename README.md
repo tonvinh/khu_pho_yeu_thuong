@@ -53,6 +53,7 @@ Dockerfile                   multi-stage node:22-alpine, pnpm@9 ghim cứng
 
 Tạo từ template: `cp .env.example .env`. **Không bao giờ commit `.env` thật.**
 Bảng đầy đủ + cách sinh/backup secrets: [docs/18 §2](docs/18-TRIEN-KHAI-VAN-HANH.md#2-biến-môi-trường--secrets).
+Deploy trên **k8s bên FPT** thì secret lấy từ Vault chứ không qua `.env` — xem [docs/18 §2.4](docs/18-TRIEN-KHAI-VAN-HANH.md). Localhost và VM không đổi gì.
 
 | Biến | Bắt buộc | Ý nghĩa |
 |---|---|---|

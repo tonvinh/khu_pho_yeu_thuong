@@ -48,7 +48,7 @@ Nếu A và B mâu thuẫn → hệ thống đang lệch đặc tả: sửa code
 | [`15-DIEM-XEP-HANG-CHONG-GIAN-LAN.md`](15-DIEM-XEP-HANG-CHONG-GIAN-LAN.md) | Sổ cái điểm, trần tuần, bảng xếp hạng, heuristics gian lận & xử lý im lặng | Khi sửa logic điểm/bình chọn |
 | [`16-FRONTEND-UI.md`](16-FRONTEND-UI.md) | Bản đồ route, cây component, design token, luồng tương tác, trang share + OG image | Khi làm giao diện |
 | [`17-VAN-HANH-ADMIN.md`](17-VAN-HANH-ADMIN.md) | Cẩm nang vận hành admin: SOP duyệt 4N, chọn câu, treo biển, leads, import, chứng nhận | Đội vận hành chiến dịch |
-| [`18-TRIEN-KHAI-VAN-HANH.md`](18-TRIEN-KHAI-VAN-HANH.md) | **Runbook deploy production từng bước** (mode A/B), env & secrets, CI/CD, rollback, backup/restore, sự cố | Khi deploy/vận hành hạ tầng |
+| [`18-TRIEN-KHAI-VAN-HANH.md`](18-TRIEN-KHAI-VAN-HANH.md) | **Runbook deploy production từng bước** (mode A/B), env & secrets (§2.4 Vault cho k8s FPT), CI/CD, rollback, backup/restore, sự cố, k8s + NFS | Khi deploy/vận hành hạ tầng |
 | [`19-KIEM-THU-VA-NGHIEM-THU.md`](19-KIEM-THU-VA-NGHIEM-THU.md) | Test tự động, kịch bản E2E thủ công, checklist nghiệm thu theo 11 quy tắc cứng | Trước mỗi lần release |
 | [`20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md`](20-QUYET-DINH-GIA-DINH-NO-KY-THUAT.md) | Nhật ký quyết định kiến trúc (gồm Q1–Q7 của 2/9 và các chốt 4/9, 7/9), ASSUMPTION trong code, giới hạn đã biết, backlog kỹ thuật | Khi lên kế hoạch giai đoạn sau |
 

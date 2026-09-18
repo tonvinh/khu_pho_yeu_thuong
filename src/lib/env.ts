@@ -1,6 +1,13 @@
 // Đọc secrets từ biến môi trường (secret manager / .env — KHÔNG hard-code).
 // PEPPER (định danh) và khoá AES (liên hệ) là 2 khoá TÁCH BIỆT (07 §2.1).
 import path from "node:path";
+import { loadVaultEnv } from "./vault-env";
+
+// Nạp secret Vault (k8s bên FPT) TRƯỚC khi đọc biến nào. Đặt ở đây chứ không ở
+// instrumentation.ts vì mọi chỗ dùng secret (crypto.ts, db.ts, storage.ts, url.ts) đều đi qua
+// file này ⇒ phủ hết entry point mà không đụng vào cấu trúc build của Next.
+// Ngoài k8s là no-op im lặng: không có /vault/secrets thì thoát ngay.
+loadVaultEnv();
 
 const isProd = process.env.NODE_ENV === "production";
 

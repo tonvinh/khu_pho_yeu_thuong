@@ -128,6 +128,9 @@ Xếp theo mức độ cần xử lý.
 | **Chưa có script xoay `PHONE_AES_KEY`** | Xoay khoá cần giải mã bằng khoá cũ + mã hoá lại toàn bộ `leads.phone_encrypted`, `users.phone_encrypted`, `sessions.phone_encrypted` | Viết migration script nhận cả 2 khoá |
 | **`redactPhonesInText` chưa gắn vào logger** | Hàm đã có + đã test nhưng chưa có logger tập trung gọi nó | Bọc một `log()` chung, dùng thay `console.*` |
 | **Chưa có backup tự động** | Backup DB + thư mục ảnh upload hiện là lệnh chạy tay (production k8s: backup NFS do bên vận hành lo) | Thêm cron trên VM + kiểm tra restore định kỳ |
+| **Secret Vault không hot-reload** | `loadVaultEnv()` đọc file **một lần mỗi process**. Vault agent ghi đè file lúc renew thì process đang chạy vẫn dùng giá trị cũ ⇒ muốn nhận secret mới phải **restart pod**. Chấp nhận có chủ ý: `PHONE_PEPPER` vốn không bao giờ xoay, `PHONE_AES_KEY` xoay thì phải re-encrypt cả DB nên cũng cần cửa sổ bảo trì | Chỉ làm khi có nhu cầu thật; watch file + tạo lại pool DB là việc riêng |
+| **Logic nạp Vault bị chép 2 nơi** | `src/lib/vault-env.ts` và `scripts/migrate.mjs` (job migration chạy pod RIÊNG, file `.mjs` thuần không import được `src/` — ràng buộc từ đợt 15/9: script phải chạy được trong image production). Sửa một bên quên bên kia = migration không thấy secret | Giữ nguyên, đã ghi chú chéo ở cả hai file. Gom lại được nếu sau này build script bằng bundler |
+| **Chưa chốt tên khoá DB bên DBA** | Nhánh `database/` của Vault do đội DBA khai, tên khoá chưa xác nhận. Code đoán 3 bộ alias (`DB_*`, `POSTGRES_*`, `PG*`) và ghép `DATABASE_URL`; tên khác thì log in ra danh sách khoá nhận được | Xác nhận với DBA lúc deploy thật rồi chốt cứng một bộ tên |
 
 ### 3.3 Nghiệp vụ chưa hoàn chỉnh
 

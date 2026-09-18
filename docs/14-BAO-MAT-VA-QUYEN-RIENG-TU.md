@@ -126,6 +126,11 @@ Biện pháp phòng thủ khác:
 Quy tắc vận hành:
 
 - `.env` **không bao giờ commit** (`.gitignore` đã chặn; chỉ commit `.env.example`).
+- Trên đường deploy **k8s bên FPT**, 3 khoá này nằm ở **HashiCorp Vault**
+  (`isc-project/khu-pho-yeu-thuong/app-secret/<env>/khu-pho-yeu-thuong-web-portal`; connect string DB
+  do đội DBA khai ở nhánh `database/`), agent inject vào pod dưới dạng file JSON — xem
+  [18 §2.4](18-TRIEN-KHAI-VAN-HANH.md). Secret **không nằm trong image**, không qua `.env`.
+  App chỉ log **tên** khoá đã nạp, không bao giờ log giá trị.
 - Backup `PHONE_PEPPER` và `PHONE_AES_KEY` vào nơi an toàn **ngay khi tạo**, tách khỏi backup DB.
 - CI/CD có chốt chặn cố ý: workflow **dừng deploy** nếu `/opt/khu_pho/.env` thiếu hoặc `PHONE_PEPPER` rỗng — để container không bao giờ khởi động với pepper mới sinh.
 - Ở production, thiếu biến bắt buộc thì app **ném lỗi khi khởi động** (`env.ts`), không âm thầm dùng giá trị dev.

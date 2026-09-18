@@ -28,6 +28,7 @@ server trả 500 cho mọi route và không tự hồi. Tắt dev server trướ
 | `tests/spreadsheet.test.ts` | `readWorkbook`: **CSV UTF-8 không BOM** phải ra đúng dấu tiếng Việt (QC 2/9 · B1) | Sai bảng mã ⇒ lỗi giả "Tỉnh/Thành phố không có trong danh mục" |
 | `tests/globals-css.test.ts` | Đọc thẳng `globals.css`: khai báo có tồn tại **và có đứng ĐÚNG THỨ TỰ không** (`.kp-hero-title` sau `.kp-h2`; `.kp-input-lg` cuối cụm) | Họ bẫy C1/C2 — rule sau thắng khi cùng specificity |
 | `tests/stylize.test.ts` | `stylizeMap()` cho ra ảnh **có màu** (R > G > B), không phải đen trắng | Guard hồi quy sharp 0.34. ⚠️ Hàm này nay **mồ côi** (trang chủ bỏ bản đồ) |
+| `tests/vault-env.test.ts` | Nạp secret Vault (18/9 · 13 ca): chọn file theo `NODE_ENV` · **NODE_ENV không khớp tên file → lấy file `configuration.*.json` duy nhất** · nhiều file thì KHÔNG đoán · `VAULT_SECRET_FILE` đè · **không ghi đè biến sẵn có** · làm phẳng object/bool/null · ghép `DATABASE_URL` từ mảnh (URL-encode mật khẩu) · thiếu thư mục / JSON hỏng → **no-op, không ném lỗi** | Next ép `NODE_ENV=production` ở mọi env ⇒ nhánh dò file là thứ duy nhất cứu pod staging. Hai ca cuối khoá lời hứa "localhost và VM không đổi hành vi" |
 
 ### 1.2 Bộ UI (môi trường **jsdom** — khai `@vitest-environment jsdom` ở đầu file)
 

@@ -190,6 +190,7 @@ Quy tắc truy cập (quy tắc cứng 10) — **vẫn nguyên vẹn cho mọi �
 | Cơ chế | Mô tả |
 |---|---|
 | `src/lib/env.ts` | Getter lười cho secret. Production thiếu biến bắt buộc → **ném lỗi ngay**; dev có fallback rõ ràng ("dev-only-…") |
+| `src/lib/vault-env.ts` | Nạp secret do Vault agent inject khi deploy k8s bên FPT (`/vault/secrets/configuration.<env>.json` → `process.env`), gọi ở đầu `env.ts`. Ngoài k8s là **no-op im lặng** ⇒ localhost/VM không đổi hành vi. Biến môi trường thắng Vault. Chi tiết [18 §2.4](18-TRIEN-KHAI-VAN-HANH.md) |
 | `BASE_PATH` | **Build arg** (`next.config.ts` đọc lúc build, đẩy sang client qua `NEXT_PUBLIC_BASE_PATH`). Đổi domain kiểu path ⇒ phải rebuild image |
 | `SITE_ORIGIN` | Chỉ dùng cho URL tuyệt đối (OG, share link). Đổi runtime được, chỉ cần `up -d web` |
 | `serverExternalPackages` | `sharp`, `@node-rs/argon2`, `xlsx`, `adm-zip` không bị bundle (native/binary) |
