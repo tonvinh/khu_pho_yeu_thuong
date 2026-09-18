@@ -58,7 +58,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
      ON CONFLICT (neighborhood_id, position) DO UPDATE SET photo_key = EXCLUDED.photo_key`,
     [id, key, position]
   );
-  if (old) await removeObject(old.photo_key);
+  // `!== key`: hai lần upload cùng slot trong CÙNG mili-giây sinh key giống hệt nhau
+  // (Date.now()) ⇒ xoá "ảnh cũ" chính là xoá file vừa ghi, để lại hàng DB trỏ vào file trống.
+  if (old && old.photo_key !== key) await removeObject(old.photo_key);
 
   return NextResponse.json({ ok: true, position, url: imgUrl(key) }, { status: 201 });
 }

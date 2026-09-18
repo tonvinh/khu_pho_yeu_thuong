@@ -46,7 +46,12 @@ function errCode(e: unknown): string {
 
 /** Lỗi đọc vì file không tồn tại (route ảnh trả 404 mà không cần log). */
 export function isMissingFile(e: unknown): boolean {
-  return (e as NodeJS.ErrnoException)?.code === "ENOENT";
+  const code = (e as NodeJS.ErrnoException)?.code;
+  // EISDIR: key trỏ vào THƯ MỤC có thật (vd "public/neighborhoods") — resolveKey cho qua vì
+  // đúng bộ ký tự. ENOTDIR: một đoạn cha lại là file. Cả hai đều do người gọi bịa key, không
+  // phải sự cố đĩa/NFS ⇒ coi như thiếu file, tuyệt đối KHÔNG log (route /api/img mở công khai,
+  // log được thì ai cũng bơm rác được vào log — chỗ duy nhất báo EACCES/EIO thật).
+  return code === "ENOENT" || code === "EISDIR" || code === "ENOTDIR";
 }
 
 /** Ghi ảnh: ghi file tạm CÙNG thư mục → fsync → rename. rename trong cùng thư mục là
@@ -84,7 +89,7 @@ export async function removeObject(key: string): Promise<void> {
   }
 }
 
-/** Đọc ảnh. File thiếu → ném lỗi có `code === "ENOENT"` (kiểm bằng isMissingFile). */
+/** Đọc ảnh. File thiếu (hoặc key trỏ vào thư mục) → ném lỗi, kiểm bằng `isMissingFile`. */
 export async function getObjectBuffer(key: string): Promise<Buffer> {
   return readFile(resolveKey(key));
 }

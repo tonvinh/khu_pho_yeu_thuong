@@ -769,6 +769,19 @@ nguyên — chỉ chép file, **không migration DB**.
 Trong lúc chuyển, **tạm dừng upload ảnh ở admin** (ảnh upload sau bước 1 sẽ không có trong bản xuất;
 hoặc chạy lại bước 1 ngay trước bước 3 — `mc mirror` chỉ chép phần mới).
 
+> 🚨 **Bước 2 KHÔNG do bạn bấm: push lên `main` là đã deploy** ([§5](#5-deploy-các-lần-sau) — CI
+> chạy `build web` + `up -d` cho mọi push). Volume `uploads_data` sinh ra **rỗng**, nên tính từ
+> giây stack mới lên, **mọi ảnh cũ 404** (slider trang chủ, popup khu phố, ảnh góc phố, chứng
+> nhận, thẻ OG) cho tới khi xong bước 3. Vì vậy:
+>
+> - **Làm bước 1 TRƯỚC khi merge/push** bản bỏ MinIO — lúc đó stack cũ còn service `storage`.
+>   Bản xuất đã nằm sẵn ở `/var/backups/khupho/` thì bước 3 chạy ngay sau khi CI xanh, khoảng
+>   tối ưu chỉ còn vài phút.
+> - Lỡ push trước rồi: **đừng rollback**. Service `storage` vẫn chạy (orphan, còn nguyên dữ
+>   liệu) ⇒ chạy bước 1 rồi bước 3 là ảnh trở lại, không mất gì.
+> - Muốn tự chọn thời điểm: tạm để nhánh release ngoài `main`, deploy bằng tab Actions →
+>   "Run workflow" sau khi bước 1 xong.
+
 **Bước 1 — xuất bucket ra host** (stack CŨ còn chạy; ví dụ mode B, bucket mặc định `khupho`):
 
 ```bash
@@ -782,8 +795,9 @@ docker cp khupho-storage-1:/tmp/kp-export /var/backups/khupho/minio-export
 find /var/backups/khupho/minio-export -type f | wc -l     # PHẢI bằng số "objects" mc du in ra
 ```
 
-**Bước 2 — deploy code mới** như [§5](#5-deploy-các-lần-sau). Compose báo container `storage` là
-*orphan* — **để nguyên nó chạy** tới khi kiểm xong bước 4.
+**Bước 2 — deploy code mới** như [§5](#5-deploy-các-lần-sau) — **push lên `main` là đã xong bước
+này**, CI tự build + `up -d` (xem cảnh báo ở trên). Compose báo container `storage` là *orphan* —
+**để nguyên nó chạy** tới khi kiểm xong bước 4.
 
 **Bước 3 — nạp vào volume ảnh mới** (giải nén trong container `web` ⇒ file thuộc đúng UID/GID 1001):
 

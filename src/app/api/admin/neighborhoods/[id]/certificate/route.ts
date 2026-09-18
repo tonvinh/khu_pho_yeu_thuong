@@ -35,7 +35,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const saved = await putObject(key, webp).catch(() => null);
   if (!saved) return jsonError(500, "Không lưu được ảnh, vui lòng thử lại sau");
   await q(`UPDATE neighborhoods SET certificate_photo_key = $2 WHERE id = $1`, [id, key]);
-  if (nb.certificate_photo_key) await removeObject(nb.certificate_photo_key);
+  // `!== key`: hai lần upload cùng khu phố trong CÙNG mili-giây sinh key giống hệt nhau
+  // (Date.now()) ⇒ xoá "ảnh cũ" chính là xoá file vừa ghi, để lại hàng DB trỏ vào file trống.
+  if (nb.certificate_photo_key && nb.certificate_photo_key !== key) {
+    await removeObject(nb.certificate_photo_key);
+  }
 
   return NextResponse.json({ ok: true, url: imgUrl(key) }, { status: 201 });
 }

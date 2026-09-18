@@ -93,6 +93,20 @@ describe("putObject / getObjectBuffer / removeObject", () => {
     expect(isMissingFile(Object.assign(new Error("x"), { code: "EACCES" }))).toBe(false);
   });
 
+  // Key bịa trỏ vào thư mục / vào con của một file: resolveKey cho qua (đúng bộ ký tự) nên
+  // /api/img sẽ đọc thật và nhận EISDIR/ENOTDIR. Phải im lặng như file thiếu, nếu không ai
+  // cũng bơm được rác vào log production bằng URL ảnh công khai.
+  test("key trỏ vào thư mục (EISDIR) / con của file (ENOTDIR) → isMissingFile = true", async () => {
+    await putObject(KEY, Buffer.from("x"));
+    const dirErr = await getObjectBuffer("public/neighborhoods").catch((e) => e);
+    expect(dirErr.code).toBe("EISDIR");
+    expect(isMissingFile(dirErr)).toBe(true);
+
+    const underFile = await getObjectBuffer(`${KEY}/them.webp`).catch((e) => e);
+    expect(underFile.code).toBe("ENOTDIR");
+    expect(isMissingFile(underFile)).toBe(true);
+  });
+
   test("UPLOAD_DIR đọc lại mỗi lần gọi (không cache đường dẫn trong bộ nhớ)", async () => {
     await putObject(KEY, Buffer.from("thu-muc-1"));
     const dir2 = await mkdtemp(path.join(tmpdir(), "kp-uploads-2-"));
