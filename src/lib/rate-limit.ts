@@ -32,6 +32,9 @@ export const LIMITS = {
   IDENTIFY_PER_DEVICE_HOUR: 3,
   WRITES_PER_USER_HOUR: 30,
   ADMIN_LOGIN_PER_IP_15MIN: 20,
+  /** Upload ảnh admin (pentest 5.2.1) — đủ rộng cho đợt nhập 4 ảnh × vài khu phố */
+  UPLOADS_PER_ADMIN_5MIN: 30,
   HOUR: 3600_000,
   MIN15: 900_000,
+  MIN5: 300_000,
 };

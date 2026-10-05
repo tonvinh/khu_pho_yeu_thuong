@@ -872,3 +872,22 @@ sẵn `node_modules`).
 - `BASE_PATH` **không** đưa vào Vault — build arg, bake lúc `next build`.
 - Test: `tests/vault-env.test.ts` (13 ca). Bản trong `migrate.mjs` không có test tự động — đã kiểm
   tay bằng cách chạy với `VAULT_SECRETS_DIR` trỏ thư mục giả.
+
+## Pentest 10/2026 (`docs/pentest.docx`, FTEL-CSOCBM, staging) — đã sửa 3/4
+
+- **5.2.1 + 5.2.2 (DoS upload ảnh)**: mọi ảnh upload đi qua `guarded()` trong
+  `src/lib/stylize.ts` (`toCover`/`toWebp`/`stylizeMap`) — **đừng gọi `sharp(buf)` thẳng** trên
+  buffer người dùng ở chỗ khác. Thứ tự: magic bytes (chỉ JPEG/PNG/WebP — `Content-Type` client
+  khai KHÔNG phải lớp chặn, SVG đội lốt jpeg vẫn bị librsvg render) → `metadata()` (định dạng
+  thật khớp magic + `w*h ≤ 4096×4096`, chốt theo báo cáo) → giải mã có `limitInputPixels` +
+  `timeout(20s)` → tối đa **2 ảnh xử lý cùng lúc**/tiến trình, hàng chờ 4, quá thì 429.
+  Mọi lỗi ném ra là `ImageError` (status + câu cho client). Route upload thêm trần
+  30 lần/5 phút/admin. Test: `tests/image-guard.test.ts`.
+- **5.2.3 (khu phố ẩn)**: `loadNeighborhoodDetail` chặn `hidden` MẶC ĐỊNH, chỉ mở bằng
+  `{ includeHidden: true }`. `/khu-pho/<slug>` khu ẩn → 404 với khách; admin đã đăng nhập
+  (cookie `kp_admin_session`, path `/`) xem trước được kèm dải báo + `noindex`. API
+  `/api/v1/neighborhoods/{id}` 404 với MỌI người, OG rơi về thẻ chung. Test:
+  `tests/neighborhood-hidden.test.ts`.
+- **5.1.1 (X-Forwarded-For giả → né rate limit/chống gian lận) — CHƯA SỬA, đang trao đổi.**
+  `clientIp()` (`src/lib/api.ts`) vẫn lấy phần tử ĐẦU của XFF. Hướng đang bàn: đọc từ phải,
+  bỏ IP nội bộ + route kiểm chứng admin + chặn đăng nhập theo email (không phụ thuộc nginx).

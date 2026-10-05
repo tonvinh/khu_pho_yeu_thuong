@@ -4,8 +4,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { one, q } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
+import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import { putObject, removeObject, imgUrl } from "@/lib/storage";
-import { toCover } from "@/lib/stylize";
+import { toCover, ImageError } from "@/lib/stylize";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,9 @@ const MAX_PHOTOS = 4;
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if ("error" in auth) return auth.error;
+  if (!rateLimit(`upload:${auth.admin.id}`, LIMITS.UPLOADS_PER_ADMIN_5MIN, LIMITS.MIN5)) {
+    return jsonError(429, "Tải ảnh hơi nhiều — thử lại sau ít phút nhé");
+  }
   const { id } = await ctx.params;
 
   const nb = await one<{ id: string }>(`SELECT id FROM neighborhoods WHERE id = $1`, [id]);
@@ -45,7 +49,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   const buf = Buffer.from(await file.arrayBuffer());
   const key = `public/neighborhoods/${id}/photo-${position}-${Date.now()}.webp`;
-  const webp = await toCover(buf);
+  // Định dạng thật (magic bytes) + trần điểm ảnh kiểm trong stylize — Content-Type
+  // client khai ở trên chỉ để báo lỗi sớm, không phải lớp chặn (pentest 5.2.2).
+  let webp: Buffer;
+  try {
+    webp = await toCover(buf);
+  } catch (e) {
+    if (e instanceof ImageError) return jsonError(e.status, e.message);
+    throw e;
+  }
   // Lỗi ghi (NFS chưa mount/không có quyền) đã log chi tiết trong storage — client chỉ
   // nhận câu chung, không lộ đường dẫn hay mã lỗi hệ thống.
   const saved = await putObject(key, webp).catch(() => null);

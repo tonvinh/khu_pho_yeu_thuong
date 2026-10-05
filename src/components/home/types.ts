@@ -205,6 +205,8 @@ export interface NeighborhoodDetail {
   slug: string;
   ward: string | null;
   city: string | null;
+  /** true chỉ xảy ra ở trang share khi ADMIN xem trước khu đang ẩn */
+  hidden?: boolean;
   certified_4n: boolean;
   certified_at: string | null;
   /** Ảnh tổng quan (theo position); rỗng thì rơi về `map_url` */

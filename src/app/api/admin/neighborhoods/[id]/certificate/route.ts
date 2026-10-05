@@ -4,8 +4,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { one, q } from "@/lib/db";
 import { jsonError, requireAdmin } from "@/lib/api";
+import { rateLimit, LIMITS } from "@/lib/rate-limit";
 import { putObject, removeObject, imgUrl } from "@/lib/storage";
-import { toWebp } from "@/lib/stylize";
+import { toWebp, ImageError } from "@/lib/stylize";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ const MAX_SIZE = 10 * 1024 * 1024;
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin(req);
   if ("error" in auth) return auth.error;
+  if (!rateLimit(`upload:${auth.admin.id}`, LIMITS.UPLOADS_PER_ADMIN_5MIN, LIMITS.MIN5)) {
+    return jsonError(429, "Tải ảnh hơi nhiều — thử lại sau ít phút nhé");
+  }
   const { id } = await ctx.params;
 
   const nb = await one<{ certificate_photo_key: string | null }>(
@@ -31,7 +35,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   const buf = Buffer.from(await file.arrayBuffer());
   const key = `public/neighborhoods/${id}/certificate-${Date.now()}.webp`;
-  const webp = await toWebp(buf, 1600, 85);
+  // Định dạng thật (magic bytes) + trần điểm ảnh kiểm trong stylize — Content-Type
+  // client khai ở trên chỉ để báo lỗi sớm, không phải lớp chặn (pentest 5.2.2).
+  let webp: Buffer;
+  try {
+    webp = await toWebp(buf, 1600, 85);
+  } catch (e) {
+    if (e instanceof ImageError) return jsonError(e.status, e.message);
+    throw e;
+  }
   const saved = await putObject(key, webp).catch(() => null);
   if (!saved) return jsonError(500, "Không lưu được ảnh, vui lòng thử lại sau");
   await q(`UPDATE neighborhoods SET certificate_photo_key = $2 WHERE id = $1`, [id, key]);

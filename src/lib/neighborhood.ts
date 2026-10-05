@@ -15,13 +15,18 @@ const NOTE_LIMIT = 8;
  * `key` là slug hoặc UUID — id ép sang text để slug không làm Postgres cast lỗi uuid.
  * `viewerId` là người đang xem (cookie kp_session) để đánh dấu câu đã bình chọn và
  * câu của chính mình; không truyền thì mọi câu đều "chưa bình chọn".
+ *
+ * Khu phố đang ẩn (`hidden`) trả null như khu không tồn tại — chặn MẶC ĐỊNH (pentest
+ * 10/2026, lỗi 5.2.3). Chỉ trang share bật `includeHidden` khi người xem là ADMIN, để
+ * nút "xem" ở /admin/khu-pho vẫn xem trước được khu đang soạn.
  */
 export async function loadNeighborhoodDetail(
   key: string,
-  viewerId?: string | null
+  viewerId?: string | null,
+  opts: { includeHidden?: boolean } = {}
 ): Promise<NeighborhoodDetail | null> {
   const nb = await one(
-    `SELECT n.id, n.name, n.slug, n.ward, n.city, n.certified_4n, n.certified_at,
+    `SELECT n.id, n.name, n.slug, n.ward, n.city, n.hidden, n.certified_4n, n.certified_at,
        n.certificate_photo_key, n.map_stylized_key,
        COALESCE((SELECT json_agg(p.photo_key ORDER BY p.position)
          FROM neighborhood_photos p WHERE p.neighborhood_id = n.id), '[]'::json) AS photo_keys,
@@ -33,8 +38,9 @@ export async function loadNeighborhoodDetail(
          WHERE i.neighborhood_id = n.id
            AND s.status IN ('approved','selected','produced','installed')) AS suggestions_total
      FROM neighborhoods n
-     WHERE (n.slug = $1 OR n.id::text = $1) AND n.deleted_at IS NULL`,
-    [key]
+     WHERE (n.slug = $1 OR n.id::text = $1) AND n.deleted_at IS NULL
+       AND ($2::boolean OR NOT n.hidden)`,
+    [key, Boolean(opts.includeHidden)]
   );
   if (!nb) return null;
 
@@ -62,6 +68,7 @@ export async function loadNeighborhoodDetail(
     slug: nb.slug as string,
     ward: nb.ward as string | null,
     city: nb.city as string | null,
+    hidden: Boolean(nb.hidden),
     certified_4n: nb.certified_4n as boolean,
     certified_at: nb.certified_at ? String(nb.certified_at) : null,
     photo_urls: (nb.photo_keys as string[]).map((k) => imgUrl(k)!).filter(Boolean),

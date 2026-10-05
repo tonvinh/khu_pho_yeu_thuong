@@ -8,18 +8,32 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { absoluteUrl, withBase } from "@/lib/url";
 import { loadNeighborhoodDetail } from "@/lib/neighborhood";
+import { getAdminUser } from "@/lib/admin-session";
 import { getSiteContent } from "@/lib/site-content";
 import { COPY } from "@/lib/copy";
 import NeighborhoodView from "@/components/home/NeighborhoodView";
 
 export const dynamic = "force-dynamic";
 
+/** Khu đang ẩn → 404 với mọi người (pentest 10/2026, lỗi 5.2.3). Riêng admin đã đăng
+ *  nhập được xem trước (nút "xem" ở /admin/khu-pho). Khách thường chỉ tốn đúng 1 query:
+ *  chỉ khi KHÔNG thấy khu công khai mới tra tới session admin. */
+async function loadForViewer(slug: string) {
+  const nb = await loadNeighborhoodDetail(slug);
+  if (nb) return nb;
+  const admin = await getAdminUser().catch(() => null);
+  if (!admin) return null;
+  return loadNeighborhoodDetail(slug, null, { includeHidden: true });
+}
+
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const { slug } = await params;
-  const nb = await loadNeighborhoodDetail(slug);
+  const nb = await loadForViewer(slug);
   if (!nb) return {};
+  // Bản xem trước của admin: không cho máy tìm kiếm lập chỉ mục
+  if (nb.hidden) return { title: `${nb.name} (đang ẩn) — xem trước`, robots: { index: false, follow: false } };
   const title = nb.certified_4n
     ? `${nb.name} — Khu phố biết thương chuẩn 4N 💛`
     : `${nb.name} — Khu Phố Của Tôi`;
@@ -40,7 +54,7 @@ export async function generateMetadata(
 
 export default async function NeighborhoodPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [nb, content] = await Promise.all([loadNeighborhoodDetail(slug), getSiteContent()]);
+  const [nb, content] = await Promise.all([loadForViewer(slug), getSiteContent()]);
   if (!nb) notFound();
 
   return (
@@ -53,6 +67,15 @@ export default async function NeighborhoodPage({ params }: { params: Promise<{ s
       />
 
       <div className="relative mx-auto max-w-[720px] px-4 pt-6 sm:pt-10">
+        {nb.hidden && (
+          <p
+            role="status"
+            data-testid="hidden-preview"
+            className="mb-4 rounded-xl border border-brick bg-white px-4 py-2 text-center text-[14px] text-ink"
+          >
+            Bản xem trước dành cho admin — khu phố đang ẩn, khách truy cập sẽ thấy trang 404.
+          </p>
+        )}
         {/* Pill logo — dựng như top bar trang chủ, bấm về trang chủ */}
         <a href={withBase("/")} className="mx-auto block w-fit" aria-label="Về trang chủ">
           <span className="grid h-[76px] w-[168px] place-items-center rounded-full bg-white sm:h-[96px] sm:w-[192px]">
