@@ -71,8 +71,9 @@ Dev-dep: `jsdom`, `@testing-library/react`, `@testing-library/dom`. `testTimeout
 
 - `E2E_BASE_URL`, mặc định `http://localhost:3001`. Không thấy server ⇒ **cả bộ tự SKIP** để
   `pnpm test` trên máy khác không đỏ oan.
-- `tests/e2e/client.ts` là cookie jar + CSRF double-submit; **mỗi Client có User-Agent riêng** vì
-  trần "3 SĐT mới/thiết bị/giờ" tính theo `(IP + UA)`.
+- `tests/e2e/client.ts` là cookie jar + CSRF double-submit. Rate limit định danh tính **theo IP**
+  (20 lượt/15 phút, giống đăng nhập admin — pentest 5.1.1) nên chạy E2E dồn dập nhiều lần liền
+  có thể nhận 429; đợi 15 phút hoặc khởi động lại server (bộ đếm in-memory).
 - `tests/e2e/db.ts` chỉ dùng để **DỰNG/DỌN fixture** (đọc `DATABASE_URL` từ `.env`); mọi khẳng định
   vẫn đi qua HTTP.
 - **Dọn user E2E một lần ở CUỐI file** — xoá giữa chừng làm mỗi lần định danh sau bị tính là "tạo

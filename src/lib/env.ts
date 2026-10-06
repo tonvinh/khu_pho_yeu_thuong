@@ -2,6 +2,7 @@
 // PEPPER (định danh) và khoá AES (liên hệ) là 2 khoá TÁCH BIỆT (07 §2.1).
 import path from "node:path";
 import { loadVaultEnv } from "./vault-env";
+import { trustedHopsFromEnv } from "./client-ip";
 
 // Nạp secret Vault (k8s bên FPT) TRƯỚC khi đọc biến nào. Đặt ở đây chứ không ở
 // instrumentation.ts vì mọi chỗ dùng secret (crypto.ts, db.ts, storage.ts, url.ts) đều đi qua
@@ -44,5 +45,10 @@ export const env = {
    *  Luôn trả đường dẫn TUYỆT ĐỐI (resolve theo cwd) và đọc lại mỗi lần gọi. */
   get UPLOAD_DIR() {
     return path.resolve(process.env.UPLOAD_DIR || "/app/uploads");
+  },
+  /** Số proxy NỐI X-Forwarded-For đứng trước app (pentest 5.1.1). Để trống = tự dò: lấy IP
+   *  công khai đầu tiên tính từ phải. Chỉ đặt khi hạ tầng xác nhận số hop — sai số là sai IP. */
+  get TRUSTED_PROXY_HOPS() {
+    return trustedHopsFromEnv(process.env.TRUSTED_PROXY_HOPS);
   },
 };

@@ -557,6 +557,6 @@ d("B10 · GET /api/v1/ambassadors/{slug}", () => {
   });
 });
 
-// Dọn dấu vết E2E một lần ở CUỐI: xoá user giữa chừng sẽ khiến mỗi lần định danh sau đó
-// bị tính là "tạo định danh MỚI" và đâm vào trần 3 SĐT mới/thiết bị/giờ.
+// Dọn dấu vết E2E một lần ở CUỐI: xoá user giữa chừng thì các bước sau phải định danh lại
+// từ đầu, tốn thêm lượt trong trần 20 lượt định danh/IP/15 phút.
 afterAll(cleanupE2EUser);

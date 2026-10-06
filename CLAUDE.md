@@ -873,7 +873,7 @@ sẵn `node_modules`).
 - Test: `tests/vault-env.test.ts` (13 ca). Bản trong `migrate.mjs` không có test tự động — đã kiểm
   tay bằng cách chạy với `VAULT_SECRETS_DIR` trỏ thư mục giả.
 
-## Pentest 10/2026 (`docs/pentest.docx`, FTEL-CSOCBM, staging) — đã sửa 3/4
+## Pentest 10/2026 (`docs/pentest.docx`, FTEL-CSOCBM, staging) — đã sửa 4/4
 
 - **5.2.1 + 5.2.2 (DoS upload ảnh)**: mọi ảnh upload đi qua `guarded()` trong
   `src/lib/stylize.ts` (`toCover`/`toWebp`/`stylizeMap`) — **đừng gọi `sharp(buf)` thẳng** trên
@@ -888,6 +888,24 @@ sẵn `node_modules`).
   (cookie `kp_admin_session`, path `/`) xem trước được kèm dải báo + `noindex`. API
   `/api/v1/neighborhoods/{id}` 404 với MỌI người, OG rơi về thẻ chung. Test:
   `tests/neighborhood-hidden.test.ts`.
-- **5.1.1 (X-Forwarded-For giả → né rate limit/chống gian lận) — CHƯA SỬA, đang trao đổi.**
-  `clientIp()` (`src/lib/api.ts`) vẫn lấy phần tử ĐẦU của XFF. Hướng đang bàn: đọc từ phải,
-  bỏ IP nội bộ + route kiểm chứng admin + chặn đăng nhập theo email (không phụ thuộc nginx).
+- **5.1.1 (X-Forwarded-For giả → né rate limit/chống gian lận)**: `clientIp()` giờ đi qua
+  `resolveClientIp()` (`src/lib/client-ip.ts`) — đọc XFF từ **PHẢI**, bỏ IP nội bộ/loopback/
+  CGNAT của proxy-sidecar, lấy IP công khai đầu tiên; toàn IP nội bộ ⇒ phần tử phải nhất (gộp
+  bucket chứ không cho giả). `x-real-ip` bỏ hẳn (client tự đặt được). Biết chắc số proxy thì
+  đặt `TRUSTED_PROXY_HOPS=N`. `ipHash` gom IPv6 theo **/64**. Rate limit định danh đổi sang
+  ĐÚNG kiểu đăng nhập admin: chặn đầu route, đếm MỌI lượt gọi, khoá chỉ theo IP —
+  **20 lượt/IP/15 phút** (`IDENTIFY_PER_IP_15MIN`), câu lỗi "Thử lại sau ít phút". Trần cũ
+  "3 SĐT mới/thiết bị+IP/giờ" (02 §8.4) bỏ vì User-Agent do client tự khai. **Chốt 6/10:
+  KHÔNG có trần riêng cho lượt tạo SĐT mới** — chấp nhận một IP tạo tối đa ~80 tài khoản/giờ;
+  phát hiện dồn về màn Chống gian lận (cụm ≥3 tài khoản cùng `ip_hash`/24h).
+  Kiểm chứng trên staging: `GET /api/admin/client-ip` (cần đăng nhập admin) — gửi kèm XFF giả
+  thì `resolved_ip` phải giữ nguyên. Test: `tests/client-ip.test.ts`.
+  Rate limit vẫn in-memory: nhiều replica thì trần chia theo pod.
+  **Đã test Chrome 6/10** qua proxy giả lập nginx (nối IP vào cuối XFF): client IP công khai
+  đổi XFF mỗi lượt ⇒ lượt 21 bị 429 ở cả `identify` lẫn `admin/auth/login`.
+  **RỦI RO ĐÃ CHẤP NHẬN (chốt 6/10 — không làm việc với hạ tầng, `TRUSTED_PROXY_HOPS` để trống):**
+  (1) client ở mạng NỘI BỘ (IP thật 10.x…) vẫn giả được IP — chế độ tự dò bỏ qua IP nội bộ
+  nên lấy IP công khai giả phía trái; đặt `TRUSTED_PROXY_HOPS` là hết (đã kiểm). (2) Next chỉ
+  điền IP socket khi request KHÔNG có XFF, không bao giờ nối thêm ⇒ app chạy thẳng không
+  proxy (như `pnpm dev`) thì client điều khiển cả chuỗi. Đừng "sửa" hai điểm này trong app —
+  app không thấy IP socket, chỉ hạ tầng giải được.

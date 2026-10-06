@@ -23,9 +23,8 @@ export async function serverUp(): Promise<boolean> {
 /** Một "trình duyệt" tối giản: giữ cookie jar + tự gắn header CSRF double-submit */
 export class Client {
   private jar = new Map<string, string>();
-  /** Rate-limit định danh tính theo (IP + User-Agent) — 3 SĐT mới/thiết bị/giờ (02 §8.4).
-   *  Mỗi Client là một "thiết bị" riêng nên phải có UA riêng, nếu không vài lần chạy
-   *  test liên tiếp sẽ tự đâm vào trần và nhận 429. */
+  /** UA riêng cho mỗi "thiết bị" giả lập. Rate limit định danh nay chỉ tính theo IP
+   *  (20 lượt/15 phút, pentest 5.1.1) nên chạy E2E dồn dập nhiều lần vẫn có thể nhận 429. */
   private ua = `KhuPho-E2E/${Math.random().toString(36).slice(2, 10)}`;
 
   cookie(name: string): string | undefined {

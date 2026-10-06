@@ -1,5 +1,5 @@
 // Rate limit in-memory (MVP chạy 1 instance — 07 §2.1):
-// 3 định danh mới/thiết bị+IP/giờ · 30 hành động ghi/user/giờ · đăng nhập admin theo IP.
+// định danh + đăng nhập admin: 20 lượt/IP/15 phút · 30 hành động ghi/user/giờ.
 type Bucket = { count: number; resetAt: number };
 
 declare global {
@@ -29,7 +29,8 @@ export function rateLimit(key: string, max: number, windowMs: number): boolean {
 }
 
 export const LIMITS = {
-  IDENTIFY_PER_DEVICE_HOUR: 3,
+  /** Định danh: mọi lượt gọi /api/v1/auth/identify theo IP — cùng kiểu đăng nhập admin */
+  IDENTIFY_PER_IP_15MIN: 20,
   WRITES_PER_USER_HOUR: 30,
   ADMIN_LOGIN_PER_IP_15MIN: 20,
   /** Upload ảnh admin (pentest 5.2.1) — đủ rộng cho đợt nhập 4 ảnh × vài khu phố */

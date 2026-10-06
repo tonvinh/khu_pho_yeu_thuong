@@ -13,6 +13,12 @@ import { rateLimit, LIMITS } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   if (!verifyCsrf(req)) return jsonError(403, "CSRF token không hợp lệ");
+  // Rate limit giống đăng nhập admin: chặn TRƯỚC mọi xử lý, đếm MỌI lượt gọi, khoá chỉ theo IP
+  // (pentest 5.1.1 — User-Agent do client tự khai nên không đưa vào khoá).
+  const ip = ipHash(req);
+  if (!rateLimit(`identify:${ip}`, LIMITS.IDENTIFY_PER_IP_15MIN, LIMITS.MIN15)) {
+    return jsonError(429, "Thử lại sau ít phút");
+  }
 
   const body = await req.json().catch(() => null);
   if (!body) return jsonError(400, "Dữ liệu không hợp lệ");
@@ -24,7 +30,6 @@ export async function POST(req: NextRequest) {
   if (looksFake(normalized)) return jsonError(400, "Số điện thoại chưa đúng — kiểm tra lại giúp mình nhé");
 
   const hash = phoneHash(normalized);
-  const ip = ipHash(req);
   const ua = uaHash(req);
 
   const existing = await one<{ id: string; display_name: string }>(
@@ -64,10 +69,6 @@ export async function POST(req: NextRequest) {
       await q(`UPDATE users SET last_login_at = now() WHERE id = $1`, [userId]);
     }
   } else {
-    // Rate limit TẠO ĐỊNH DANH MỚI: 3 SĐT mới/thiết bị+IP/giờ (02 §8.4)
-    if (!rateLimit(`identify:${ip}:${ua}`, LIMITS.IDENTIFY_PER_DEVICE_HOUR, LIMITS.HOUR)) {
-      return jsonError(429, "Tạo định danh hơi nhiều — thử lại sau 1 giờ nhé");
-    }
     if (!display_name?.trim()) return jsonError(400, "Cho xóm biết tên bạn với nhé");
     const created = await one<{ id: string }>(
       `INSERT INTO users (phone_hash, display_name, share_slug, neighborhood_id, last_login_at)

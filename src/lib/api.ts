@@ -5,21 +5,21 @@ import { verifyCsrf } from "./csrf";
 import { getSessionUser, type SessionUser } from "./session";
 import { getAdminUser, type AdminUser } from "./admin-session";
 import { rateLimit, LIMITS } from "./rate-limit";
+import { env } from "./env";
+import { resolveClientIp, ipBucket } from "./client-ip";
 
 export function jsonError(status: number, message: string, extra?: Record<string, unknown>) {
   return NextResponse.json({ error: message, ...extra }, { status });
 }
 
+/** IP thật của client — đọc XFF từ PHẢI, xem `client-ip.ts` (pentest 5.1.1) */
 export function clientIp(req: NextRequest): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "0.0.0.0"
-  );
+  return resolveClientIp(req.headers.get("x-forwarded-for"), env.TRUSTED_PROXY_HOPS);
 }
 
+/** Hash theo dải IP (IPv6 gom /64) — dùng cho rate limit và cụm gian lận cùng IP */
 export function ipHash(req: NextRequest): string {
-  return sha256Hex("ip:" + clientIp(req));
+  return sha256Hex("ip:" + ipBucket(clientIp(req)));
 }
 
 export function uaHash(req: NextRequest): string {
