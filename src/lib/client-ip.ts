@@ -13,7 +13,7 @@
 //     trong) ⇒ lấy phần tử PHẢI NHẤT: thà gộp chung bucket còn hơn cho giả IP.
 // x-real-ip KHÔNG dùng: proxy không đặt nó thì client tự đặt được, y như XFF.
 // Next luôn tự điền XFF bằng IP socket khi request tới mà không có header này.
-import { isIP } from "node:net";
+import { BlockList, isIP } from "node:net";
 
 /** Bỏ port, ngoặc vuông, zone id và tiền tố IPv4-mapped; trả null nếu không phải IP hợp lệ */
 export function normalizeIp(raw: string): string | null {
@@ -45,24 +45,27 @@ function ipv6Groups(ip: string): number[] {
   return [...h, ...Array(Math.max(fill, 0)).fill(0), ...r, ...tail];
 }
 
-/** IP không thể là IP công khai của cư dân: nội bộ, loopback, link-local, CGNAT, unspecified */
+/** Dải KHÔNG phải IP công khai của cư dân (IANA special-purpose): nội bộ, loopback,
+ *  link-local, CGNAT, benchmark, multicast, dự trữ, NAT64, tài liệu */
+const NON_PUBLIC = (() => {
+  const b = new BlockList();
+  for (const [net, prefix] of [
+    ["0.0.0.0", 8], ["10.0.0.0", 8], ["100.64.0.0", 10], ["127.0.0.0", 8],
+    ["169.254.0.0", 16], ["172.16.0.0", 12], ["192.0.0.0", 24], ["192.0.2.0", 24],
+    ["192.168.0.0", 16], ["198.18.0.0", 15], ["198.51.100.0", 24], ["203.0.113.0", 24],
+    ["224.0.0.0", 4], ["240.0.0.0", 4],
+  ] as const) b.addSubnet(net, prefix, "ipv4");
+  for (const [net, prefix] of [
+    ["::", 128], ["::1", 128], ["64:ff9b::", 96], ["100::", 64], ["2001:db8::", 32],
+    ["fc00::", 7], ["fe80::", 10], ["ff00::", 8],
+  ] as const) b.addSubnet(net, prefix, "ipv6");
+  return b;
+})();
+
+/** IP không thể là IP công khai của cư dân — coi là hop proxy/sidecar */
 export function isPrivateIp(ip: string): boolean {
-  if (isIP(ip) === 4) {
-    const [a, b] = ip.split(".").map(Number);
-    return (
-      a === 0 || a === 10 || a === 127 ||
-      (a === 100 && b >= 64 && b <= 127) ||
-      (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168)
-    );
-  }
-  const g = ipv6Groups(ip);
-  if (g.every((x) => x === 0)) return true; // ::
-  if (g.slice(0, 7).every((x) => x === 0) && g[7] === 1) return true; // ::1
-  if ((g[0] & 0xfe00) === 0xfc00) return true; // fc00::/7 ULA
-  if ((g[0] & 0xffc0) === 0xfe80) return true; // fe80::/10 link-local
-  return false;
+  const v = isIP(ip);
+  return v === 0 || NON_PUBLIC.check(ip, v === 4 ? "ipv4" : "ipv6");
 }
 
 /**

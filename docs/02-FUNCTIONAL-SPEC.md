@@ -333,7 +333,7 @@ Khu phố **đã xoá mềm** ⇒ popup và trang share đều 404, khu biến m
 
 ### 8.4 Rủi ro đã chấp nhận & biện pháp bù (do bỏ OTP)
 - ⚠️ Không OTP nghĩa là **không chứng minh được người nhập sở hữu SĐT đó** — có thể nhập số của người khác hoặc số ảo để tạo nhiều tài khoản. Đây là trade-off có chủ đích (giảm ma sát), phải bù bằng:
-  - Rate limit tạo định danh: tối đa 3 SĐT mới/thiết bị+IP/giờ; captcha nhẹ khi vượt ngưỡng.
+  - Rate limit định danh: 20 lượt định danh/IP/15 phút (đếm mọi lượt, khoá chỉ theo IP — giống đăng nhập admin; đổi 6/10 theo pentest 5.1.1); captcha nhẹ khi vượt ngưỡng.
   - Chặn dải số không hợp lệ (regex đầu số VN, số lặp bất thường 0900000000...).
   - Heuristics gian lận (03-DATA-MODEL §5) hoạt động mạnh hơn: cụm tài khoản cùng IP/thiết bị/thời gian, vote hàng loạt → vô hiệu lặng lẽ.
   - Không còn kênh SMS nào (đã chốt Q1) → không phát sinh rủi ro gửi tin nhầm chủ số; tranh chấp mạo danh xử lý qua hotline + admin revoke/tách tài khoản.

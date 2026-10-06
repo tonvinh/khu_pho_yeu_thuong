@@ -57,7 +57,7 @@ Phiên bản 1.0
 - Cookie session hợp lệ, chưa revoked, chưa hết hạn → nếu không: 401.
 - **CSRF double-submit token** cho mọi POST/PATCH (bắt buộc vì auth dựa cookie).
 - Request có kèm SĐT (form lead): băm và đối chiếu với phone_hash của session — lệch → luồng xác nhận chuyển định danh (02 §8.3), không bao giờ ghi dữ liệu chéo tài khoản.
-- Rate limit: 3 định danh mới/thiết bị+IP/giờ; 30 hành động ghi/user/giờ; captcha khi vượt.
+- Rate limit: 20 lượt định danh/IP/15 phút (đếm mọi lượt, khoá chỉ theo IP — giống đăng nhập admin; đổi 6/10 theo pentest 5.1.1); 30 hành động ghi/user/giờ; captcha khi vượt.
 
 ### Vận hành & tuân thủ (PDPD — NĐ 13/2023)
 - Admin xem SĐT: mặc định che `090***123`, bấm-để-hiện có ghi log (ai, khi nào, bản ghi nào); export CSV có log.

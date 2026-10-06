@@ -18,6 +18,10 @@ describe("resolveClientIp — chế độ tự dò", () => {
     expect(resolveClientIp(`8.8.8.8, 1.1.1.1, ${REAL}`)).toBe(REAL);
   });
 
+  test("hop proxy ở dải benchmark 198.18/15 không bị nhận nhầm là client", () => {
+    expect(resolveClientIp(`1.2.3.4, ${REAL}, 198.18.0.5`)).toBe(REAL);
+  });
+
   test("bỏ qua proxy/sidecar nội bộ ở cuối chuỗi", () => {
     expect(resolveClientIp(`1.2.3.4, ${REAL}, 10.0.3.7, 172.20.0.5, 127.0.0.1`)).toBe(REAL);
     expect(resolveClientIp(`${REAL}, 100.64.1.1, fd00::5`)).toBe(REAL);
@@ -40,7 +44,7 @@ describe("resolveClientIp — chế độ tự dò", () => {
   });
 
   test("IPv6 công khai", () => {
-    expect(resolveClientIp("2001:db8::1, 2402:800:6310:1::abcd, fe80::1")).toBe("2402:800:6310:1::abcd");
+    expect(resolveClientIp("2a00:1450::1, 2402:800:6310:1::abcd, fe80::1")).toBe("2402:800:6310:1::abcd");
   });
 });
 
@@ -72,10 +76,12 @@ describe("normalizeIp / isPrivateIp / ipBucket", () => {
 
   test("dải nội bộ", () => {
     for (const ip of ["10.1.2.3", "172.16.0.1", "172.31.255.255", "192.168.1.1", "127.0.0.4",
-      "169.254.1.1", "100.64.0.1", "0.0.0.0", "::1", "::", "fd12::1", "fe80::abcd"]) {
+      "169.254.1.1", "100.64.0.1", "0.0.0.0", "::1", "::", "fd12::1", "fe80::abcd",
+      "198.18.0.5", "198.19.255.1", "192.0.0.9", "224.0.0.1", "250.1.1.1", "64:ff9b::808:808",
+      "2001:db8::1", "ff02::1"]) {
       expect(isPrivateIp(ip), ip).toBe(true);
     }
-    for (const ip of [REAL, "172.32.0.1", "100.128.0.1", "8.8.8.8", "2402:800::1", "::ffff:0:1"]) {
+    for (const ip of [REAL, "172.32.0.1", "100.128.0.1", "8.8.8.8", "198.20.0.1", "2402:800::1"]) {
       expect(isPrivateIp(ip), ip).toBe(false);
     }
   });

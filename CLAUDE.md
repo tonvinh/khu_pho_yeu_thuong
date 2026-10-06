@@ -223,11 +223,10 @@ Link design chuẩn: `figma.com/design/FMiW4tzQvKgi8qomzYFlff/...?node-id=7217-1
   SAU `.kp-h2` không), `tests/ui/{issue-board,user-menu,home-shell,slider-motion,signs-panel,admin-loading}.test.tsx`.
 - `pnpm test:e2e` — gọi THẲNG server đang chạy (`E2E_BASE_URL`, mặc định
   `http://localhost:3001`), không mock gì; tự SKIP khi không thấy server.
-  `tests/e2e/client.ts` là cookie jar + CSRF double-submit; mỗi Client có User-Agent
-  riêng vì trần "3 SĐT mới/thiết bị/giờ" tính theo (IP + UA). `tests/e2e/db.ts` chỉ dùng
-  để DỰNG/DỌN fixture (đọc `DATABASE_URL` từ `.env`), mọi khẳng định vẫn đi qua HTTP.
-  Dọn user E2E một lần ở CUỐI file — xoá giữa chừng làm mỗi lần định danh sau bị tính là
-  "tạo định danh MỚI" và đâm trần rate limit.
+  `tests/e2e/client.ts` là cookie jar + CSRF double-submit. Rate limit định danh tính theo
+  IP (20 lượt/15 phút, từ 6/10) nên chạy E2E dồn dập nhiều lần liền sẽ nhận 429 — đợi 15
+  phút hoặc khởi động lại server. `tests/e2e/db.ts` chỉ dùng để DỰNG/DỌN fixture (đọc
+  `DATABASE_URL` từ `.env`), mọi khẳng định vẫn đi qua HTTP. Dọn user E2E một lần ở CUỐI file.
 - Số đo px / media query / prefers-reduced-motion đo bằng DOM thật trong Chrome (jsdom
   không tính layout). Mẹo dùng lại được: dựng `<iframe src="/" width=...>` rồi đo trong
   `contentDocument` — media query ăn theo bề ngang iframe, và vá `matchMedia`/`fetch` của

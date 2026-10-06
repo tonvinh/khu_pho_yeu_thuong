@@ -496,7 +496,8 @@ d("B6 · mã dịch vụ của lead", () => {
     const id = await c.sendJson("POST", "/api/v1/auth/identify", {
       phone: PHONE, display_name: E2E_USER_NAME,
     });
-    if (id.status !== 200) return; // đâm trần rate limit thì bỏ qua
+    // Đâm trần rate limit (20 lượt/IP/15 phút) thì ĐỎ cho rõ, không lặng lẽ qua
+    expect(id.status, "định danh thất bại — chạy E2E dồn dập thì đợi 15 phút").toBe(200);
 
     const res = await c.sendJson("POST", "/api/v1/leads", {
       name: E2E_USER_NAME,

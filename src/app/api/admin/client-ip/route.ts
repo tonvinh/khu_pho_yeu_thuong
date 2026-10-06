@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
       resolved_ip: clientIp(req),
       mode: hops ? `TRUSTED_PROXY_HOPS=${hops}` : "auto (IP công khai đầu tiên tính từ phải)",
       x_forwarded_for: req.headers.get("x-forwarded-for"),
-      x_real_ip: req.headers.get("x-real-ip"),
+      // Chỉ để chẩn đoán — app KHÔNG đọc header này (client tự đặt được)
+      x_real_ip_unused: req.headers.get("x-real-ip"),
     },
     { headers: { "cache-control": "no-store" } }
   );

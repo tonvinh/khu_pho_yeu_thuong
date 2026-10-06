@@ -272,7 +272,7 @@ khôi phục là về nguyên trạng. Mọi truy vấn công khai mới đụng
 | GET | /share/dai-su/:slug · /share/bien/:id · /share/khu-pho/:slug | Trang share công khai + OG image động (Q8) |
 
 ### Auth (định danh không OTP)
-| POST | /auth/identify | body: {phone, display_name?, neighborhood_id?} → server băm SĐT, upsert user, set cookie `kp_session` (HttpOnly, Secure, SameSite=Lax). Response KHÔNG trả lại SĐT/hash. Rate limit: 3 định danh mới/thiết bị+IP/giờ |
+| POST | /auth/identify | body: {phone, display_name?, neighborhood_id?} → server băm SĐT, upsert user, set cookie `kp_session` (HttpOnly, Secure, SameSite=Lax). Response KHÔNG trả lại SĐT/hash. Rate limit: 20 lượt định danh/IP/15 phút (đếm mọi lượt, khoá chỉ theo IP — giống đăng nhập admin; đổi 6/10 theo pentest 5.1.1) |
 | POST | /auth/logout | Thu hồi session hiện tại (revoked=true), xoá cookie |
 | GET/PATCH | /me | Hồ sơ: display_name, neighborhood_id (nhận diện qua cookie) |
 
@@ -306,7 +306,7 @@ khôi phục là về nguyên trạng. Mọi truy vấn công khai mới đụng
 ## 5. Chống gian lận (im lặng)
 
 - 1 SĐT (định danh qua phone_hash) = 1 tài khoản; UNIQUE vote; cấm tự thương (server-side).
-- **Bù đắp việc bỏ OTP** (không chứng minh sở hữu số): rate limit tạo định danh theo thiết bị+IP, captcha khi vượt ngưỡng, chặn dải số ảo, trọng số cao hơn cho heuristics cụm tài khoản cùng ip_hash/ua_hash/thời gian.
+- **Bù đắp việc bỏ OTP** (không chứng minh sở hữu số): rate limit định danh theo IP (20 lượt/15 phút), captcha khi vượt ngưỡng, chặn dải số ảo, trọng số cao hơn cho heuristics cụm tài khoản cùng ip_hash/ua_hash/thời gian.
 - Heuristics gắn cờ: cụm tài khoản đăng ký cùng dải thời gian/IP; 1 người nhận thương hàng loạt từ nhóm tài khoản mới; tốc độ vote bất thường.
 - Xử lý: set `is_valid=false` trên votes/score_events, hoặc `is_shadow_banned` trên user. **Không thông báo, không hiển thị lý do.** UI của người bị lọc vẫn thấy phiếu của mình bình thường.
 
