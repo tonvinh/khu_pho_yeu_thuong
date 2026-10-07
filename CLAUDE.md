@@ -908,3 +908,8 @@ sẵn `node_modules`).
   điền IP socket khi request KHÔNG có XFF, không bao giờ nối thêm ⇒ app chạy thẳng không
   proxy (như `pnpm dev`) thì client điều khiển cả chuỗi. Đừng "sửa" hai điểm này trong app —
   app không thấy IP socket, chỉ hạ tầng giải được.
+  **VM `khupho.ailab.city` đứng sau CLOUDFLARE** (header `server: cloudflare`, `cf-ray` — docs/18
+  không ghi). Caddy host thấy IP edge Cloudflare nên app coi IP Cloudflare là IP client: đo 7/10
+  gửi 22 lượt XFF giả không lượt nào 429. Áp cho CẢ định danh lẫn đăng nhập admin, và có từ
+  trước bản sửa này. **Chốt 7/10: giữ y như login admin, không đọc `CF-Connecting-IP`** — FPT
+  staging/production (nginx + envoy, không Cloudflare) mới là môi trường pentest kiểm.
